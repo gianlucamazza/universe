@@ -1,0 +1,6 @@
+name = "universe"
+version = "0.0.1"
+defaultTargets = ["Universe"]
+
+[[lean_lib]]
+name = "Universe"
