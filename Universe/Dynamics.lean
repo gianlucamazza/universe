@@ -993,4 +993,88 @@ noncomputable def qubitDyn : Dyn QMat where
     intro M N
     rw [qadd_mk, qsmul_mk, qsmul_mk, qsmul_mk, qadd_mk, matSmul_add]
 
+/-! ### Lemmi di matrice che non sono assiomi di `Dyn` -/
+
+theorem mat_entry_smul (z : Gauss) (a b c d : Poly) :
+    pmul (scale z a) c ++ pmul (scale z b) d = scale z (pmul a c ++ pmul b d) := by
+  rw [scale_append, scale_pmul_left, scale_pmul_left]
+
+theorem matMul_smul_left (z : Gauss) (M N : Mat) :
+    matMul (matSmul z M) N = matSmul z (matMul M N) := by
+  apply Mat.ext
+  · exact mat_entry_smul z M.a00 M.a01 N.a00 N.a10
+  · exact mat_entry_smul z M.a00 M.a01 N.a01 N.a11
+  · exact mat_entry_smul z M.a10 M.a11 N.a00 N.a10
+  · exact mat_entry_smul z M.a10 M.a11 N.a01 N.a11
+
+theorem qsmul_qmul_left (z : Gauss) (x y : QMat) :
+    qmul (qsmul z x) y = qsmul z (qmul x y) := by
+  refine Quotient.inductionOn₂ x y ?_
+  intro M N
+  rw [qsmul_mk, qmul_mk, qmul_mk, qsmul_mk, matMul_smul_left]
+
+theorem matSame_mul_add_left (M N P : Mat) :
+    matSame (matMul (matAdd M N) P) (matAdd (matMul M P) (matMul N P)) := by
+  have entry (a a' b b' c d : Poly) :
+      polySame (pmul (a ++ a') c ++ pmul (b ++ b') d)
+        ((pmul a c ++ pmul b d) ++ (pmul a' c ++ pmul b' d)) := by
+    intro t
+    rw [pmul_append_left, pmul_append_left]
+    exact polySame_append4_mid (pmul a c) (pmul a' c) (pmul b d) (pmul b' d) t
+  exact ⟨entry M.a00 N.a00 M.a01 N.a01 P.a00 P.a10,
+    entry M.a00 N.a00 M.a01 N.a01 P.a01 P.a11,
+    entry M.a10 N.a10 M.a11 N.a11 P.a00 P.a10,
+    entry M.a10 N.a10 M.a11 N.a11 P.a01 P.a11⟩
+
+theorem matSame_mul_add_right (M N P : Mat) :
+    matSame (matMul M (matAdd N P)) (matAdd (matMul M N) (matMul M P)) := by
+  have entry (a b c c' d d' : Poly) :
+      polySame (pmul a (c ++ c') ++ pmul b (d ++ d'))
+        ((pmul a c ++ pmul b d) ++ (pmul a c' ++ pmul b d')) := by
+    intro t
+    calc
+      coeffOf (pmul a (c ++ c') ++ pmul b (d ++ d')) t
+          = coeffOf (pmul a (c ++ c')) t + coeffOf (pmul b (d ++ d')) t := by
+            rw [coeffOf_append]
+      _ = coeffOf (pmul a c ++ pmul a c') t + coeffOf (pmul b d ++ pmul b d') t := by
+            rw [coeff_mul_append_right, coeff_mul_append_right]
+      _ = (coeffOf (pmul a c) t + coeffOf (pmul a c') t) +
+            (coeffOf (pmul b d) t + coeffOf (pmul b d') t) := by
+            rw [coeffOf_append, coeffOf_append]
+      _ = (coeffOf (pmul a c) t + coeffOf (pmul b d) t) +
+            (coeffOf (pmul a c') t + coeffOf (pmul b d') t) :=
+            Gauss.add_add_add_comm _ _ _ _
+      _ = coeffOf ((pmul a c ++ pmul b d) ++ (pmul a c' ++ pmul b d')) t := by
+            rw [← coeffOf_append, ← coeffOf_append, ← coeffOf_append]
+  exact ⟨entry M.a00 M.a01 N.a00 P.a00 N.a10 P.a10,
+    entry M.a00 M.a01 N.a01 P.a01 N.a11 P.a11,
+    entry M.a10 M.a11 N.a00 P.a00 N.a10 P.a10,
+    entry M.a10 M.a11 N.a01 P.a01 N.a11 P.a11⟩
+
+theorem qmul_add_left (x y z : QMat) :
+    qmul (qadd x y) z = qadd (qmul x z) (qmul y z) := by
+  refine Quotient.inductionOn₃ x y z ?_
+  intro M N P
+  rw [qadd_mk, qmul_mk, qmul_mk, qmul_mk, qadd_mk]
+  exact Quotient.sound (matRel_of_matSame (matSame_mul_add_left M N P))
+
+theorem qmul_add_right (x y z : QMat) :
+    qmul x (qadd y z) = qadd (qmul x y) (qmul x z) := by
+  refine Quotient.inductionOn₃ x y z ?_
+  intro M N P
+  rw [qadd_mk, qmul_mk, qmul_mk, qmul_mk, qadd_mk]
+  exact Quotient.sound (matRel_of_matSame (matSame_mul_add_right M N P))
+
+theorem qmul_zero_left (x : QMat) : qmul (Quotient.mk matSetoid matZero) x =
+    Quotient.mk matSetoid matZero := by
+  refine Quotient.inductionOn x ?_
+  intro M
+  rw [qmul_mk, matMul_zero_left]
+
+theorem qmul_zero_right (x : QMat) : qmul x (Quotient.mk matSetoid matZero) =
+    Quotient.mk matSetoid matZero := by
+  refine Quotient.inductionOn x ?_
+  intro M
+  rw [qmul_mk, matMul_zero_right]
+
 end Universe.Dynamics
