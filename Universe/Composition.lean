@@ -7,6 +7,10 @@ L'indice di `|i⟩ ⊗ |k⟩` è `right * i + k`, la stessa formula di `tensor_i
 fattore. `kronecker_ui` è il caso `|φ⟩ = |0⟩`. Il marginale sinistro ha i
 coefficienti di `‖φ‖² · P(U|ψ⟩)`. `kronecker_iu_gen` scambia i fattori, nel
 senso di `polySame`. Sul fattore generico, togliere `‖φ‖²` chiede `gA`.
+
+Tre qubit. `tensor_assoc` identifica le due parentesizzazioni come la stessa
+ottupla. `tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore.
+`tensor_assoc_obs` identifica i moduli quadri delle otto celle.
 -/
 import Universe.Epistemology
 import Universe.Ontology
@@ -315,5 +319,128 @@ theorem marginal_right_sphere (U : Mat) (φ : Pair) :
         (scale_defect (normPair genericPair) (bornPair (applyMat U φ)).a0 hμ),
       inIdeal3_polySame (polySame_psub hgen.2 (polySame_refl _))
         (scale_defect (normPair genericPair) (bornPair (applyMat U φ)).a1 hμ)⟩
+
+/-! ### Tre qubit
+
+L'indice di `|i⟩ ⊗ |j⟩ ⊗ |k⟩` è `4 * i + 2 * j + k`.
+`tensorLeft` è `((ψ ⊗ φ) ⊗ χ)`. `tensorRight` è `(ψ ⊗ (φ ⊗ χ))`.
+`applyUII` agisce sul bit alto, a blocchi di quattro, per entrambe le
+parentesizzazioni. -/
+
+/-- Otto ampiezze, nell'ordine `(i, j, k)` lessicografico. -/
+@[ext]
+structure Oct where
+  a0 : Poly
+  a1 : Poly
+  a2 : Poly
+  a3 : Poly
+  a4 : Poly
+  a5 : Poly
+  a6 : Poly
+  a7 : Poly
+
+/-- `((|ψ⟩ ⊗ |φ⟩) ⊗ |χ⟩)`. La cella `2 * q + k` moltiplica la quad per `|χ⟩`. -/
+def tensorLeft (quad : Quad) (χ : Pair) : Oct where
+  a0 := pmul quad.a0 χ.a0
+  a1 := pmul quad.a0 χ.a1
+  a2 := pmul quad.a1 χ.a0
+  a3 := pmul quad.a1 χ.a1
+  a4 := pmul quad.a2 χ.a0
+  a5 := pmul quad.a2 χ.a1
+  a6 := pmul quad.a3 χ.a0
+  a7 := pmul quad.a3 χ.a1
+
+/-- `(|ψ⟩ ⊗ (|φ⟩ ⊗ |χ⟩))`. La cella `4 * i + q` moltiplica `|ψ⟩` per la quad. -/
+def tensorRight (ψ : Pair) (quad : Quad) : Oct where
+  a0 := pmul ψ.a0 quad.a0
+  a1 := pmul ψ.a0 quad.a1
+  a2 := pmul ψ.a0 quad.a2
+  a3 := pmul ψ.a0 quad.a3
+  a4 := pmul ψ.a1 quad.a0
+  a5 := pmul ψ.a1 quad.a1
+  a6 := pmul ψ.a1 quad.a2
+  a7 := pmul ψ.a1 quad.a3
+
+/-- Le due parentesizzazioni sono la stessa lista di ampiezze. -/
+theorem tensor_assoc (ψ φ χ : Pair) :
+    tensorLeft (tensorPair ψ φ) χ = tensorRight ψ (tensorPair φ χ) := by
+  ext <;> simp only [tensorLeft, tensorRight, tensorPair] <;> rw [pmul_assoc]
+
+/-- Una riga di `(U ⊗ I ⊗ I)` attraversa i due prodotti. Uguaglianza di liste. -/
+theorem assoc_row (u0 u1 x0 x1 y z : Poly) :
+    pmul u0 (pmul (pmul x0 y) z) ++ pmul u1 (pmul (pmul x1 y) z) =
+      pmul (pmul (pmul u0 x0 ++ pmul u1 x1) y) z := by
+  rw [← pmul_assoc u0 (pmul x0 y) z, ← pmul_assoc u1 (pmul x1 y) z]
+  rw [← pmul_assoc u0 x0 y, ← pmul_assoc u1 x1 y]
+  rw [← pmul_append_left (pmul (pmul u0 x0) y) (pmul (pmul u1 x1) y) z]
+  rw [← pmul_append_left (pmul u0 x0) (pmul u1 x1) y]
+
+/-- `(U ⊗ I ⊗ I)` sul bit alto. I blocchi di quattro sono le fibre di `i`. -/
+def applyUII (U : Mat) (v : Oct) : Oct where
+  a0 := pmul U.a00 v.a0 ++ pmul U.a01 v.a4
+  a1 := pmul U.a00 v.a1 ++ pmul U.a01 v.a5
+  a2 := pmul U.a00 v.a2 ++ pmul U.a01 v.a6
+  a3 := pmul U.a00 v.a3 ++ pmul U.a01 v.a7
+  a4 := pmul U.a10 v.a0 ++ pmul U.a11 v.a4
+  a5 := pmul U.a10 v.a1 ++ pmul U.a11 v.a5
+  a6 := pmul U.a10 v.a2 ++ pmul U.a11 v.a6
+  a7 := pmul U.a10 v.a3 ++ pmul U.a11 v.a7
+
+/-- `(U ⊗ I ⊗ I)((ψ ⊗ φ) ⊗ χ) = ((Uψ) ⊗ φ) ⊗ χ`. -/
+theorem tensor_assoc_ui (U : Mat) (ψ φ χ : Pair) :
+    applyUII U (tensorLeft (tensorPair ψ φ) χ) =
+      tensorLeft (tensorPair (applyMat U ψ) φ) χ := by
+  apply Oct.ext
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a00 U.a01 ψ.a0 ψ.a1 φ.a0 χ.a0
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a00 U.a01 ψ.a0 ψ.a1 φ.a0 χ.a1
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a00 U.a01 ψ.a0 ψ.a1 φ.a1 χ.a0
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a00 U.a01 ψ.a0 ψ.a1 φ.a1 χ.a1
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a10 U.a11 ψ.a0 ψ.a1 φ.a0 χ.a0
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a10 U.a11 ψ.a0 ψ.a1 φ.a0 χ.a1
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a10 U.a11 ψ.a0 ψ.a1 φ.a1 χ.a0
+  · simpa only [applyUII, tensorLeft, tensorPair, applyMat] using
+      assoc_row U.a10 U.a11 ψ.a0 ψ.a1 φ.a1 χ.a1
+
+/-- La stessa azione sulla parentesizzazione destra. -/
+theorem tensor_assoc_ui_right (U : Mat) (ψ φ χ : Pair) :
+    applyUII U (tensorRight ψ (tensorPair φ χ)) =
+      tensorRight (applyMat U ψ) (tensorPair φ χ) := by
+  rw [← tensor_assoc, tensor_assoc_ui, tensor_assoc]
+
+/-- Modulo quadro di ogni cella. -/
+def bornOct (v : Oct) : Oct where
+  a0 := columnBorn v.a0
+  a1 := columnBorn v.a1
+  a2 := columnBorn v.a2
+  a3 := columnBorn v.a3
+  a4 := columnBorn v.a4
+  a5 := columnBorn v.a5
+  a6 := columnBorn v.a6
+  a7 := columnBorn v.a7
+
+/-- Le due parentesizzazioni hanno gli stessi pesi di Born. -/
+theorem tensor_assoc_obs (ψ φ χ : Pair) :
+    bornOct (tensorLeft (tensorPair ψ φ) χ) =
+      bornOct (tensorRight ψ (tensorPair φ χ)) := by
+  rw [tensor_assoc]
+
+/-- Il passo binario di `tensorIndexAssoc` sulle dimensioni `2` e `2`. -/
+theorem tensorIndex_assoc_qubit (i j k : Nat) :
+    tensorIndex (tensorIndex i j 2) k 2 = tensorIndex i (tensorIndex j k 2) 4 := by
+  simp only [tensorIndex]
+  have h := Universe.Ontology.tensorIndexAssoc i j k 2 2
+  calc
+    2 * (2 * i + j) + k = (2 * i + j) * 2 + k := by rw [Nat.mul_comm]
+    _ = (i * 2 + j) * 2 + k := by rw [Nat.mul_comm i 2]
+    _ = i * (2 * 2) + (j * 2 + k) := h
+    _ = i * 4 + (j * 2 + k) := by rfl
+    _ = 4 * i + (2 * j + k) := by rw [Nat.mul_comm i 4, Nat.mul_comm j 2]
 
 end Universe.Composition

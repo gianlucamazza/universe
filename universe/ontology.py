@@ -3,9 +3,12 @@
 X è uno spazio di Hilbert a dimensione finita. Due sistemi si compongono con il
 prodotto tensoriale. L'indice di |i⟩⊗|k⟩ è `tensor_index`, la stessa formula di
 `Universe.Composition.tensorIndex` e il passo binario di
-`Universe.Ontology.tensorIndexAssoc`. `|0⟩ ⊗ |0⟩ = |00⟩` è
-`ground_tensor`. I marginali con un fattore `|0⟩` fermo sono `marginal_ui`
-e `marginal_iu`. La nota è `papers/qubit.md`.
+`Universe.Ontology.tensorIndexAssoc`. `(A⊗B)⊗C` e `A⊗(B⊗C)` sono lo stesso
+stato: le ampiezze sono `Universe.Composition.tensor_assoc`, l'azione sul
+primo fattore è `tensor_assoc_ui`, i moduli quadri sono `tensor_assoc_obs`.
+`|0⟩ ⊗ |0⟩ = |00⟩` è `ground_tensor`. I marginali con un fattore `|0⟩` fermo
+sono `marginal_ui` e `marginal_iu`. La nota è `papers/qubit.md`.
+L'argomento dell'associazione è `researches/associazione.md`.
 """
 
 from __future__ import annotations
@@ -42,7 +45,11 @@ def tensor_index(left_index: int, right_index: int, right_dim: int) -> int:
 
 
 def tensor_index_assoc(i: int, j: int, k: int, nb: int, nc: int) -> bool:
-    """`(A⊗B)⊗C` e `A⊗(B⊗C)` codificano la stessa cella."""
+    """`(A⊗B)⊗C` e `A⊗(B⊗C)` codificano la stessa cella.
+
+    Le ampiezze di tre qubit, sullo stesso passo, sono
+    `Universe.Composition.tensor_assoc`.
+    """
     left = tensor_index(tensor_index(i, j, nb), k, nc)
     right = tensor_index(i, tensor_index(j, k, nc), nb * nc)
     return left == right

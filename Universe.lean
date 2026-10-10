@@ -5,6 +5,8 @@ La nota è `papers/qubit.md`.
 
 `Universe.Ring` è lo scalare `ℚ(i)`.
 `Universe.Quotient` è il quoziente `c² + s² = 1`, `|n| = 1`, con cofattori.
+`reduce_sound` ricostruisce i coefficienti. `Universe.Dynamics.reduce_complete`
+è il converso: se `p` sta in `(gC, gN)`, ogni coefficiente di `(reduce p).rem` è zero.
 `gA`, nello stesso file, è la sfera delle ampiezze e non entra in `reduce`.
 `Universe.Series` è il collasso di `exp(-i φ a)` quando `a² = 1`.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
@@ -32,6 +34,10 @@ e `axis_z_gn` azzera i coefficienti di `gN` lungo z.
 `point_gC` e `point_gN` sono i due vincoli in `ℚ`, e `point_unitary` valuta `δ`
 in `n = e_x`.
 `Universe.Ontology` è X. `tensorIndexAssoc` è l'associatività degli indici.
+`tensorIndex_assoc_qubit` è quel passo sulle dimensioni `2` e `2`.
+`tensor_assoc` identifica le due parentesizzazioni di tre qubit.
+`tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore.
+`tensor_assoc_obs` identifica i moduli quadri delle otto celle.
 `Universe.Composition.tensorIndex` è `right * i + k`. `ground_tensor` dice che
 `|0⟩ ⊗ |0⟩` ha ampiezza `1` nella cella `0` e `0` altrove.
 `kronecker_ui_gen` è `(U ⊗ I)(|ψ⟩ ⊗ |φ⟩) = (U|ψ⟩) ⊗ |φ⟩` per ogni matrice e

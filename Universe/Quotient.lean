@@ -13,7 +13,8 @@ polinomio e ogni monomio, i coefficienti coincidono:
 
 `p = resto + f · (c² + s² − 1) + g · (nx² + ny² + nz² − 1)`.
 
-Se il resto ha tutti i coefficienti zero, `p` sta nell'ideale.
+Se il resto ha tutti i coefficienti zero, `p` sta nell'ideale. Il converso,
+per questo `reduce`, è `Universe.Dynamics.reduce_complete`.
 -/
 import Universe.Ring
 
@@ -941,6 +942,898 @@ theorem reduce_gN_rem (t : Mono) : coeffOf (reduce gN).rem t = 0 := by
 theorem reduce_gN_cofactors : (reduce gN).fc = [] ∧ (reduce gN).fn = single 1 Mono.one := by
   rw [reduce_gN_eq]
   exact ⟨rfl, rfl⟩
+
+/-! ### Divisione monica per `gC` e per `gN`
+
+`gC` è monico di grado 2 in `c`, `gN` in `nx`. Le due variabili sono disgiunte.
+`reduceC` sbuccia solo `c²`. Le fette `sliceC` e `sliceNx` isolano un esponente.
+Il resto normale di un elemento dell'ideale ha coefficienti zero: è
+`Universe.Dynamics.reduce_complete`. -/
+
+def gC0 : Poly := single 1 sSq ++ single (-1) Mono.one
+
+def gN0 : Poly := single 1 nySq ++ single 1 nzSq ++ single (-1) Mono.one
+
+theorem gC_eq_split : gC = single 1 cSq ++ gC0 := by
+  simp [gC, gC0, single]
+
+theorem gN_eq_split : gN = single 1 nxSq ++ gN0 := by
+  simp [gN, gN0, single]
+
+def cSmall (p : Poly) : Prop := ∀ t, 2 ≤ t.c → coeffOf p t = 0
+
+def nxSmall (p : Poly) : Prop := ∀ t, 2 ≤ t.nx → coeffOf p t = 0
+
+def cListSmall : Poly → Prop
+  | [] => True
+  | (a, m) :: rest => (a = 0 ∨ m.c < 2) ∧ cListSmall rest
+
+def nxListSmall : Poly → Prop
+  | [] => True
+  | (a, m) :: rest => (a = 0 ∨ m.nx < 2) ∧ nxListSmall rest
+
+def listCFree : Poly → Prop
+  | [] => True
+  | (_, m) :: rest => m.c = 0 ∧ listCFree rest
+
+def listNxFree : Poly → Prop
+  | [] => True
+  | (_, m) :: rest => m.nx = 0 ∧ listNxFree rest
+
+theorem listCFree_gC0 : listCFree gC0 := by
+  simp [listCFree, gC0, single, sSq, Mono.one]
+
+theorem listCFree_gN : listCFree gN := by
+  simp [listCFree, gN, single, nxSq, nySq, nzSq, Mono.one]
+
+theorem listNxFree_gN0 : listNxFree gN0 := by
+  simp [listNxFree, gN0, single, nySq, nzSq, Mono.one]
+
+theorem listNxFree_gC : listNxFree gC := by
+  simp [listNxFree, gC, single, cSq, sSq, Mono.one]
+
+theorem cListSmall_append {p q : Poly} (hp : cListSmall p) (hq : cListSmall q) :
+    cListSmall (p ++ q) := by
+  induction p with
+  | nil => simpa using hq
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hp with ⟨hm, hrest⟩
+      exact ⟨hm, ih hrest⟩
+
+theorem cListSmall_cSmall {p : Poly} (h : cListSmall p) : cSmall p := by
+  intro t ht
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases h with ⟨hm, hrest⟩
+      by_cases he : m = t
+      · have ha : a = 0 := by
+          cases hm with
+          | inl ha => exact ha
+          | inr hlt =>
+            have hc : m.c = t.c := congrArg Mono.c he
+            omega
+        simp [coeffOf, he, ha, Gauss.zero_add, ih hrest]
+      · simp [coeffOf, he, Gauss.zero_add, ih hrest]
+
+theorem nxListSmall_nxSmall {p : Poly} (h : nxListSmall p) : nxSmall p := by
+  intro t ht
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases h with ⟨hm, hrest⟩
+      by_cases he : m = t
+      · have ha : a = 0 := by
+          cases hm with
+          | inl ha => exact ha
+          | inr hlt =>
+            have hx : m.nx = t.nx := congrArg Mono.nx he
+            omega
+        simp [coeffOf, he, ha, Gauss.zero_add, ih hrest]
+      · simp [coeffOf, he, Gauss.zero_add, ih hrest]
+
+theorem normal_cListSmall {p : Poly} (h : normal p) : cListSmall p := by
+  induction p with
+  | nil => simp [cListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases h with ⟨hm, hrest⟩
+      refine ⟨?_, ih hrest⟩
+      cases hm with
+      | inl ha => exact Or.inl ha
+      | inr hlt => exact Or.inr hlt.1
+
+theorem normal_nxListSmall {p : Poly} (h : normal p) : nxListSmall p := by
+  induction p with
+  | nil => simp [nxListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases h with ⟨hm, hrest⟩
+      refine ⟨?_, ih hrest⟩
+      cases hm with
+      | inl ha => exact Or.inl ha
+      | inr hlt => exact Or.inr hlt.2
+
+theorem cListSmall_mulMono {a : Gauss} {m : Mono} {q : Poly}
+    (ha : a = 0 ∨ m.c < 2) (hq : listCFree q) : cListSmall (mulMono a m q) := by
+  induction q with
+  | nil => simp [mulMono, cListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      rcases hq with ⟨hn, hrest⟩
+      refine ⟨?_, ih hrest⟩
+      cases ha with
+      | inl hz => exact Or.inl (by rw [hz, Gauss.zero_mul])
+      | inr hc =>
+        have hc' : (m.mul n).c = m.c := by simp [Mono.mul, hn]
+        exact Or.inr (hc' ▸ hc)
+
+theorem cListSmall_mul {p q : Poly} (hp : cListSmall p) (hq : listCFree q) :
+    cListSmall (mul p q) := by
+  induction p with
+  | nil => simp [mul, cListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hp with ⟨hm, hrest⟩
+      simpa [mul] using cListSmall_append (cListSmall_mulMono hm hq) (ih hrest)
+
+def setC (k : Nat) (m : Mono) : Mono := {m with c := k}
+
+def setNx (k : Nat) (m : Mono) : Mono := {m with nx := k}
+
+theorem Mono.mul_right_cancel {a b c : Mono} (h : b.mul a = c.mul a) : b = c := by
+  ext
+  · have h1 := congrArg Mono.c h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.s h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.nx h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.ny h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.nz h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.ar h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.ai h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.br h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  · have h1 := congrArg Mono.bi h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+
+def sliceC (k : Nat) : Poly → Poly
+  | [] => []
+  | (a, m) :: rest => if m.c = k then (a, setC 0 m) :: sliceC k rest else sliceC k rest
+
+def sliceNx (k : Nat) : Poly → Poly
+  | [] => []
+  | (a, m) :: rest => if m.nx = k then (a, setNx 0 m) :: sliceNx k rest else sliceNx k rest
+
+def cBound : Poly → Nat
+  | [] => 0
+  | (_, m) :: rest => max m.c (cBound rest)
+
+def nxBound : Poly → Nat
+  | [] => 0
+  | (_, m) :: rest => max m.nx (nxBound rest)
+
+theorem sliceC_above {p : Poly} {k : Nat} (hk : cBound p < k) : sliceC k p = [] := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk _a m =>
+      have hmax : max m.c (cBound rest) < k := by simpa [cBound] using hk
+      have hne : m.c ≠ k := Nat.ne_of_lt (Nat.lt_of_le_of_lt (Nat.le_max_left _ _) hmax)
+      simp [sliceC, hne, ih (Nat.lt_of_le_of_lt (Nat.le_max_right _ _) hmax)]
+
+theorem sliceNx_above {p : Poly} {k : Nat} (hk : nxBound p < k) : sliceNx k p = [] := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk _a m =>
+      have hmax : max m.nx (nxBound rest) < k := by simpa [nxBound] using hk
+      have hne : m.nx ≠ k := Nat.ne_of_lt (Nat.lt_of_le_of_lt (Nat.le_max_left _ _) hmax)
+      simp [sliceNx, hne, ih (Nat.lt_of_le_of_lt (Nat.le_max_right _ _) hmax)]
+
+theorem coeff_sliceC (k : Nat) (p : Poly) (t : Mono) :
+    coeffOf (sliceC k p) t = if t.c = 0 then coeffOf p (setC k t) else 0 := by
+  induction p with
+  | nil => simp [sliceC, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [sliceC]
+      by_cases hc : m.c = k
+      · simp only [hc, ite_true, coeffOf, ih]
+        by_cases ht : t.c = 0
+        · simp only [ht, ite_true]
+          by_cases he : setC 0 m = t
+          · have hrestore : setC 0 (setC k t) = t := by
+              ext <;> simp [setC, ht]
+            have hm : m = setC k t := by
+              ext
+              · simp [setC, hc]
+              · have hs := congrArg Mono.s he; simpa [setC] using hs
+              · have hs := congrArg Mono.nx he; simpa [setC] using hs
+              · have hs := congrArg Mono.ny he; simpa [setC] using hs
+              · have hs := congrArg Mono.nz he; simpa [setC] using hs
+              · have hs := congrArg Mono.ar he; simpa [setC] using hs
+              · have hs := congrArg Mono.ai he; simpa [setC] using hs
+              · have hs := congrArg Mono.br he; simpa [setC] using hs
+              · have hs := congrArg Mono.bi he; simpa [setC] using hs
+            simp [hm, hrestore]
+          · have hm : m ≠ setC k t := by
+              intro eq
+              apply he
+              have hrestore : setC 0 (setC k t) = t := by
+                ext <;> simp [setC, ht]
+              rw [eq]; exact hrestore
+            simp [he, hm, Gauss.zero_add]
+        · have hne : setC 0 m ≠ t := by
+            intro eq
+            exact ht (Eq.symm (by simpa [setC] using congrArg Mono.c eq))
+          simp [ht, hne, Gauss.zero_add]
+      · simp only [hc, ite_false, coeffOf, ih]
+        by_cases ht : t.c = 0
+        · have hm : m ≠ setC k t := by
+            intro eq
+            exact hc (by simpa [setC] using congrArg Mono.c eq)
+          simp [ht, hm, Gauss.zero_add]
+        · simp [ht]
+
+theorem coeff_sliceNx (k : Nat) (p : Poly) (t : Mono) :
+    coeffOf (sliceNx k p) t = if t.nx = 0 then coeffOf p (setNx k t) else 0 := by
+  induction p with
+  | nil => simp [sliceNx, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [sliceNx]
+      by_cases hx : m.nx = k
+      · simp only [hx, ite_true, coeffOf, ih]
+        by_cases ht : t.nx = 0
+        · simp only [ht, ite_true]
+          by_cases he : setNx 0 m = t
+          · have hrestore : setNx 0 (setNx k t) = t := by
+              ext <;> simp [setNx, ht]
+            have hm : m = setNx k t := by
+              ext
+              · have hs := congrArg Mono.c he; simpa [setNx] using hs
+              · have hs := congrArg Mono.s he; simpa [setNx] using hs
+              · simp [setNx, hx]
+              · have hs := congrArg Mono.ny he; simpa [setNx] using hs
+              · have hs := congrArg Mono.nz he; simpa [setNx] using hs
+              · have hs := congrArg Mono.ar he; simpa [setNx] using hs
+              · have hs := congrArg Mono.ai he; simpa [setNx] using hs
+              · have hs := congrArg Mono.br he; simpa [setNx] using hs
+              · have hs := congrArg Mono.bi he; simpa [setNx] using hs
+            simp [hm, hrestore]
+          · have hm : m ≠ setNx k t := by
+              intro eq
+              apply he
+              have hrestore : setNx 0 (setNx k t) = t := by
+                ext <;> simp [setNx, ht]
+              rw [eq]; exact hrestore
+            simp [he, hm, Gauss.zero_add]
+        · have hne : setNx 0 m ≠ t := by
+            intro eq
+            exact ht (Eq.symm (by simpa [setNx] using congrArg Mono.nx eq))
+          simp [ht, hne, Gauss.zero_add]
+      · simp only [hx, ite_false, coeffOf, ih]
+        by_cases ht : t.nx = 0
+        · have hm : m ≠ setNx k t := by
+            intro eq
+            exact hx (by simpa [setNx] using congrArg Mono.nx eq)
+          simp [ht, hm, Gauss.zero_add]
+        · simp [ht]
+
+theorem coeff_via_sliceC (p : Poly) (t : Mono) :
+    coeffOf p t = coeffOf (sliceC t.c p) (setC 0 t) := by
+  rw [coeff_sliceC]
+  have h0 : (setC 0 t).c = 0 := rfl
+  simp only [h0, ite_true]
+  congr 1
+
+theorem coeff_via_sliceNx (p : Poly) (t : Mono) :
+    coeffOf p t = coeffOf (sliceNx t.nx p) (setNx 0 t) := by
+  rw [coeff_sliceNx]
+  have h0 : (setNx 0 t).nx = 0 := rfl
+  simp only [h0, ite_true]
+  congr 1
+
+theorem sliceC_append (k : Nat) (p q : Poly) :
+    sliceC k (p ++ q) = sliceC k p ++ sliceC k q := by
+  induction p with
+  | nil => simp [sliceC]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [List.cons_append, sliceC]
+      by_cases hc : m.c = k <;> simp [hc, ih]
+
+theorem sliceNx_append (k : Nat) (p q : Poly) :
+    sliceNx k (p ++ q) = sliceNx k p ++ sliceNx k q := by
+  induction p with
+  | nil => simp [sliceNx]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [List.cons_append, sliceNx]
+      by_cases hx : m.nx = k <;> simp [hx, ih]
+
+theorem mulMono_append_eq (a : Gauss) (m : Mono) (p q : Poly) :
+    mulMono a m (p ++ q) = mulMono a m p ++ mulMono a m q := by
+  induction p with
+  | nil => simp [mulMono]
+  | cons head rest ih =>
+    cases head with
+    | mk b n => simp [mulMono, ih]
+
+theorem mul_append_right_coeff (p q r : Poly) (t : Mono) :
+    coeffOf (mul p (q ++ r)) t = coeffOf (mul p q ++ mul p r) t := by
+  induction p with
+  | nil => simp [mul, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show mul ((a, m) :: rest) (q ++ r) =
+        mulMono a m (q ++ r) ++ mul rest (q ++ r) from rfl]
+      rw [mulMono_append_eq, coeffOf_append, ih]
+      rw [show mul ((a, m) :: rest) q = mulMono a m q ++ mul rest q from rfl,
+        show mul ((a, m) :: rest) r = mulMono a m r ++ mul rest r from rfl]
+      rw [coeffOf_append (mulMono a m q) (mulMono a m r),
+        coeffOf_append (mul rest q) (mul rest r),
+        coeffOf_append (mulMono a m q ++ mul rest q) (mulMono a m r ++ mul rest r),
+        coeffOf_append (mulMono a m q) (mul rest q),
+        coeffOf_append (mulMono a m r) (mul rest r)]
+      -- (A + B) + (C + D) = (A + C) + (B + D)
+      have hswap : ∀ (w x y z : Gauss), w + x + (y + z) = w + y + (x + z) := by
+        intro w x y z
+        ext <;> simp <;> grind
+      exact hswap _ _ _ _
+
+theorem factor_cSq (a : Gauss) (n m : Mono) :
+    factor a n (single (1 : Gauss) cSq) (m.mul cSq) = if n = m then a else 0 := by
+  by_cases hn : n = m
+  · rw [hn]
+    have hsub : subExp (m.mul cSq) m = some cSq := subExp_mul m cSq
+    simp [factor, hsub, single, coeffOf, Gauss.mul_one, Gauss.add_zero]
+  · cases hsub : subExp (m.mul cSq) n with
+    | none => simp [factor, hsub, hn]
+    | some k =>
+      have hmk : n.mul k = m.mul cSq := mul_subExp hsub
+      by_cases hk : k = cSq
+      · exact absurd (Mono.mul_right_cancel (by simpa [hk] using hmk)) hn
+      · have hne : cSq ≠ k := fun eq => hk eq.symm
+        simp [factor, hsub, single, coeffOf, hne, hn, Gauss.zero_add, Gauss.mul_zero]
+
+theorem factor_nxSq (a : Gauss) (n m : Mono) :
+    factor a n (single (1 : Gauss) nxSq) (m.mul nxSq) = if n = m then a else 0 := by
+  by_cases hn : n = m
+  · rw [hn]
+    have hsub : subExp (m.mul nxSq) m = some nxSq := subExp_mul m nxSq
+    simp [factor, hsub, single, coeffOf, Gauss.mul_one, Gauss.add_zero]
+  · cases hsub : subExp (m.mul nxSq) n with
+    | none => simp [factor, hsub, hn]
+    | some k =>
+      have hmk : n.mul k = m.mul nxSq := mul_subExp hsub
+      by_cases hk : k = nxSq
+      · exact absurd (Mono.mul_right_cancel (by simpa [hk] using hmk)) hn
+      · have hne : nxSq ≠ k := fun eq => hk eq.symm
+        simp [factor, hsub, single, coeffOf, hne, hn, Gauss.zero_add, Gauss.mul_zero]
+
+theorem coeff_mul_cSq_shift (f : Poly) (m : Mono) :
+    coeffOf (mul f (single (1 : Gauss) cSq)) (m.mul cSq) = coeffOf f m := by
+  induction f with
+  | nil => simp [mul, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a n =>
+      rw [show mul ((a, n) :: rest) (single (1 : Gauss) cSq) =
+        mulMono a n (single (1 : Gauss) cSq) ++ mul rest (single (1 : Gauss) cSq) from rfl]
+      rw [coeffOf_append, coeffOf_mulMono, ih, coeffOf, factor_cSq]
+
+theorem coeff_mul_nxSq_shift (f : Poly) (m : Mono) :
+    coeffOf (mul f (single (1 : Gauss) nxSq)) (m.mul nxSq) = coeffOf f m := by
+  induction f with
+  | nil => simp [mul, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a n =>
+      rw [show mul ((a, n) :: rest) (single (1 : Gauss) nxSq) =
+        mulMono a n (single (1 : Gauss) nxSq) ++ mul rest (single (1 : Gauss) nxSq) from rfl]
+      rw [coeffOf_append, coeffOf_mulMono, ih, coeffOf, factor_nxSq]
+
+theorem setC_mul_cSq (k : Nat) (t : Mono) :
+    setC (k + 2) t = (setC k t).mul cSq := by
+  ext <;> simp [setC, Mono.mul, cSq]
+
+theorem setNx_mul_nxSq (k : Nat) (t : Mono) :
+    setNx (k + 2) t = (setNx k t).mul nxSq := by
+  ext <;> simp [setNx, Mono.mul, nxSq]
+
+theorem coeff_slice_mul_cSq (k : Nat) (f : Poly) (t : Mono) :
+    coeffOf (sliceC (k + 2) (mul f (single (1 : Gauss) cSq))) t = coeffOf (sliceC k f) t := by
+  rw [coeff_sliceC, coeff_sliceC]
+  by_cases ht : t.c = 0
+  · simp only [ht, ite_true]
+    rw [setC_mul_cSq k t, coeff_mul_cSq_shift]
+  · simp [ht]
+
+theorem coeff_slice_mul_nxSq (k : Nat) (f : Poly) (t : Mono) :
+    coeffOf (sliceNx (k + 2) (mul f (single (1 : Gauss) nxSq))) t =
+      coeffOf (sliceNx k f) t := by
+  rw [coeff_sliceNx, coeff_sliceNx]
+  by_cases ht : t.nx = 0
+  · simp only [ht, ite_true]
+    rw [setNx_mul_nxSq k t, coeff_mul_nxSq_shift]
+  · simp [ht]
+
+theorem setC_mul_free {m n : Mono} (hn : n.c = 0) : setC 0 (m.mul n) = (setC 0 m).mul n := by
+  ext <;> simp [setC, Mono.mul, hn]
+
+theorem setNx_mul_free {m n : Mono} (hn : n.nx = 0) :
+    setNx 0 (m.mul n) = (setNx 0 m).mul n := by
+  ext <;> simp [setNx, Mono.mul, hn]
+
+theorem coeff_slice_mulMono_cFree (a : Gauss) (m : Mono) (q : Poly) (hq : listCFree q)
+    (k : Nat) (t : Mono) :
+    coeffOf (sliceC k (mulMono a m q)) t =
+      if m.c = k then coeffOf (mulMono a (setC 0 m) q) t else 0 := by
+  induction q with
+  | nil => simp [mulMono, sliceC, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      rcases hq with ⟨hn, hrest⟩
+      have hc : (m.mul n).c = m.c := by simp [Mono.mul, hn]
+      simp only [mulMono]
+      by_cases hk : m.c = k
+      · have hc' : (m.mul n).c = k := hc.trans hk
+        simp only [sliceC, hc', ite_true, coeffOf, ih hrest, hk, ite_true]
+        have hhead : setC 0 (m.mul n) = (setC 0 m).mul n := setC_mul_free hn
+        by_cases he : setC 0 (m.mul n) = t
+        · rw [← hhead, he]
+        · have he' : (setC 0 m).mul n ≠ t := by rw [← hhead]; exact he
+          simp [he, he', Gauss.zero_add]
+      · have hc' : (m.mul n).c ≠ k := by
+          intro eq
+          exact hk (hc.symm.trans eq)
+        simp only [sliceC, hc', ite_false, ih hrest, hk, ite_false]
+
+theorem coeff_slice_mulMono_nxFree (a : Gauss) (m : Mono) (q : Poly) (hq : listNxFree q)
+    (k : Nat) (t : Mono) :
+    coeffOf (sliceNx k (mulMono a m q)) t =
+      if m.nx = k then coeffOf (mulMono a (setNx 0 m) q) t else 0 := by
+  induction q with
+  | nil => simp [mulMono, sliceNx, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      rcases hq with ⟨hn, hrest⟩
+      have hx : (m.mul n).nx = m.nx := by simp [Mono.mul, hn]
+      simp only [mulMono]
+      by_cases hk : m.nx = k
+      · have hx' : (m.mul n).nx = k := hx.trans hk
+        simp only [sliceNx, hx', ite_true, coeffOf, ih hrest, hk, ite_true]
+        have hhead : setNx 0 (m.mul n) = (setNx 0 m).mul n := setNx_mul_free hn
+        by_cases he : setNx 0 (m.mul n) = t
+        · rw [← hhead, he]
+        · have he' : (setNx 0 m).mul n ≠ t := by rw [← hhead]; exact he
+          simp [he, he', Gauss.zero_add]
+      · have hx' : (m.mul n).nx ≠ k := by
+          intro eq
+          exact hk (hx.symm.trans eq)
+        simp only [sliceNx, hx', ite_false, ih hrest, hk, ite_false]
+
+theorem coeff_slice_mul_cFree (k : Nat) (p q : Poly) (hq : listCFree q) (t : Mono) :
+    coeffOf (sliceC k (mul p q)) t = coeffOf (mul (sliceC k p) q) t := by
+  induction p with
+  | nil => simp [mul, sliceC, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      have hmul : mul ((a, m) :: rest) q = mulMono a m q ++ mul rest q := rfl
+      rw [hmul, sliceC_append, coeffOf_append, coeff_slice_mulMono_cFree a m q hq k t, ih]
+      simp only [sliceC]
+      by_cases hk : m.c = k
+      · simp only [hk, ite_true]
+        rw [show mul ((a, setC 0 m) :: sliceC k rest) q =
+          mulMono a (setC 0 m) q ++ mul (sliceC k rest) q from rfl]
+        rw [coeffOf_append]
+      · simp only [hk, ite_false, Gauss.zero_add]
+
+theorem coeff_slice_mul_nxFree (k : Nat) (p q : Poly) (hq : listNxFree q) (t : Mono) :
+    coeffOf (sliceNx k (mul p q)) t = coeffOf (mul (sliceNx k p) q) t := by
+  induction p with
+  | nil => simp [mul, sliceNx, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      have hmul : mul ((a, m) :: rest) q = mulMono a m q ++ mul rest q := rfl
+      rw [hmul, sliceNx_append, coeffOf_append, coeff_slice_mulMono_nxFree a m q hq k t, ih]
+      simp only [sliceNx]
+      by_cases hx : m.nx = k
+      · simp only [hx, ite_true]
+        rw [show mul ((a, setNx 0 m) :: sliceNx k rest) q =
+          mulMono a (setNx 0 m) q ++ mul (sliceNx k rest) q from rfl]
+        rw [coeffOf_append]
+      · simp only [hx, ite_false, Gauss.zero_add]
+
+theorem sliceC_list_cFree (k : Nat) (p : Poly) : listCFree (sliceC k p) := by
+  induction p with
+  | nil => simp [sliceC, listCFree]
+  | cons head rest ih =>
+    cases head with
+    | mk _a m =>
+      simp only [sliceC]
+      by_cases hc : m.c = k
+      · simp only [hc, ite_true, listCFree]
+        exact ⟨rfl, ih⟩
+      · simp [hc, ih]
+
+theorem sliceNx_list_nxFree (k : Nat) (p : Poly) : listNxFree (sliceNx k p) := by
+  induction p with
+  | nil => simp [sliceNx, listNxFree]
+  | cons head rest ih =>
+    cases head with
+    | mk _a m =>
+      simp only [sliceNx]
+      by_cases hx : m.nx = k
+      · simp only [hx, ite_true, listNxFree]
+        exact ⟨rfl, ih⟩
+      · simp [hx, ih]
+
+theorem coeff_listCFree_zero {q : Poly} (hq : listCFree q) {k : Mono} (hk : k.c ≠ 0) :
+    coeffOf q k = 0 := by
+  induction q with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hq with ⟨hm, hrest⟩
+      have hne : m ≠ k := fun eq => hk (eq ▸ hm)
+      simp [coeffOf, hne, Gauss.zero_add, ih hrest]
+
+theorem coeff_listNxFree_zero {q : Poly} (hq : listNxFree q) {k : Mono} (hk : k.nx ≠ 0) :
+    coeffOf q k = 0 := by
+  induction q with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hq with ⟨hm, hrest⟩
+      have hne : m ≠ k := fun eq => hk (eq ▸ hm)
+      simp [coeffOf, hne, Gauss.zero_add, ih hrest]
+
+theorem listCFree_mul {p q : Poly} (hp : listCFree p) (hq : listCFree q) (t : Mono)
+    (ht : t.c ≠ 0) : coeffOf (mul p q) t = 0 := by
+  induction p with
+  | nil => simp [mul, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hp with ⟨hm, hrest⟩
+      rw [show mul ((a, m) :: rest) q = mulMono a m q ++ mul rest q from rfl]
+      rw [coeffOf_append, coeffOf_mulMono, ih hrest, Gauss.add_zero]
+      cases hsub : subExp t m with
+      | none => simp [factor, hsub]
+      | some k =>
+        have hk : k.c ≠ 0 := by
+          intro hk0
+          have hc : t.c = 0 := by
+            have h := congrArg Mono.c (mul_subExp hsub)
+            simp only [Mono.mul, hm, hk0] at h
+            simpa [Nat.zero_add] using h.symm
+          exact ht hc
+        simp [factor, hsub, coeff_listCFree_zero hq hk, Gauss.mul_zero]
+
+theorem listNxFree_mul {p q : Poly} (hp : listNxFree p) (hq : listNxFree q) (t : Mono)
+    (ht : t.nx ≠ 0) : coeffOf (mul p q) t = 0 := by
+  induction p with
+  | nil => simp [mul, coeffOf]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rcases hp with ⟨hm, hrest⟩
+      rw [show mul ((a, m) :: rest) q = mulMono a m q ++ mul rest q from rfl]
+      rw [coeffOf_append, coeffOf_mulMono, ih hrest, Gauss.add_zero]
+      cases hsub : subExp t m with
+      | none => simp [factor, hsub]
+      | some k =>
+        have hk : k.nx ≠ 0 := by
+          intro hk0
+          have hx : t.nx = 0 := by
+            have h := congrArg Mono.nx (mul_subExp hsub)
+            simp only [Mono.mul, hm, hk0] at h
+            simpa [Nat.zero_add] using h.symm
+          exact ht hx
+        simp [factor, hsub, coeff_listNxFree_zero hq hk, Gauss.mul_zero]
+
+theorem coeff_slice_mul_gC (k : Nat) (f : Poly) (t : Mono) :
+    coeffOf (sliceC (k + 2) (mul f gC)) t =
+      coeffOf (sliceC k f ++ mul (sliceC (k + 2) f) gC0) t := by
+  by_cases ht : t.c = 0
+  · rw [coeff_sliceC]
+    simp only [ht, ite_true]
+    rw [gC_eq_split, mul_append_right_coeff, coeffOf_append, coeffOf_append]
+    have hsq := coeff_slice_mul_cSq k f t
+    rw [coeff_sliceC] at hsq
+    simp only [ht, ite_true] at hsq
+    have hfree := coeff_slice_mul_cFree (k + 2) f gC0 listCFree_gC0 t
+    rw [coeff_sliceC] at hfree
+    simp only [ht, ite_true] at hfree
+    rw [hsq, hfree]
+  · have h1 : coeffOf (sliceC k f) t = 0 := by rw [coeff_sliceC]; simp [ht]
+    have h2 : coeffOf (mul (sliceC (k + 2) f) gC0) t = 0 :=
+      listCFree_mul (sliceC_list_cFree _ _) listCFree_gC0 t ht
+    rw [coeffOf_append, h1, h2, Gauss.zero_add, coeff_sliceC]
+    simp [ht]
+
+theorem coeff_slice_mul_gN (k : Nat) (f : Poly) (t : Mono) :
+    coeffOf (sliceNx (k + 2) (mul f gN)) t =
+      coeffOf (sliceNx k f ++ mul (sliceNx (k + 2) f) gN0) t := by
+  by_cases ht : t.nx = 0
+  · rw [coeff_sliceNx]
+    simp only [ht, ite_true]
+    rw [gN_eq_split, mul_append_right_coeff, coeffOf_append, coeffOf_append]
+    have hsq := coeff_slice_mul_nxSq k f t
+    rw [coeff_sliceNx] at hsq
+    simp only [ht, ite_true] at hsq
+    have hfree := coeff_slice_mul_nxFree (k + 2) f gN0 listNxFree_gN0 t
+    rw [coeff_sliceNx] at hfree
+    simp only [ht, ite_true] at hfree
+    rw [hsq, hfree]
+  · have h1 : coeffOf (sliceNx k f) t = 0 := by rw [coeff_sliceNx]; simp [ht]
+    have h2 : coeffOf (mul (sliceNx (k + 2) f) gN0) t = 0 :=
+      listNxFree_mul (sliceNx_list_nxFree _ _) listNxFree_gN0 t ht
+    rw [coeffOf_append, h1, h2, Gauss.zero_add, coeff_sliceNx]
+    simp [ht]
+
+/-- Sbuccia solo `c²`. -/
+def peelC : Poly → Option (Poly × Poly)
+  | [] => none
+  | (a, m) :: rest =>
+    if a = 0 then
+      match peelC rest with
+      | none => none
+      | some (rest', cof) => some ((a, m) :: rest', cof)
+    else if _h : 2 ≤ m.c then
+      let m' := shiftC m
+      some ([(a, m'), (-a, shiftS m')] ++ rest, single a m')
+    else
+      match peelC rest with
+      | none => none
+      | some (rest', cof) => some ((a, m) :: rest', cof)
+
+def cTerm (m : Mono) : Nat := 3 ^ m.c
+
+def cWeight : Poly → Nat
+  | [] => 0
+  | (a, m) :: rest => (if a = 0 then 0 else cTerm m) + cWeight rest
+
+theorem cWeight_zero_small {p : Poly} (h : cWeight p = 0) : cListSmall p := by
+  induction p with
+  | nil => simp [cListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      have hsum : (if a = 0 then 0 else cTerm m) + cWeight rest = 0 := by
+        simpa [cWeight] using h
+      have hrest : cWeight rest = 0 := by omega
+      have ha : a = 0 := by
+        by_cases hz : a = 0
+        · exact hz
+        · simp only [hz, ite_false] at hsum
+          have hpos : 0 < cTerm m := by
+            simpa [cTerm] using Nat.pow_pos (n := m.c) (by decide : 0 < 3)
+          omega
+      exact ⟨Or.inl ha, ih hrest⟩
+
+theorem peelC_none_small {p : Poly} (h : peelC p = none) : cListSmall p := by
+  induction p with
+  | nil => simp [cListSmall]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      by_cases ha : a = 0
+      · rw [peelC, ite_eq_left ha] at h
+        cases hrest : peelC rest with
+        | none => exact ⟨Or.inl ha, ih hrest⟩
+        | some val => simp [hrest] at h
+      · rw [peelC, ite_eq_right ha] at h
+        by_cases hc : 2 ≤ m.c
+        · rw [dite_eq_left hc] at h
+          simp at h
+        · rw [dite_eq_right hc] at h
+          cases hrest : peelC rest with
+          | none => exact ⟨Or.inr (Nat.lt_of_not_ge hc), ih hrest⟩
+          | some val => simp [hrest] at h
+
+theorem peelC_coeff (p : Poly) : ∀ rest cof, peelC p = some (rest, cof) → ∀ t,
+    coeffOf p t = coeffOf (rest ++ mul cof gC) t := by
+  induction p with
+  | nil =>
+    intro rest cof h t
+    simp [peelC] at h
+  | cons head tail ih =>
+    intro rest cof h t
+    cases head with
+    | mk a m =>
+      by_cases ha : a = 0
+      · rw [peelC, ite_eq_left ha] at h
+        cases htail : peelC tail with
+        | none => simp [htail] at h
+        | some val =>
+          cases val with
+          | mk rest' cof' =>
+            simp only [htail] at h
+            have hpair : ((a, m) :: rest', cof') = (rest, cof) := Option.some.inj h
+            injection hpair with hr hc
+            subst hr hc
+            simp only [coeffOf, List.cons_append, coeffOf_append, ih rest' cof' htail t]
+      · rw [peelC, ite_eq_right ha] at h
+        by_cases hc : 2 ≤ m.c
+        · rw [dite_eq_left hc] at h
+          dsimp at h
+          have hpair := Option.some.inj h
+          injection hpair with hr hcof
+          subst hr hcof
+          rw [coeffOf, coeff_head_c a m hc t]
+          exact coeffOf_rotate [(a, shiftC m), (-a, shiftS (shiftC m))] tail
+            (mul (single a (shiftC m)) gC) t
+        · rw [dite_eq_right hc] at h
+          cases htail : peelC tail with
+          | none => simp [htail] at h
+          | some val =>
+            cases val with
+            | mk rest' cof' =>
+              simp only [htail] at h
+              have hpair : ((a, m) :: rest', cof') = (rest, cof) := Option.some.inj h
+              injection hpair with hr hcof
+              subst hr hcof
+              simp only [coeffOf, List.cons_append, coeffOf_append, ih rest' cof' htail t]
+
+theorem cWeight_step (c : Nat) (hc : 2 ≤ c) : 2 * 3 ^ (c - 2) < 3 ^ c := by
+  have h9 : (3 : Nat) ^ 2 = 9 := by decide
+  have wpos : 0 < 3 ^ (c - 2) := Nat.pow_pos (by decide)
+  calc
+    2 * 3 ^ (c - 2) < 9 * 3 ^ (c - 2) :=
+      Nat.mul_lt_mul_of_pos_right (by decide : (2 : Nat) < 9) wpos
+    _ = 3 ^ c := by
+          rw [← h9, ← Nat.pow_add, Nat.add_comm 2 (c - 2), Nat.sub_add_cancel hc]
+
+theorem peelC_weight (p : Poly) : ∀ rest cof, peelC p = some (rest, cof) →
+    cWeight rest < cWeight p := by
+  induction p with
+  | nil =>
+    intro rest cof h
+    simp [peelC] at h
+  | cons head tail ih =>
+    intro rest cof h
+    cases head with
+    | mk a m =>
+      by_cases ha : a = 0
+      · rw [peelC, ite_eq_left ha] at h
+        cases htail : peelC tail with
+        | none => simp [htail] at h
+        | some val =>
+          cases val with
+          | mk rest' cof' =>
+            simp only [htail] at h
+            have hpair : ((a, m) :: rest', cof') = (rest, cof) := Option.some.inj h
+            injection hpair with hr _hc
+            subst hr
+            simpa [cWeight, ite_eq_left ha, Nat.zero_add] using ih rest' cof' htail
+      · rw [peelC, ite_eq_right ha] at h
+        by_cases hc : 2 ≤ m.c
+        · rw [dite_eq_left hc] at h
+          dsimp at h
+          have hpair := Option.some.inj h
+          injection hpair with hr _hcof
+          subst hr
+          simp only [cWeight, ite_eq_right ha, ite_eq_right (Gauss.neg_ne_zero ha), cTerm,
+            shiftC, shiftS]
+          rw [← Nat.add_assoc, ← Nat.two_mul]
+          exact Nat.add_lt_add_right (cWeight_step m.c hc) (cWeight tail)
+        · rw [dite_eq_right hc] at h
+          cases htail : peelC tail with
+          | none => simp [htail] at h
+          | some val =>
+            cases val with
+            | mk rest' cof' =>
+              simp only [htail] at h
+              have hpair : ((a, m) :: rest', cof') = (rest, cof) := Option.some.inj h
+              injection hpair with hr _hcof
+              subst hr
+              simp only [cWeight, ite_eq_right ha]
+              exact Nat.add_lt_add_left (ih rest' cof' htail) (cTerm m)
+
+structure CSplit where
+  rem : Poly
+  fc : Poly
+
+def cAssemble (s : CSplit) : Poly := s.rem ++ mul s.fc gC
+
+def pushC (s : CSplit) (cof : Poly) : CSplit := { s with fc := s.fc ++ cof }
+
+/-- Coefficiente di `mul (p ++ q) r`. -/
+theorem mul_append_left_coeff (p q r : Poly) (t : Mono) :
+    coeffOf (mul (p ++ q) r) t = coeffOf (mul p r ++ mul q r) t := by
+  induction p with
+  | nil => simp [mul]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [List.cons_append, mul, coeffOf_append, ih]
+      rw [← Gauss.add_assoc, ← coeffOf_append]
+
+theorem pushC_coeff (s : CSplit) (cof : Poly) (t : Mono) :
+    coeffOf (cAssemble (pushC s cof)) t =
+      coeffOf (cAssemble s) t + coeffOf (mul cof gC) t := by
+  simp only [pushC, cAssemble]
+  calc
+    coeffOf (s.rem ++ mul (s.fc ++ cof) gC) t
+        = coeffOf s.rem t + coeffOf (mul (s.fc ++ cof) gC) t := by rw [coeffOf_append]
+    _ = coeffOf s.rem t + coeffOf (mul s.fc gC ++ mul cof gC) t := by
+          rw [mul_append_left_coeff]
+    _ = coeffOf s.rem t + (coeffOf (mul s.fc gC) t + coeffOf (mul cof gC) t) := by
+          rw [coeffOf_append]
+    _ = (coeffOf s.rem t + coeffOf (mul s.fc gC) t) + coeffOf (mul cof gC) t := by
+          rw [Gauss.add_assoc]
+    _ = coeffOf (s.rem ++ mul s.fc gC) t + coeffOf (mul cof gC) t := by
+          rw [← coeffOf_append]
+
+def reduceCAux : Nat → Poly → CSplit
+  | 0, p => ⟨p, []⟩
+  | fuel + 1, p =>
+    match peelC p with
+    | none => ⟨p, []⟩
+    | some (rest, cof) => pushC (reduceCAux fuel rest) cof
+
+def reduceC (p : Poly) : CSplit := reduceCAux (cWeight p) p
+
+theorem reduceCAux_spec (fuel : Nat) (p : Poly) (h : cWeight p ≤ fuel) :
+    cListSmall (reduceCAux fuel p).rem ∧
+      ∀ t, coeffOf p t = coeffOf (cAssemble (reduceCAux fuel p)) t := by
+  induction fuel generalizing p with
+  | zero =>
+    have hz : cWeight p = 0 := by omega
+    refine ⟨cWeight_zero_small hz, ?_⟩
+    intro t
+    simp [reduceCAux, cAssemble, mul]
+  | succ fuel ih =>
+    cases hpeel : peelC p with
+    | none =>
+      have hred : reduceCAux (fuel + 1) p = ⟨p, []⟩ := by
+        simp [reduceCAux, hpeel]
+      rw [hred]
+      refine ⟨peelC_none_small hpeel, ?_⟩
+      intro t
+      simp [cAssemble, mul]
+    | some val =>
+      cases val with
+      | mk rest cof =>
+        have hlt : cWeight rest < cWeight p := peelC_weight p rest cof hpeel
+        have hle : cWeight rest ≤ fuel := by omega
+        have ih' := ih rest hle
+        refine ⟨?_, ?_⟩
+        · simpa [reduceCAux, hpeel, pushC] using ih'.1
+        · intro t
+          simp only [reduceCAux, hpeel]
+          rw [peelC_coeff p rest cof hpeel t, coeffOf_append, ih'.2 t]
+          exact (pushC_coeff (reduceCAux fuel rest) cof t).symm
+
+theorem reduceC_small (p : Poly) : cListSmall (reduceC p).rem :=
+  (reduceCAux_spec (cWeight p) p (Nat.le_refl _)).1
+
+theorem reduceC_sound (p : Poly) (t : Mono) :
+    coeffOf p t = coeffOf (cAssemble (reduceC p)) t :=
+  (reduceCAux_spec (cWeight p) p (Nat.le_refl _)).2 t
 
 def arSq : Mono := ⟨0, 0, 0, 0, 0, 2, 0, 0, 0⟩
 def aiSq : Mono := ⟨0, 0, 0, 0, 0, 0, 2, 0, 0⟩

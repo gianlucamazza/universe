@@ -4,7 +4,7 @@ Exact kernel of one universe: the triple `(X, Φ, Obs)`. The first world is a qu
 
 `X` is a finite-dimensional state space. `Φ` is `exp(-i φ n·σ)`, packaged as the closed form `U = c I − i s H` on the quotient `c² + s² = 1`, `|n| = 1`. `Obs` is the computational-basis measurement. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
 
-The Python package is the executable certificate. Lean 4 is the formal one. Both rewrite `c²` and `nx²` and keep the cofactors. Neither is an extraction of the other. The note that records how the identities split is [`papers/qubit.md`](papers/qubit.md).
+The Python package is the executable certificate. Lean 4 is the formal one. Both rewrite `c²` and `nx²` and keep the cofactors. Neither is an extraction of the other. The note that records how the identities split is [`papers/qubit.md`](papers/qubit.md). The monic division behind `reduce_complete` is [`researches/divisione-monica.md`](researches/divisione-monica.md). The three-qubit associativity is [`researches/associazione.md`](researches/associazione.md).
 
 ## Run
 
@@ -31,12 +31,57 @@ In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + 
 
 `c` and `s` stay indeterminates of the circle quotient. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form.
 
+The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 24.
+
+`Universe.Dynamics.reduce_complete` is the converse for this `reduce`: membership in `(gC, gN)` means every coefficient of the remainder is zero. The statement is on `coeffOf`. Cofactors are a witness, and they are not unique. The rational point is the 3-4-5 triangle on the circle, so `9/25` and `16/25` are the squares of `3/5` and `4/5`. Those coefficients show which generator pays for which identity.
+
+## Representations
+
+The two parenthesizations are one encoded state. Association and then `U` on the first factor is the same list as `U` and then association.
+
+```mermaid
+flowchart LR
+  L["tensorLeft (ψ, φ, χ)"]
+  R["tensorRight (ψ, φ, χ)"]
+  LU["tensorLeft (Uψ, φ, χ)"]
+  RU["tensorRight (Uψ, φ, χ)"]
+  L -->|tensor_assoc| R
+  L -->|tensor_assoc_ui| LU
+  R -->|tensor_assoc_ui_right| RU
+  LU -->|tensor_assoc| RU
+```
+
+`tensor_assoc_obs` equates `z · conj(z)` on each cell of the two states before `U`. The two states after `U` have the same weights because those states are equal.
+
+The cell of `|i⟩ ⊗ |j⟩ ⊗ |k⟩` is `4·i + 2·j + k`. Both constructions fill the same table. `applyUII` uses the first row of `U` on cells `0`–`3` and the second row on cells `4`–`7`.
+
+| cell | i | j | k | amplitude |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | ψ₀ φ₀ χ₀ |
+| 1 | 0 | 0 | 1 | ψ₀ φ₀ χ₁ |
+| 2 | 0 | 1 | 0 | ψ₀ φ₁ χ₀ |
+| 3 | 0 | 1 | 1 | ψ₀ φ₁ χ₁ |
+| 4 | 1 | 0 | 0 | ψ₁ φ₀ χ₀ |
+| 5 | 1 | 0 | 1 | ψ₁ φ₀ χ₁ |
+| 6 | 1 | 1 | 0 | ψ₁ φ₁ χ₀ |
+| 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
+
+The index identity of the certificate lives on the ring `(i, j, k, nb, nc)`. The amplitudes and `(U ⊗ I ⊗ I)` live on `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. The three writings `(U ⊗ I) ⊗ I`, `U ⊗ (I ⊗ I)` and `U ⊗ I₄` meet the factored state. Lean states the same identities for every polynomial. The printed detail cites `tensor_assoc`, `tensor_assoc_ui` and `tensor_assoc_obs`.
+
+On the circle, the rational point is the 3-4-5 triangle. `δ` evaluates to zero there. `9/25` and `16/25` are the squares of `3/5` and `4/5`.
+
+| reading | P(0) | P(1) |
+|---|---|---|
+| along x | 1 − s² | s² |
+| along z | 1 | 0 |
+| c = 3/5, s = 4/5, n = e_x | 9/25 | 16/25 |
+
 ## What is proved
 
 | Layer | Fact | Python | Lean |
 |---|---|---|---|
 | Ring | Gauss arithmetic, `i² = -1` | `universe.ring.Gauss` | `Universe.Ring` |
-| Ring | Quotient `c² + s² = 1`, `\|n\| = 1`, with cofactors | `reduce_witness`, driven by `Ring.set_square` | `Universe.Quotient.reduce_sound` |
+| Ring | Quotient `c² + s² = 1`, `\|n\| = 1`, with cofactors | `reduce_witness`, driven by `Ring.set_square` | `Universe.Quotient.reduce_sound`, `Universe.Dynamics.reduce_complete` |
 | Law | `exp(-i φ a) = cos φ · 1 + (-i sin φ) · a` when `a² = 1` | cited | `Universe.Series.expCoeff` |
 | Law | `H = n·σ`, with `Y = [[0, −i], [i, 0]]` | `universe.dynamics.pauli` | `Universe.Qubit.hamiltonian_pauli` |
 | Law | `H† = H` in the free ring | certificate | `Universe.Qubit.hamiltonian_dagger` |
@@ -57,7 +102,7 @@ In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + 
 | Observation | Axis x: `P(0) − (1 − s²) = gC`, `P(1) = s²`, coefficients of `gN` are zero | certificate, substituting the Born polynomials | `axis_x_born0`, `axis_x_born1`, `axis_x_gn` |
 | Observation | Axis z: the second amplitude is zero, `P(0) − 1 = gC`, coefficients of `gN` are zero | certificate, reduced `P(0) = 1` | `axis_z_born1`, `axis_z_born0`, `axis_z_gn` |
 | Observation | `c = 3/5`, `s = 4/5`, `n = e_x`: `P(0) = 9/25`, `P(1) = 16/25`, `δ` evaluates to 0 | certificate, numeric matrix | `point_prob0`, `point_prob1`, `point_unitary` |
-| Composition | Tensor index associativity | `tensor_index` | `Universe.Ontology.tensorIndexAssoc` |
+| Composition | Two parenthesizations of three qubits are the same state | `tensor_index`, amplitudes, `(U⊗I⊗I)` | `tensorIndexAssoc`, `tensor_assoc`, `tensor_assoc_ui`, `tensor_assoc_obs` |
 | Composition | `\|0⟩ ⊗ \|0⟩ = \|00⟩`, amplitude `1` in cell 0 | certificate | `Universe.Composition.ground_tensor` |
 | Composition | `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)` | certificate on `\|φ⟩ = \|0⟩`; `\|00⟩` is `α = 1`, `β = 0` | `kronecker_ui_gen`, `marginal_left_gen` |
 | Composition | `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)` | certificate on `\|ψ⟩ = \|0⟩`, same reading | `kronecker_iu_gen`, `marginal_right_gen` |

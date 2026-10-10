@@ -4,16 +4,21 @@ Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
 `Universe.Qubit.expCoeff_hamiltonian`.
 
-La ripartizione per ideali è `papers/qubit.md`. L'indice dei lemmi è il
-README. `literal_sandwich` dà al modulo letterale `‖Uψ‖²` gli stessi
-coefficienti del sandwich. Questo file, sul procedimento: riduce
+La ripartizione per ideali è `papers/qubit.md`. La completezza di
+`Universe.Quotient.reduce` è `Universe.Dynamics.reduce_complete`. Queste
+righe restano il testimone eseguibile: resto zero e ricostruzione libera.
+L'indice dei lemmi è il README. `literal_sandwich` dà al modulo letterale
+`‖Uψ‖²` gli stessi coefficienti del sandwich. Questo file, sul procedimento: riduce
 `‖Uψ‖² − ‖ψ‖²`; sulla sfera usa `certify_extra` per `‖Uψ‖² − 1`;
 sostituisce `nx`, `ny`, `nz` nei pesi di Born, gli stessi polinomi di
 `axis_x_born0` e `axis_z_born0`; moltiplica la matrice
 numerica nel punto `c = 3/5`, `s = 4/5`, `n = e_x`; confronta i polinomi
 ridotti dei marginali nel caso `|φ⟩ = |0⟩`. `|00⟩` è il caso `α = 1`,
 `β = 0`. Il fattore `‖φ‖²` e il cofattore `gA` stanno in
-`marginal_left_gen` e `marginal_left_sphere`.
+`marginal_left_gen` e `marginal_left_sphere`. La riga di associatività
+confronta gli indici sull'anello `(i, j, k, nb, nc)` e le ampiezze con
+`(U ⊗ I ⊗ I)` sull'anello `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`.
+Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
 """
 
 from __future__ import annotations
@@ -22,6 +27,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from universe.epistemology import (
+    born,
     computational_projector,
     expectation,
     marginal,
@@ -317,25 +323,69 @@ def main() -> int:
     return 0 if all(theorem.holds for theorem in theorems) else 1
 
 
+def _same_state(left: State, right: State) -> bool:
+    return left.dim == right.dim and all(
+        a == b for a, b in zip(left.amplitudes, right.amplitudes, strict=True)
+    )
+
+
 def _tensor_associativity() -> tuple[str, bool, str]:
-    """Identità libera di `tensor_index`, dunque Universe.Ontology.tensorIndexAssoc."""
+    """Due parentesizzazioni: indici, ampiezze e (U⊗I⊗I) sul primo fattore.
+
+    Gli indici citano `tensor_index` sull'anello `(i, j, k, nb, nc)`.
+    Le ampiezze citano `Universe.Composition.tensor_assoc`. L'azione sul
+    primo fattore cita `tensor_assoc_ui`. I moduli quadri citano
+    `tensor_assoc_obs`.
+    """
+    name = "(A⊗B)⊗C e A⊗(B⊗C) sono lo stesso stato"
     ring = Ring(("i", "j", "k", "nb", "nc"))
-    i, j, k, nb, nc = (ring.var(name) for name in ring.variables)
-    left = (i * nb + j) * nc + k
-    right = i * (nb * nc) + (j * nc + k)
-    defect = left - right
-    layout = _tensor_layout()
-    if defect.is_zero() and layout:
-        return (
-            "(A⊗B)⊗C e A⊗(B⊗C) hanno la stessa codifica di indici",
-            True,
-            "tensor_index; identità polinomiale, dunque Nat come tensorIndexAssoc",
-        )
-    detail = f"resto = {defect}" if not defect.is_zero() else "layout di tensor_state"
+    i, j, k, nb, nc = (ring.var(symbol) for symbol in ring.variables)
+    defect = ((i * nb + j) * nc + k) - (i * (nb * nc) + (j * nc + k))
+    if not defect.is_zero():
+        return name, False, f"resto degli indici = {defect}"
+    if not _tensor_layout():
+        return name, False, "layout di tensor_state"
+
+    factors = Ring(
+        ("u00", "u01", "u10", "u11", "a0", "a1", "b0", "b1", "c0", "c1")
+    )
+
+    def v(symbol: str):
+        return factors.var(symbol)
+
+    matrix = Operator.from_rows([[v("u00"), v("u01")], [v("u10"), v("u11")]])
+    first = State((v("a0"), v("a1")))
+    second = State((v("b0"), v("b1")))
+    third = State((v("c0"), v("c1")))
+    left = tensor_state(tensor_state(first, second), third)
+    right = tensor_state(first, tensor_state(second, third))
+    if not _same_state(left, right):
+        return name, False, "ampiezze delle due parentesizzazioni"
+    if born(left) != born(right):
+        return name, False, "moduli quadri delle due parentesizzazioni"
+
+    idle = Operator.eye(factors, 2)
+    on_left = matrix.tensor(idle).tensor(idle).apply(left)
+    on_right = matrix.tensor(idle.tensor(idle)).apply(right)
+    on_blocks = matrix.tensor(Operator.eye(factors, 4)).apply(right)
+    evolved = matrix.apply(first)
+    factored_left = tensor_state(tensor_state(evolved, second), third)
+    factored_right = tensor_state(evolved, tensor_state(second, third))
+    phi_ok = (
+        _same_state(on_left, factored_left)
+        and _same_state(on_right, factored_right)
+        and _same_state(on_blocks, factored_right)
+        and _same_state(factored_left, factored_right)
+        and born(on_left) == born(factored_right)
+    )
+    if not phi_ok:
+        return name, False, "(U⊗I⊗I) sul primo fattore"
     return (
-        "(A⊗B)⊗C e A⊗(B⊗C) hanno la stessa codifica di indici",
-        False,
-        detail,
+        name,
+        True,
+        "tensor_index su (i, j, k, nb, nc)\n"
+        "ampiezze e (U⊗I⊗I) su (u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)\n"
+        "Universe.Composition.tensor_assoc, tensor_assoc_ui, tensor_assoc_obs",
     )
 
 

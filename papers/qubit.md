@@ -6,6 +6,24 @@ Nota sul primo mondo del kernel `universe`. I nomi in corpo di testo sono lemmi 
 
 Un universo è `(X, Φ, Obs)`. `X` è lo spazio degli stati e la composizione. `Φ` è la legge. `Obs` è ciò che un osservatore interno estrae. Due descrizioni sono lo stesso universo quando un isomorfismo commuta con `Φ` e con `Obs`.
 
+Le due parentesizzazioni di tre qubit sono quell'isomorfismo. `Universe.Composition.tensor_assoc` identifica le ampiezze di `((|ψ⟩ ⊗ |φ⟩) ⊗ |χ⟩)` e di `(|ψ⟩ ⊗ (|φ⟩ ⊗ |χ⟩))`, con indice `4·i + 2·j + k`. `tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore. `tensor_assoc_obs` identifica il modulo quadro di ogni cella. L'argomento, con la tabella delle otto celle, è `researches/associazione.md`.
+
+Associazione e poi `U` sul primo fattore è la stessa lista di `U` e poi associazione.
+
+```mermaid
+flowchart LR
+  L["tensorLeft (ψ, φ, χ)"]
+  R["tensorRight (ψ, φ, χ)"]
+  LU["tensorLeft (Uψ, φ, χ)"]
+  RU["tensorRight (Uψ, φ, χ)"]
+  L -->|tensor_assoc| R
+  L -->|tensor_assoc_ui| LU
+  R -->|tensor_assoc_ui_right| RU
+  LU -->|tensor_assoc| RU
+```
+
+`tensor_assoc_obs` identifica `z · conj(z)` su ogni cella dei due stati prima di `U`. I due stati dopo `U` hanno gli stessi pesi perché quegli stati sono uguali.
+
 Il primo mondo è un qubit finito. `X = ℂ²`. L'Hamiltoniana è `H = n·σ`, con
 
 ```
@@ -44,7 +62,9 @@ c²  = (1 − s²) + gC,
 nx² = (1 − ny² − nz²) + gN.
 ```
 
-`reduce_sound` dice che, per ogni polinomio e ogni monomio, i coefficienti di `p` coincidono con quelli di `resto + f·gC + g·gN`. Se il resto ha tutti i coefficienti zero, `p` sta nell'ideale `(gC, gN)`. Il testimone esibisce l'appartenenza. La completezza di quel calcolo sull'ideale intero resta fuori da questa nota.
+`reduce_sound` dice che, per ogni polinomio e ogni monomio, i coefficienti di `p` coincidono con quelli di `resto + f·gC + g·gN`. Se il resto ha tutti i coefficienti zero, `p` sta nell'ideale `(gC, gN)`. Il testimone esibisce l'appartenenza. `Universe.Dynamics.reduce_complete` è il converso per questo `reduce`: se `p` sta nell'ideale, ogni coefficiente del resto è zero. L'enunciato è su `coeffOf`: una lista non vuota può cancellarsi. I cofattori non sono unici.
+
+`gC` è monico di grado 2 in `c`, `gN` in `nx`, e le due variabili sono disgiunte. `reduceC` sbuccia solo `c²`. Se `f · gC` non ha grado `≥ 2` in `c`, la discesa sulle fette `sliceC` a partire da `cBound` annulla ogni coefficiente di `f`. Lo stesso vale per `gN` e `sliceNx`. Un resto `normal` nell'ideale si divide in `c`, e le due discese lo azzerano. `mul_gC_low` e `mul_gN_low` stanno in `Dynamics`, perché una fetta a coefficienti zero può non essere la lista vuota. Il motore delle fette sta in `Quotient`. `reduce_gC_rem` e `reduce_gN_rem` restano il calcolo diretto. L'argomento per esteso è `researches/divisione-monica.md`. Il teorema è su `reduce` di Lean.
 
 `gA = ar² + ai² + br² + bi² − 1` è definito nello stesso file. È il terzo generatore, la sfera delle ampiezze. `reduce` lo lascia dov'è.
 
@@ -82,7 +102,15 @@ Lungo x, `axis_x_prob0` è `|c|² − (1 − s²) = gC` sull'ampiezza specializz
 
 Il certificato Python sostituisce `nx`, `ny`, `nz` nei pesi di Born già calcolati per `Φ|0⟩` e confronta le forme ridotte: lungo x, `P(0) = 1 − s²` e `P(1) = s²`; lungo z, `P(0) = 1` e `P(1) = 0`. Quel polinomio è `spec` di `groundP0` e di `groundP1`. `reduce` sbuccia ancora solo `c²` e `nx²`.
 
-Il punto `c = 3/5`, `s = 4/5`, `n = e_x` è un corollario. `point_prob0` e `point_prob1` valutano i pesi specializzati e ottengono `9/25` e `16/25`. `point_gC` e `point_gN` sono i due vincoli in `ℚ`. `point_unitary` valuta `δ` in quel punto e ottiene zero. La chiusura è `ext`, poi `simp`, poi `grind` sui razionali di Gauss. Il certificato Python moltiplica la matrice numerica e legge gli stessi valori sui moduli della prima colonna.
+Il punto `c = 3/5`, `s = 4/5`, `n = e_x` è un corollario. `point_prob0` e `point_prob1` valutano i pesi specializzati e ottengono `9/25` e `16/25`, i quadrati di `3/5` e `4/5`. `point_gC` e `point_gN` sono i due vincoli in `ℚ`. `point_unitary` valuta `δ` in quel punto e ottiene zero. La chiusura è `ext`, poi `simp`, poi `grind` sui razionali di Gauss. Il certificato Python moltiplica la matrice numerica e legge gli stessi valori sui moduli della prima colonna.
+
+| lettura | P(0) | P(1) |
+|---|---|---|
+| lungo x | 1 − s² | s² |
+| lungo z | 1 | 0 |
+| c = 3/5, s = 4/5, n = e_x | 9/25 | 16/25 |
+
+I coefficienti espongono la ripartizione delle sezioni 3 e 4: chi paga ogni identità, e con quale generatore. Il punto razionale è un corollario di quella ripartizione.
 
 ## 6. Composizione
 
@@ -102,8 +130,21 @@ Per ogni matrice 2×2 e ogni coppia di ampiezze, `kronecker_ui_gen` è
 
 Sul fattore generico `(ar + i ai, br + i bi)`, `marginal_left_sphere` e `marginal_right_sphere` tolgono il fattore `‖φ‖²` con cofattore esplicito `gA` e cofattori nulli per `gC` e `gN`. `gA` resta fuori da `reduce`.
 
-Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. Il conteggio resta 24.
+Su tre qubit, `tensorIndex_assoc_qubit` è `tensorIndexAssoc` con dimensioni `2` e `2`. `tensor_assoc` è l'uguaglianza di liste fra le due parentesizzazioni. La cella `(i, j, k)` vale `ψᵢ φⱼ χₖ` in entrambe, e l'indice è `4·i + 2·j + k`. `assoc_row` fa attraversare a una riga di `U` i due prodotti, con `pmul_assoc` e `pmul_append_left`. `applyUII` agisce sul bit alto: la prima riga di `U` sulle celle `0`–`3`, la seconda sulle celle `4`–`7`. `tensor_assoc_ui` è `(U ⊗ I ⊗ I)((ψ ⊗ φ) ⊗ χ) = ((Uψ) ⊗ φ) ⊗ χ`. `tensor_assoc_ui_right` è la stessa azione sulla parentesizzazione destra. `bornOct` applica `columnBorn` a ogni cella, e `tensor_assoc_obs` identifica i due pesi.
+
+| cella | i | j | k | ampiezza |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | ψ₀ φ₀ χ₀ |
+| 1 | 0 | 0 | 1 | ψ₀ φ₀ χ₁ |
+| 2 | 0 | 1 | 0 | ψ₀ φ₁ χ₀ |
+| 3 | 0 | 1 | 1 | ψ₀ φ₁ χ₁ |
+| 4 | 1 | 0 | 0 | ψ₁ φ₀ χ₀ |
+| 5 | 1 | 0 | 1 | ψ₁ φ₀ χ₁ |
+| 6 | 1 | 1 | 0 | ψ₁ φ₁ χ₀ |
+| 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
+
+Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. La riga di associatività usa due anelli. Gli indici stanno su `(i, j, k, nb, nc)`. Ampiezze e `(U ⊗ I ⊗ I)` stanno su `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`. Il conteggio resta 24.
 
 ## 7. Fuori da questa nota
 
-Un secondo universo fisico, il limite continuo, la meccanica classica, la completezza del calcolo dei cofattori, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
+Un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.

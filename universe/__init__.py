@@ -8,8 +8,12 @@ Un universo è una tripla (X, Φ, Obs):
 
 Due rappresentazioni sono lo stesso universo quando un isomorfismo commuta con Φ
 e con Obs. «Perfetto» vuol dire che quel diagramma commuta e che gli invarianti
-sono teoremi. Le identità polinomiali hanno resto zero nel quoziente
-c² + s² = 1, |n| = 1, e quel resto esibisce i cofattori nell'anello libero.
+sono teoremi. Le due parentesizzazioni di tre qubit sono quell'isomorfismo:
+`Universe.Composition.tensor_assoc` sulle ampiezze, `tensor_assoc_ui` per Φ sul
+primo fattore, `tensor_assoc_obs` per il modulo quadro di ogni cella.
+L'argomento è `researches/associazione.md`. Le identità polinomiali hanno resto
+zero nel quoziente c² + s² = 1, |n| = 1, e quel resto esibisce i cofattori
+nell'anello libero.
 Il collasso di exp(−i φ a) è Universe.Series.expCoeff quando a² = 1.
 L'istanza su questo qubit è Universe.Qubit.expCoeff_hamiltonian.
 
@@ -19,7 +23,10 @@ fermo. Nell'ideale (gC, gN) sta un solo difetto, δ = gC + s² gN: U†U, UU†,
 det U − 1, la norma per ampiezze arbitrarie, e P(0)+P(1)−1 su Φ|0⟩.
 Nell'ideale (gC, gN, gA) sta ψ†(U†U)ψ − 1 sullo stato generico. gA è la
 sfera delle ampiezze e resta accanto a reduce, che sbuccia solo c² e nx².
-La nota è papers/qubit.md. L'indice è il README.
+Se p sta in (gC, gN), Universe.Dynamics.reduce_complete dice che ogni
+coefficiente del resto di reduce è zero. I cofattori sono un testimone.
+La nota è papers/qubit.md. L'argomento della divisione è
+researches/divisione-monica.md. L'indice è il README.
 
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """

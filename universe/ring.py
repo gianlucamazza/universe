@@ -6,6 +6,8 @@ restituisce resto e cofattori. Nell'anello libero
 `p = resto + Σ fᵢ·(xᵢ² − sostitutoᵢ)`.
 Se il resto ha tutti i coefficienti zero, questa espansione esibisce
 l'appartenenza all'ideale generato da quelle regole.
+Il converso, per `Universe.Quotient.reduce`, è `Universe.Dynamics.reduce_complete`:
+non è un teorema su questo riduttore.
 """
 
 from __future__ import annotations

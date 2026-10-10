@@ -3,7 +3,9 @@ Dinamica del qubit sul quoziente `c² + s² = 1`, `|n| = 1`.
 
 Le matrici hanno entrate nel polinomio libero. Due entrate sono la stessa classe
 quando la differenza sta nell'ideale generato da `gC` e `gN`, con cofattori
-espliciti. `Universe.Qubit.expCoeff_hamiltonian` applica `expCoeff` a `H` su
+espliciti. `reduce_complete` è il converso di `Universe.Quotient.reduce_sound`
+per questo `reduce`: nell'ideale `(gC, gN)` ogni coefficiente del resto è zero.
+`Universe.Qubit.expCoeff_hamiltonian` applica `expCoeff` a `H` su
 `qubitDyn`: è il lemma che autorizza «U implementa Φ».
 Lo scorrimento, la distributività del prodotto e l'annullamento per lo zero
 sono lemmi su `qmul`, `qadd` e `qsmul`, fuori dagli assiomi di `Dyn`.
@@ -659,6 +661,185 @@ theorem polySame_mul_psub_left (a a' c : Poly) :
   intro t
   rw [coeff_psub, psub, pmul_append_left, ← pneg_pmul, coeffOf_append, coeff_pneg]
 
+/-! ### Completezza di `reduce` -/
+
+theorem Gauss.eq_of_sub_eq_zero {a b : Gauss} (h : a + -b = 0) : a = b := by
+  calc
+    a = a + 0 := by rw [Gauss.add_zero]
+    _ = a + (-b + b) := by rw [← Gauss.neg_add_cancel]
+    _ = (a + -b) + b := by rw [← Gauss.add_assoc]
+    _ = 0 + b := by rw [h]
+    _ = b := by rw [Gauss.zero_add]
+
+theorem coeff_mul_zero_left {p q : Poly} (h : ∀ u, coeffOf p u = 0) (t : Mono) :
+    coeffOf (pmul p q) t = 0 := by
+  have h0 : ∀ u, coeffOf p u = coeffOf ([] : Poly) u := by
+    intro u
+    rw [h u, coeffOf_nil]
+  rw [coeff_mul_congr_left h0 q t]
+  simp [Universe.Quotient.mul, coeffOf]
+
+theorem cSmall_psub {p q : Poly} (hp : cSmall p) (hq : cSmall q) : cSmall (psub p q) := by
+  intro t ht
+  rw [coeff_psub, hp t ht, hq t ht, Gauss.neg_zero, Gauss.add_zero]
+
+/-- Se `f · gC` non ha grado `≥ 2` in `c`, ogni fetta di `f` è nulla. L'induzione scende da `cBound`. -/
+theorem sliceC_of_mul_gC {f : Poly} (hf : cSmall (pmul f gC)) :
+    ∀ d, d ≤ cBound f → ∀ t, coeffOf (sliceC (cBound f - d) f) t = 0 := by
+  intro d
+  induction d using Nat.strongRecOn with
+  | ind d ih =>
+    intro hd t
+    have hL : coeffOf (sliceC ((cBound f - d) + 2) (pmul f gC)) t = 0 := by
+      rw [coeff_sliceC]
+      by_cases ht : t.c = 0
+      · simp only [ht, ite_true]
+        exact hf (setC ((cBound f - d) + 2) t) (by simp [setC])
+      · simp [ht]
+    have hmul0 : coeffOf (pmul (sliceC ((cBound f - d) + 2) f) gC0) t = 0 := by
+      by_cases h2 : 2 ≤ d
+      · have hhi : ∀ u, coeffOf (sliceC ((cBound f - d) + 2) f) u = 0 := by
+          intro u
+          have heq : cBound f - (d - 2) = (cBound f - d) + 2 := by omega
+          rw [← heq]
+          exact ih (d - 2) (by omega) (by omega) u
+        exact coeff_mul_zero_left hhi t
+      · rw [sliceC_above (by omega)]
+        rfl
+    have hrec := coeff_slice_mul_gC (cBound f - d) f t
+    rw [hL, coeffOf_append, hmul0, Gauss.add_zero] at hrec
+    exact hrec.symm
+
+theorem sliceNx_of_mul_gN {f : Poly} (hf : nxSmall (pmul f gN)) :
+    ∀ d, d ≤ nxBound f → ∀ t, coeffOf (sliceNx (nxBound f - d) f) t = 0 := by
+  intro d
+  induction d using Nat.strongRecOn with
+  | ind d ih =>
+    intro hd t
+    have hL : coeffOf (sliceNx ((nxBound f - d) + 2) (pmul f gN)) t = 0 := by
+      rw [coeff_sliceNx]
+      by_cases ht : t.nx = 0
+      · simp only [ht, ite_true]
+        exact hf (setNx ((nxBound f - d) + 2) t) (by simp [setNx])
+      · simp [ht]
+    have hmul0 : coeffOf (pmul (sliceNx ((nxBound f - d) + 2) f) gN0) t = 0 := by
+      by_cases h2 : 2 ≤ d
+      · have hhi : ∀ u, coeffOf (sliceNx ((nxBound f - d) + 2) f) u = 0 := by
+          intro u
+          have heq : nxBound f - (d - 2) = (nxBound f - d) + 2 := by omega
+          rw [← heq]
+          exact ih (d - 2) (by omega) (by omega) u
+        exact coeff_mul_zero_left hhi t
+      · rw [sliceNx_above (by omega)]
+        rfl
+    have hrec := coeff_slice_mul_gN (nxBound f - d) f t
+    rw [hL, coeffOf_append, hmul0, Gauss.add_zero] at hrec
+    exact hrec.symm
+
+theorem mul_gC_low {f : Poly} (hf : cSmall (pmul f gC)) (t : Mono) : coeffOf f t = 0 := by
+  rw [coeff_via_sliceC]
+  by_cases hc : t.c ≤ cBound f
+  · have hslice :=
+      sliceC_of_mul_gC hf (cBound f - t.c) (Nat.sub_le _ _) (setC 0 t)
+    rw [← Nat.sub_sub_self hc]
+    exact hslice
+  · rw [sliceC_above (Nat.lt_of_not_ge hc)]
+    rfl
+
+theorem mul_gN_low {f : Poly} (hf : nxSmall (pmul f gN)) (t : Mono) : coeffOf f t = 0 := by
+  rw [coeff_via_sliceNx]
+  by_cases hx : t.nx ≤ nxBound f
+  · have hslice :=
+      sliceNx_of_mul_gN hf (nxBound f - t.nx) (Nat.sub_le _ _) (setNx 0 t)
+    rw [← Nat.sub_sub_self hx]
+    exact hslice
+  · rw [sliceNx_above (Nat.lt_of_not_ge hx)]
+    rfl
+
+theorem normal_ideal_zero {r fc fn : Poly} (hr : normal r)
+    (hmem : ∀ t, coeffOf r t = coeffOf (pmul fc gC ++ pmul fn gN) t) (t : Mono) :
+    coeffOf r t = 0 := by
+  let s := reduceC fn
+  have hρ : cListSmall s.rem := reduceC_small fn
+  have hfn : ∀ u, coeffOf fn u = coeffOf (s.rem ++ pmul s.fc gC) u := by
+    intro u
+    rw [reduceC_sound fn u, cAssemble]
+  have hcomm : ∀ u, coeffOf (pmul gC gN) u = coeffOf (pmul gN gC) u :=
+    fun u => coeff_mul_comm gC gN u
+  have hfnN : ∀ u, coeffOf (pmul fn gN) u =
+      coeffOf (pmul (pmul s.fc gN) gC ++ pmul s.rem gN) u := by
+    intro u
+    calc
+      coeffOf (pmul fn gN) u
+          = coeffOf (pmul (s.rem ++ pmul s.fc gC) gN) u := by
+            rw [coeff_mul_congr_left hfn gN u]
+      _ = coeffOf (pmul s.rem gN ++ pmul (pmul s.fc gC) gN) u := by
+            rw [pmul_append_left]
+      _ = coeffOf (pmul s.rem gN) u + coeffOf (pmul (pmul s.fc gC) gN) u := by
+            rw [coeffOf_append]
+      _ = coeffOf (pmul s.rem gN) u + coeffOf (pmul s.fc (pmul gC gN)) u := by
+            rw [pmul_assoc]
+      _ = coeffOf (pmul s.rem gN) u + coeffOf (pmul s.fc (pmul gN gC)) u := by
+            rw [coeff_mul_congr_right hcomm s.fc u]
+      _ = coeffOf (pmul s.rem gN) u + coeffOf (pmul (pmul s.fc gN) gC) u := by
+            rw [← pmul_assoc]
+      _ = coeffOf (pmul (pmul s.fc gN) gC) u + coeffOf (pmul s.rem gN) u := by
+            rw [Gauss.add_comm]
+      _ = coeffOf (pmul (pmul s.fc gN) gC ++ pmul s.rem gN) u := by
+            rw [← coeffOf_append]
+  have hbig : ∀ u, coeffOf (pmul fc gC ++ pmul fn gN) u =
+      coeffOf (pmul (fc ++ pmul s.fc gN) gC ++ pmul s.rem gN) u := by
+    intro u
+    calc
+      coeffOf (pmul fc gC ++ pmul fn gN) u
+          = coeffOf (pmul fc gC) u + coeffOf (pmul fn gN) u := by rw [coeffOf_append]
+      _ = coeffOf (pmul fc gC) u +
+            coeffOf (pmul (pmul s.fc gN) gC ++ pmul s.rem gN) u := by rw [hfnN u]
+      _ = coeffOf (pmul fc gC) u +
+            (coeffOf (pmul (pmul s.fc gN) gC) u + coeffOf (pmul s.rem gN) u) := by
+            rw [coeffOf_append]
+      _ = (coeffOf (pmul fc gC) u + coeffOf (pmul (pmul s.fc gN) gC) u) +
+            coeffOf (pmul s.rem gN) u := by rw [← Gauss.add_assoc]
+      _ = coeffOf (pmul fc gC ++ pmul (pmul s.fc gN) gC) u + coeffOf (pmul s.rem gN) u := by
+            rw [← coeffOf_append]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC) u + coeffOf (pmul s.rem gN) u := by
+            rw [← pmul_append_left]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC ++ pmul s.rem gN) u := by
+            rw [← coeffOf_append]
+  have hdiff : ∀ u, coeffOf (psub r (pmul s.rem gN)) u =
+      coeffOf (pmul (fc ++ pmul s.fc gN) gC) u := by
+    intro u
+    calc
+      coeffOf (psub r (pmul s.rem gN)) u
+          = coeffOf r u + -coeffOf (pmul s.rem gN) u := by rw [coeff_psub]
+      _ = coeffOf (pmul fc gC ++ pmul fn gN) u + -coeffOf (pmul s.rem gN) u := by rw [hmem u]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC ++ pmul s.rem gN) u +
+            -coeffOf (pmul s.rem gN) u := by rw [hbig u]
+      _ = (coeffOf (pmul (fc ++ pmul s.fc gN) gC) u + coeffOf (pmul s.rem gN) u) +
+            -coeffOf (pmul s.rem gN) u := by rw [coeffOf_append]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC) u +
+            (coeffOf (pmul s.rem gN) u + -coeffOf (pmul s.rem gN) u) := by rw [Gauss.add_assoc]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC) u + 0 := by rw [Gauss.add_neg_cancel]
+      _ = coeffOf (pmul (fc ++ pmul s.fc gN) gC) u := by rw [Gauss.add_zero]
+  have hrC : cSmall r := cListSmall_cSmall (normal_cListSmall hr)
+  have hρN : cSmall (pmul s.rem gN) := cListSmall_cSmall (cListSmall_mul hρ listCFree_gN)
+  have hmulC : cSmall (pmul (fc ++ pmul s.fc gN) gC) := by
+    intro u hu
+    rw [← hdiff u]
+    exact cSmall_psub hrC hρN u hu
+  have hkill : ∀ u, coeffOf (fc ++ pmul s.fc gN) u = 0 := fun u => mul_gC_low hmulC u
+  have hzero : ∀ u, coeffOf (pmul (fc ++ pmul s.fc gN) gC) u = 0 :=
+    fun u => coeff_mul_zero_left hkill u
+  have hrρ : ∀ u, coeffOf r u = coeffOf (pmul s.rem gN) u := by
+    intro u
+    apply Gauss.eq_of_sub_eq_zero
+    rw [← coeff_psub, hdiff u, hzero u]
+  have hprodNx : nxSmall (pmul s.rem gN) := by
+    intro u hu
+    rw [← hrρ u]
+    exact nxListSmall_nxSmall (normal_nxListSmall hr) u hu
+  rw [hrρ t, coeff_mul_zero_left (fun u => mul_gN_low hprodNx u) t]
+
 theorem Gauss.sub_trans (a b c : Gauss) : a + -c = (a + -b) + (b + -c) := by
   ext <;> simp <;> grind
 
@@ -696,6 +877,45 @@ theorem polySame_dot_sub_left (a a' b b' c d : Poly) :
   polySame.trans (polySame_psub_append _ _ _ _)
     (polySame_append (polySame.symm (polySame_mul_psub_left a a' c))
       (polySame.symm (polySame_mul_psub_left b b' d)))
+
+theorem reduce_complete (p : Poly) (h : inIdeal p) (t : Mono) :
+    coeffOf (reduce p).rem t = 0 := by
+  rcases h with ⟨fc, fn, hp⟩
+  have hsplit : ∀ u, coeffOf (assemble (reduce p)) u =
+      coeffOf (reduce p).rem u +
+        coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u := by
+    intro u
+    rw [assemble, coeffOf_append, coeffOf_append, Gauss.add_assoc, ← coeffOf_append]
+  have hsum : ∀ u, coeffOf (reduce p).rem u +
+      coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u =
+      coeffOf (pmul fc gC ++ pmul fn gN) u := by
+    intro u
+    have hs := hsplit u
+    rw [← reduce_sound p u, hp u] at hs
+    exact hs.symm
+  have hmem : ∀ u, coeffOf (reduce p).rem u =
+      coeffOf (pmul (psub fc (reduce p).fc) gC ++ pmul (psub fn (reduce p).fn) gN) u := by
+    intro u
+    have hrem : coeffOf (reduce p).rem u =
+        coeffOf (pmul fc gC ++ pmul fn gN) u +
+          -coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u := by
+      calc
+        coeffOf (reduce p).rem u
+            = coeffOf (reduce p).rem u + 0 := by rw [Gauss.add_zero]
+        _ = coeffOf (reduce p).rem u +
+              (coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u +
+                -coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u) := by
+              rw [← Gauss.add_neg_cancel]
+        _ = (coeffOf (reduce p).rem u +
+              coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u) +
+              -coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u := by
+              rw [← Gauss.add_assoc]
+        _ = coeffOf (pmul fc gC ++ pmul fn gN) u +
+              -coeffOf (pmul (reduce p).fc gC ++ pmul (reduce p).fn gN) u := by
+              rw [hsum u]
+    rw [hrem, ← coeff_psub]
+    exact polySame_dot_sub_left fc (reduce p).fc fn (reduce p).fn gC gN u
+  exact normal_ideal_zero (reduce_normal p) hmem t
 
 theorem inIdeal_dot_right (a b c c' d d' : Poly) (hc : inIdeal (psub c c'))
     (hd : inIdeal (psub d d')) :
