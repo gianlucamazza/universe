@@ -12,7 +12,8 @@ L'indice dei lemmi è il README. `literal_sandwich` dà al modulo letterale
 `‖Uψ‖² − ‖ψ‖²`; sulla sfera usa `certify_extra` per `‖Uψ‖² − 1`;
 sostituisce `nx`, `ny`, `nz` nei pesi di Born, gli stessi polinomi di
 `axis_x_born0` e `axis_z_born0`; moltiplica la matrice
-numerica nel punto `c = 3/5`, `s = 4/5`, `n = e_x`; confronta i polinomi
+numerica nel punto `c = 3/5`, `s = 4/5`, `n = e_x` e, sullo stesso
+punto, i pesi delle otto celle di tre copie di `Φ|0⟩`; confronta i polinomi
 ridotti dei marginali nel caso `|φ⟩ = |0⟩`. `|00⟩` è il caso `α = 1`,
 `β = 0`. Il fattore `‖φ‖²` e il cofattore `gA` stanno in
 `marginal_left_gen` e `marginal_left_sphere`. La riga di associatività
@@ -275,12 +276,34 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     column = (matrix[0][0], matrix[1][0])
     prob0 = _modulus_sq(column[0])
     prob1 = _modulus_sq(column[1])
-    probs_ok = prob0 == Fraction(9, 25) and prob1 == Fraction(16, 25)
+    factor = world.evolve(world.ground())
+    triple_left = tensor_state(tensor_state(factor, factor), factor)
+    triple_right = tensor_state(factor, tensor_state(factor, factor))
+    cell_weights = [
+        _real_fraction(weight.evaluate(point)) for weight in born(triple_left)
+    ]
+    cell_right = [
+        _real_fraction(weight.evaluate(point)) for weight in born(triple_right)
+    ]
+    expected_cells = [
+        Fraction(9, 25) ** (3 - (index.bit_count()))
+        * Fraction(16, 25) ** index.bit_count()
+        for index in range(8)
+    ]
+    cells_ok = cell_weights == expected_cells and cell_right == expected_cells
+    cells_ok = cells_ok and sum(cell_weights) == 1
+    probs_ok = prob0 == Fraction(9, 25) and prob1 == Fraction(16, 25) and cells_ok
+    cell_detail = " ".join(
+        f"{index}:{_format_fraction(weight)}"
+        for index, weight in enumerate(cell_weights)
+    )
     add(
         "Corollario",
         "nello stesso punto, P(0) = 9/25 e P(1) = 16/25",
         probs_ok,
-        "" if probs_ok else f"P(0) = {prob0}, P(1) = {prob1}",
+        cell_detail
+        if probs_ok
+        else f"P(0) = {prob0}, P(1) = {prob1}; celle = {cell_detail}",
     )
     return proven
 
@@ -346,9 +369,7 @@ def _tensor_associativity() -> tuple[str, bool, str]:
     if not _tensor_layout():
         return name, False, "layout di tensor_state"
 
-    factors = Ring(
-        ("u00", "u01", "u10", "u11", "a0", "a1", "b0", "b1", "c0", "c1")
-    )
+    factors = Ring(("u00", "u01", "u10", "u11", "a0", "a1", "b0", "b1", "c0", "c1"))
 
     def v(symbol: str):
         return factors.var(symbol)
@@ -455,6 +476,16 @@ def _is_gauss_identity(matrix: list[list[Gauss]]) -> bool:
             if matrix[i][j] != expected:
                 return False
     return True
+
+
+def _format_fraction(value: Fraction) -> str:
+    return f"{value.numerator}/{value.denominator}"
+
+
+def _real_fraction(value: Gauss) -> Fraction:
+    if value.im != 0:
+        raise ValueError("atteso un peso reale")
+    return value.re
 
 
 def _modulus_sq(value: Gauss) -> Fraction:

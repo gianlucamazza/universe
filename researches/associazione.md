@@ -15,17 +15,7 @@ theorem tensor_assoc (ψ φ χ : Pair) :
 
 Associazione e poi `U` sul primo fattore è la stessa lista di `U` e poi associazione.
 
-```mermaid
-flowchart LR
-  L["tensorLeft (ψ, φ, χ)"]
-  R["tensorRight (ψ, φ, χ)"]
-  LU["tensorLeft (Uψ, φ, χ)"]
-  RU["tensorRight (Uψ, φ, χ)"]
-  L -->|tensor_assoc| R
-  L -->|tensor_assoc_ui| LU
-  R -->|tensor_assoc_ui_right| RU
-  LU -->|tensor_assoc| RU
-```
+![Le due parentesizzazioni e U sul primo fattore](../papers/figures/quadrato.svg)
 
 `tensor_assoc_obs` identifica `z · conj(z)` su ogni cella dei due stati prima di `U`. I due stati dopo `U` hanno gli stessi pesi perché quegli stati sono uguali.
 
@@ -45,6 +35,10 @@ L'indice di `|i⟩ ⊗ |j⟩ ⊗ |k⟩` è `4 · i + 2 · j + k`. Le celle `0` �
 | 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
 
 `applyUII` usa la prima riga di `U` sulle celle `0`–`3` e la seconda sulle celle `4`–`7`.
+
+Tre copie di `Φ|0⟩` nel punto `c = 3/5`, `s = 4/5`, `n = e_x` danno un'altezza a ogni cella. Il peso è `(9/25)` per ogni zero e `(16/25)` per ogni uno. `point_prob0` e `point_prob1` sono i fattori. Il certificato valuta il triplo tensore, sulle due parentesizzazioni, e stampa le otto frazioni. La somma è `1`. La figura è `papers/figures/celle.svg`.
+
+![Otto celle di tre copie di Φ|0⟩](../papers/figures/celle.svg)
 
 `tensorIndex_assoc_qubit` è `Universe.Ontology.tensorIndexAssoc` con dimensioni `2` e `2`. Il passo intermedio scambia `2 * i` con `i * 2`, poi cita quel teorema sui naturali.
 

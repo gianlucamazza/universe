@@ -164,8 +164,8 @@ class Operator:
             i, k = divmod(index, right)
             row: list[Poly] = []
             for column in range(left * right):
-                j, l = divmod(column, right)
-                row.append(self.rows[i][j] * other.rows[k][l])
+                j, m = divmod(column, right)
+                row.append(self.rows[i][j] * other.rows[k][m])
             rows.append(tuple(row))
         return Operator(tuple(rows))
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
+  <title>Le due parentesizzazioni e U sul primo fattore</title>
+  <desc>tensor_assoc in orizzontale, tensor_assoc_ui e tensor_assoc_ui_right in verticale. I due cammini arrivano alla stessa lista.</desc>
+  <rect width="920" height="460" fill="#faf8f4"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a1814"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .box { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.4; }
+    .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+    .name { font-size: 20px; text-anchor: middle; }
+    .lemma { font-size: 15px; text-anchor: middle; fill: #8c3a2f; }
+  </style>
+  <rect class="box" x="36" y="36" width="360" height="92" rx="2"/>
+  <rect class="box" x="524" y="36" width="360" height="92" rx="2"/>
+  <rect class="box" x="36" y="292" width="360" height="92" rx="2"/>
+  <rect class="box" x="524" y="292" width="360" height="92" rx="2"/>
+  <text class="name" x="216" y="90">tensorLeft (ψ, φ, χ)</text>
+  <text class="name" x="704" y="90">tensorRight (ψ, φ, χ)</text>
+  <text class="name" x="216" y="346">tensorLeft (Uψ, φ, χ)</text>
+  <text class="name" x="704" y="346">tensorRight (Uψ, φ, χ)</text>
+  <path class="edge" d="M 404 82 H 512"/>
+  <path class="edge" d="M 404 338 H 512"/>
+  <path class="edge" d="M 216 136 V 280"/>
+  <path class="edge" d="M 704 136 V 280"/>
+  <text class="lemma" x="460" y="70">tensor_assoc</text>
+  <text class="lemma" x="460" y="326">tensor_assoc</text>
+  <text class="lemma" x="248" y="214">tensor_assoc_ui</text>
+  <text class="lemma" x="736" y="214">tensor_assoc_ui_right</text>
+</svg>

@@ -15,6 +15,8 @@ lake build
 
 `python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 24 lines. `lake build` typechecks the library `Universe`.
 
+`./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare.
+
 ## Reading
 
 The statements separate by the generators they use.
@@ -39,17 +41,7 @@ The two parenthesizations of three qubits are the same encoded state. The square
 
 The two parenthesizations are one encoded state. Association and then `U` on the first factor is the same list as `U` and then association.
 
-```mermaid
-flowchart LR
-  L["tensorLeft (ψ, φ, χ)"]
-  R["tensorRight (ψ, φ, χ)"]
-  LU["tensorLeft (Uψ, φ, χ)"]
-  RU["tensorRight (Uψ, φ, χ)"]
-  L -->|tensor_assoc| R
-  L -->|tensor_assoc_ui| LU
-  R -->|tensor_assoc_ui_right| RU
-  LU -->|tensor_assoc| RU
-```
+![The two parenthesizations and U on the first factor](papers/figures/quadrato.svg)
 
 `tensor_assoc_obs` equates `z · conj(z)` on each cell of the two states before `U`. The two states after `U` have the same weights because those states are equal.
 
@@ -70,11 +62,28 @@ The index identity of the certificate lives on the ring `(i, j, k, nb, nc)`. The
 
 On the circle, the rational point is the 3-4-5 triangle. `δ` evaluates to zero there. `9/25` and `16/25` are the squares of `3/5` and `4/5`.
 
+![The circle and the point 3/5, 4/5](papers/figures/cerchio.svg)
+
 | reading | P(0) | P(1) |
 |---|---|---|
 | along x | 1 − s² | s² |
 | along z | 1 | 0 |
 | c = 3/5, s = 4/5, n = e_x | 9/25 | 16/25 |
+
+Three copies of that evolved `|0⟩` fill the eight cells. Each bit `0` contributes a factor `9/25`, and each bit `1` contributes `16/25`. The two parenthesizations agree, and the eight weights sum to 1. The same certificate line prints the fractions.
+
+![Eight cells of three copies of evolved ground state](papers/figures/celle.svg)
+
+| cell | bits | weight |
+|---|---|---|
+| 0 | 000 | 729/15625 |
+| 1 | 001 | 1296/15625 |
+| 2 | 010 | 1296/15625 |
+| 3 | 011 | 2304/15625 |
+| 4 | 100 | 1296/15625 |
+| 5 | 101 | 2304/15625 |
+| 6 | 110 | 2304/15625 |
+| 7 | 111 | 4096/15625 |
 
 ## What is proved
 
@@ -101,7 +110,7 @@ On the circle, the rational point is the 3-4-5 triangle. `δ` evaluates to zero 
 | Observation | On the generic state, `‖Uψ‖² − 1` in `(gC, gN, gA)` | `certify_extra` | `sphere_prob_sum`, `literal_sphere` |
 | Observation | Axis x: `P(0) − (1 − s²) = gC`, `P(1) = s²`, coefficients of `gN` are zero | certificate, substituting the Born polynomials | `axis_x_born0`, `axis_x_born1`, `axis_x_gn` |
 | Observation | Axis z: the second amplitude is zero, `P(0) − 1 = gC`, coefficients of `gN` are zero | certificate, reduced `P(0) = 1` | `axis_z_born1`, `axis_z_born0`, `axis_z_gn` |
-| Observation | `c = 3/5`, `s = 4/5`, `n = e_x`: `P(0) = 9/25`, `P(1) = 16/25`, `δ` evaluates to 0 | certificate, numeric matrix | `point_prob0`, `point_prob1`, `point_unitary` |
+| Observation | `c = 3/5`, `s = 4/5`, `n = e_x`: `P(0) = 9/25`, `P(1) = 16/25`, `δ` evaluates to 0; eight cells of `(Φ\|0⟩)⊗³` | certificate, numeric matrix and the triple tensor | `point_prob0`, `point_prob1`, `point_unitary` |
 | Composition | Two parenthesizations of three qubits are the same state | `tensor_index`, amplitudes, `(U⊗I⊗I)` | `tensorIndexAssoc`, `tensor_assoc`, `tensor_assoc_ui`, `tensor_assoc_obs` |
 | Composition | `\|0⟩ ⊗ \|0⟩ = \|00⟩`, amplitude `1` in cell 0 | certificate | `Universe.Composition.ground_tensor` |
 | Composition | `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)` | certificate on `\|φ⟩ = \|0⟩`; `\|00⟩` is `α = 1`, `β = 0` | `kronecker_ui_gen`, `marginal_left_gen` |

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
+  <title>Otto celle di tre copie di Φ|0⟩</title>
+  <desc>Pesi nel punto c = 3/5, s = 4/5, n = e_x. L'altezza è proporzionale al numeratore su 15625. La somma è 1.</desc>
+  <rect width="920" height="460" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .bar { fill: #1a1814; }
+    .base { stroke: #1a1814; stroke-width: 1.4; }
+    .title { font-size: 20px; }
+    .frac { font-size: 13px; text-anchor: middle; }
+    .bit { font-size: 16px; text-anchor: middle; }
+  </style>
+  <text class="title" x="36" y="40">(Φ|0⟩)⊗³ nel punto c = 3/5, s = 4/5, n = e_x</text>
+  <line class="base" x1="36" y1="320" x2="884" y2="320"/>
+  <rect class="bar" x="52" y="280.85" width="64" height="39.15"/>
+  <rect class="bar" x="156" y="250.39" width="64" height="69.61"/>
+  <rect class="bar" x="260" y="250.39" width="64" height="69.61"/>
+  <rect class="bar" x="364" y="196.25" width="64" height="123.75"/>
+  <rect class="bar" x="468" y="250.39" width="64" height="69.61"/>
+  <rect class="bar" x="572" y="196.25" width="64" height="123.75"/>
+  <rect class="bar" x="676" y="196.25" width="64" height="123.75"/>
+  <rect class="bar" x="780" y="100" width="64" height="220"/>
+  <text class="frac" x="84" y="272">729</text>
+  <text class="frac" x="188" y="242">1296</text>
+  <text class="frac" x="292" y="242">1296</text>
+  <text class="frac" x="396" y="188">2304</text>
+  <text class="frac" x="500" y="242">1296</text>
+  <text class="frac" x="604" y="188">2304</text>
+  <text class="frac" x="708" y="188">2304</text>
+  <text class="frac" x="812" y="92">4096</text>
+  <text class="bit" x="84" y="348">000</text>
+  <text class="bit" x="188" y="348">001</text>
+  <text class="bit" x="292" y="348">010</text>
+  <text class="bit" x="396" y="348">011</text>
+  <text class="bit" x="500" y="348">100</text>
+  <text class="bit" x="604" y="348">101</text>
+  <text class="bit" x="708" y="348">110</text>
+  <text class="bit" x="812" y="348">111</text>
+  <text class="bit" x="84" y="372">0</text>
+  <text class="bit" x="188" y="372">1</text>
+  <text class="bit" x="292" y="372">2</text>
+  <text class="bit" x="396" y="372">3</text>
+  <text class="bit" x="500" y="372">4</text>
+  <text class="bit" x="604" y="372">5</text>
+  <text class="bit" x="708" y="372">6</text>
+  <text class="bit" x="812" y="372">7</text>
+  <text class="title" x="36" y="420">denominatore 15625, somma 1</text>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 680" role="img">
+  <title>Il cerchio c² + s² = 1 e il punto 3/5, 4/5</title>
+  <desc>Triangolo 3-4-5 sul cerchio. I pesi di Born sono i quadrati dei cateti: 9/25 e 16/25.</desc>
+  <rect width="820" height="680" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .axis { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .circle { fill: none; stroke: #1a1814; stroke-width: 1.6; }
+    .leg { stroke: #8c3a2f; stroke-width: 1.8; fill: none; }
+    .point { fill: #8c3a2f; }
+    .bar { fill: #1a1814; }
+    .label { font-size: 20px; }
+    .small { font-size: 16px; }
+  </style>
+  <text class="label" x="40" y="42">c² + s² = 1</text>
+  <line class="axis" x1="40" y1="440" x2="470" y2="440"/>
+  <line class="axis" x1="240" y1="640" x2="240" y2="200"/>
+  <polygon points="470,440 458,434 458,446" fill="#1a1814"/>
+  <polygon points="240,200 234,212 246,212" fill="#1a1814"/>
+  <circle class="circle" cx="240" cy="440" r="200"/>
+  <path class="leg" d="M 240 440 H 360 V 280"/>
+  <path class="circle" d="M 348 440 V 428 H 360" stroke="#8c3a2f" stroke-width="1.4"/>
+  <circle class="point" cx="360" cy="280" r="5"/>
+  <text class="label" x="478" y="446">c</text>
+  <text class="label" x="228" y="188">s</text>
+  <text class="small" x="280" y="464">3/5</text>
+  <text class="small" x="368" y="366">4/5</text>
+  <text class="label" x="372" y="268">(3/5, 4/5)</text>
+  <text class="small" x="560" y="78">P(0) = c²</text>
+  <text class="small" x="680" y="78">P(1) = s²</text>
+  <line class="axis" x1="540" y1="440" x2="780" y2="440"/>
+  <rect class="bar" x="575" y="350" width="52" height="90"/>
+  <rect class="bar" x="695" y="280" width="52" height="160"/>
+  <text class="small" x="572" y="340">9/25</text>
+  <text class="small" x="688" y="270">16/25</text>
+  <text class="small" x="578" y="464">P(0)</text>
+  <text class="small" x="698" y="464">P(1)</text>
+</svg>

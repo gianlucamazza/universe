@@ -10,17 +10,7 @@ Le due parentesizzazioni di tre qubit sono quell'isomorfismo. `Universe.Composit
 
 Associazione e poi `U` sul primo fattore è la stessa lista di `U` e poi associazione.
 
-```mermaid
-flowchart LR
-  L["tensorLeft (ψ, φ, χ)"]
-  R["tensorRight (ψ, φ, χ)"]
-  LU["tensorLeft (Uψ, φ, χ)"]
-  RU["tensorRight (Uψ, φ, χ)"]
-  L -->|tensor_assoc| R
-  L -->|tensor_assoc_ui| LU
-  R -->|tensor_assoc_ui_right| RU
-  LU -->|tensor_assoc| RU
-```
+![Le due parentesizzazioni e U sul primo fattore](figures/quadrato.svg)
 
 `tensor_assoc_obs` identifica `z · conj(z)` su ogni cella dei due stati prima di `U`. I due stati dopo `U` hanno gli stessi pesi perché quegli stati sono uguali.
 
@@ -110,6 +100,8 @@ Il punto `c = 3/5`, `s = 4/5`, `n = e_x` è un corollario. `point_prob0` e `poin
 | lungo z | 1 | 0 |
 | c = 3/5, s = 4/5, n = e_x | 9/25 | 16/25 |
 
+![Il cerchio e il punto 3/5, 4/5](figures/cerchio.svg)
+
 I coefficienti espongono la ripartizione delle sezioni 3 e 4: chi paga ogni identità, e con quale generatore. Il punto razionale è un corollario di quella ripartizione.
 
 ## 6. Composizione
@@ -143,7 +135,22 @@ Su tre qubit, `tensorIndex_assoc_qubit` è `tensorIndexAssoc` con dimensioni `2`
 | 6 | 1 | 1 | 0 | ψ₁ φ₁ χ₀ |
 | 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
 
-Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. La riga di associatività usa due anelli. Gli indici stanno su `(i, j, k, nb, nc)`. Ampiezze e `(U ⊗ I ⊗ I)` stanno su `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`. Il conteggio resta 24.
+Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. La riga di associatività usa due anelli. Gli indici stanno su `(i, j, k, nb, nc)`. Ampiezze e `(U ⊗ I ⊗ I)` stanno su `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
+
+Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = e_x`, riempiono le otto celle. Il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`. Le due parentesizzazioni danno gli stessi pesi e la somma è `1`. È la stessa riga del punto razionale: Lean ha `point_prob0` e `point_prob1` sul singolo fattore, il certificato valuta il triplo tensore. Il conteggio resta 24.
+
+![Otto celle di tre copie di Φ|0⟩](figures/celle.svg)
+
+| cella | bit | peso |
+|---|---|---|
+| 0 | 000 | 729/15625 |
+| 1 | 001 | 1296/15625 |
+| 2 | 010 | 1296/15625 |
+| 3 | 011 | 2304/15625 |
+| 4 | 100 | 1296/15625 |
+| 5 | 101 | 2304/15625 |
+| 6 | 110 | 2304/15625 |
+| 7 | 111 | 4096/15625 |
 
 ## 7. Fuori da questa nota
 
