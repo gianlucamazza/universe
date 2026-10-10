@@ -1,8 +1,13 @@
 """Epistemologia: che cosa un osservatore interno può estrarre.
 
 Obs, per il qubit, è la misura proiettiva nella base computazionale.
-La probabilità di un'ampiezza è il suo modulo quadro, costruito come somma
-di quadrati della parte reale e della parte immaginaria.
+La probabilità di un'ampiezza è il suo modulo quadro. Nel testo Lean il
+modulo libero è `modulus_squares`, la razionalità dei coefficienti è
+`modulus_imag_zero`, il proiettore `Π₀` è `projector_born`, la somma su
+`Φ|0⟩` è `ground_prob_sum`, e la somma sullo stato generico è
+`sphere_prob_sum`, con cofattori `gC`, `gN` e `gA`. `literal_sandwich`
+identifica quel sandwich con il modulo letterale `‖Uψ‖²`. Gli assi e il punto
+razionale sono nella stessa libreria. La nota è `papers/qubit.md`.
 """
 
 from __future__ import annotations

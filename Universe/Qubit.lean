@@ -6,7 +6,7 @@ Istanza di `Universe.Series.expCoeff` sull'Hamiltoniana del qubit.
 `HQ * HQ = 1` è l'ipotesi di `expCoeff`: i coefficienti di `φⁿ/n!` in
 `exp(−i φ H)` sono quelli di `cos φ · I + (−i sin φ) · H`.
 `U = c I − i s H`. `U†U`, `UU†` e `det U − 1` hanno gli stessi cofattori
-`gC + s² gN`. Per ogni ampiezza, `‖Uψ‖² − ‖ψ‖²` sta in quell'ideale.
+`gC + s² gN`. Per ogni ampiezza, `ψ† (U†U) ψ − ‖ψ‖²` sta in quell'ideale.
 -/
 import Universe.Dynamics
 import Universe.Series
@@ -902,7 +902,7 @@ theorem sandwich_scalar (μ : Poly) (M : Mat) (α β : Poly) (h00 : polySame M.a
   intro t
   rw [sandwich, normAmp, coeffOf_append, left t, right t, ← coeffOf_append, ← coeff_mul_append_right]
 
-/-- `‖Uψ‖² − ‖ψ‖²` sta nell'ideale, per ogni ampiezza `α, β`. -/
+/-- `ψ† (U†U) ψ − ‖ψ‖²` sta nell'ideale, per ogni ampiezza `α, β`. -/
 theorem evolution_norm (α β : Poly) :
     inIdeal (psub (sandwich (matMul (matDagger evolution) evolution) α β) (normAmp α β)) := by
   have hsand := sandwich_scalar scalarμ (matMul (matDagger evolution) evolution) α β

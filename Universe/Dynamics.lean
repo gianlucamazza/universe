@@ -5,6 +5,8 @@ Le matrici hanno entrate nel polinomio libero. Due entrate sono la stessa classe
 quando la differenza sta nell'ideale generato da `gC` e `gN`, con cofattori
 espliciti. `Universe.Qubit.expCoeff_hamiltonian` applica `expCoeff` a `H` su
 `qubitDyn`: è il lemma che autorizza «U implementa Φ».
+Lo scorrimento, la distributività del prodotto e l'annullamento per lo zero
+sono lemmi su `qmul`, `qadd` e `qsmul`, fuori dagli assiomi di `Dyn`.
 -/
 import Universe.Quotient
 import Universe.Series

@@ -1,9 +1,19 @@
-"""Teoremi del primo universo.
+"""Certificato eseguibile del primo universo. Stampa 24 righe.
 
-Ogni identità algebrica è un resto zero nel quoziente delle regole dichiarate.
-Il resto zero vale quando l'espansione libera dei cofattori ridà il polinomio.
-Il collasso della serie è Universe.Qubit.expCoeff_hamiltonian: H² = I nel
-quoziente, quindi expCoeff si applica a H.
+Una riga è dimostrata quando il resto è zero e l'espansione libera dei
+cofattori ridà il polinomio. Il collasso della serie, nel footer, è
+`Universe.Qubit.expCoeff_hamiltonian`.
+
+La ripartizione per ideali è `papers/qubit.md`. L'indice dei lemmi è il
+README. `literal_sandwich` dà al modulo letterale `‖Uψ‖²` gli stessi
+coefficienti del sandwich. Questo file, sul procedimento: riduce
+`‖Uψ‖² − ‖ψ‖²`; sulla sfera usa `certify_extra` per `‖Uψ‖² − 1`;
+sostituisce `nx`, `ny`, `nz` nei pesi di Born, gli stessi polinomi di
+`axis_x_born0` e `axis_z_born0`; moltiplica la matrice
+numerica nel punto `c = 3/5`, `s = 4/5`, `n = e_x`; confronta i polinomi
+ridotti dei marginali nel caso `|φ⟩ = |0⟩`. `|00⟩` è il caso `α = 1`,
+`β = 0`. Il fattore `‖φ‖²` e il cofattore `gA` stanno in
+`marginal_left_gen` e `marginal_left_sphere`.
 """
 
 from __future__ import annotations
@@ -200,26 +210,43 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     )
     add("Composizione", "|0⟩ ⊗ |0⟩ = |00⟩", pair_ok)
 
+    psi = world.generic()
+    idle = world.ground()
     identity = Operator.eye(ring, 2)
-    local_left = world.U.tensor(identity).apply(pair)
+    evolved = world.observe(world.evolve(psi))
+    ground_evolved = world.observe(world.evolve(idle))
+    detail = "|00⟩ è il caso α = 1, β = 0"
+
+    local_left = world.U.tensor(identity).apply(tensor_state(psi, idle))
     left = marginal(local_left, 0, 2, 2)
-    single = world.observe(world.evolve(world.ground()))
-    left_ok = left[0] == single[0] and left[1] == single[1]
+    left_ground = marginal(world.U.tensor(identity).apply(pair), 0, 2, 2)
+    left_ok = (
+        left[0] == evolved[0]
+        and left[1] == evolved[1]
+        and left_ground[0] == ground_evolved[0]
+        and left_ground[1] == ground_evolved[1]
+    )
     add(
         "Composizione",
-        "(U ⊗ I)|00⟩ riproduce le probabilità del primo fattore",
+        "(U ⊗ I)(|ψ⟩ ⊗ |0⟩) riproduce le probabilità del primo fattore",
         left_ok,
-        "" if left_ok else f"P = ({left[0]}, {left[1]})",
+        detail if left_ok else f"P = ({left[0]}, {left[1]})",
     )
 
-    local_right = identity.tensor(world.U).apply(pair)
+    local_right = identity.tensor(world.U).apply(tensor_state(idle, psi))
     right = marginal(local_right, 1, 2, 2)
-    right_ok = right[0] == single[0] and right[1] == single[1]
+    right_ground = marginal(identity.tensor(world.U).apply(pair), 1, 2, 2)
+    right_ok = (
+        right[0] == evolved[0]
+        and right[1] == evolved[1]
+        and right_ground[0] == ground_evolved[0]
+        and right_ground[1] == ground_evolved[1]
+    )
     add(
         "Composizione",
-        "(I ⊗ U)|00⟩ riproduce le probabilità del secondo fattore",
+        "(I ⊗ U)(|0⟩ ⊗ |ψ⟩) riproduce le probabilità del secondo fattore",
         right_ok,
-        "" if right_ok else f"P = ({right[0]}, {right[1]})",
+        detail if right_ok else f"P = ({right[0]}, {right[1]})",
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

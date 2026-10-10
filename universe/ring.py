@@ -4,7 +4,8 @@ Ogni regola `name² = sostituto` dichiarata con `Ring.set_square` è un
 generatore. `reduce_witness` sbuccia quelle regole, in ordine di indice, e
 restituisce resto e cofattori. Nell'anello libero
 `p = resto + Σ fᵢ·(xᵢ² − sostitutoᵢ)`.
-Se il resto è zero, questa uguaglianza è l'appartenenza all'ideale.
+Se il resto ha tutti i coefficienti zero, questa espansione esibisce
+l'appartenenza all'ideale generato da quelle regole.
 """
 
 from __future__ import annotations
@@ -357,10 +358,11 @@ class Poly:
         return None
 
     def certify_extra(self, name: str, replacement: Poly) -> str | None:
-        """`None` se `self` sta nell'ideale dell'anello più `name² − replacement`.
+        """`None` quando il resto è zero e i cofattori ricostruiscono l'origine.
 
-        Il sostituto è la forma già ridotta. Il cofattore di quel generatore
-        entra nella ricostruzione libera, insieme alle regole dell'anello.
+        La regola extra è `name² − replacement`, accanto a quelle dell'anello.
+        Il sostituto è la forma già ridotta. Il resto zero esibisce
+        l'appartenenza all'ideale generato da quelle regole.
         """
         self._same(replacement)
         idx = self.ring.index(name)
@@ -488,8 +490,9 @@ def _piece(coeff: Gauss, mono: str) -> str:
 class Scalars:
     """Linguaggio scalare del primo universo.
 
-    c, s sono cos φ e sin φ, con φ = ω t / 2.
-    n = (nx, ny, nz) è l'asse dell'Hamiltoniana, di lunghezza 1.
+    c, s sono le indeterminate del quoziente c² + s² = 1.
+    Nella forma chiusa si leggono come cos φ e sin φ, con φ = ω t / 2.
+    n = (nx, ny, nz) è l'asse dell'Hamiltoniana, con nx² + ny² + nz² = 1.
     ar, ai, br, bi sono le parti reali e immaginarie di uno stato generico.
     """
 
@@ -518,7 +521,7 @@ def qubit_scalars() -> Scalars:
     ring = Ring(names)
     symbol = {name: ring.var(name) for name in names}
     one = ring.one()
-    # Orientamento della base di Gröbner: c > s, nx > ny > nz.
+    # Orientamento della riscrittura: c prima di s, nx prima di ny e di nz.
     ring.set_square("c", one - symbol["s"] ** 2)
     ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
     return Scalars(ring=ring, **symbol)

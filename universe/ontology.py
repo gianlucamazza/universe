@@ -2,7 +2,10 @@
 
 X è uno spazio di Hilbert a dimensione finita. Due sistemi si compongono con il
 prodotto tensoriale. L'indice di |i⟩⊗|k⟩ è `tensor_index`, la stessa formula di
-`Universe.Ontology.tensorIndexAssoc`.
+`Universe.Composition.tensorIndex` e il passo binario di
+`Universe.Ontology.tensorIndexAssoc`. `|0⟩ ⊗ |0⟩ = |00⟩` è
+`ground_tensor`. I marginali con un fattore `|0⟩` fermo sono `marginal_ui`
+e `marginal_iu`. La nota è `papers/qubit.md`.
 """
 
 from __future__ import annotations

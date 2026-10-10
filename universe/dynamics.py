@@ -1,12 +1,14 @@
 """Dinamica del qubit: Φ = exp(−i φ n·σ).
 
-H = n·σ con le matrici di Pauli standard. Sulla varietà |n| = 1 vale H² = I,
+H = n·σ con Y = [[0, −i], [i, 0]]. Nel quoziente |n| = 1 vale H² = I,
 e la serie dell'esponenziale collassa nella forma chiusa
 
-    U = c I − i s H,    c = cos φ,  s = sin φ,  φ = ω t / 2.
+    U = c I − i s H,    φ = ω t / 2.
 
-Quel collasso è `Universe.Qubit.expCoeff_hamiltonian`: i coefficienti coincidono
-perché H² = I nel quoziente. Questo modulo costruisce la forma chiusa.
+c e s restano le indeterminate del cerchio. Nella forma chiusa si leggono
+come cos φ e sin φ. Quel collasso è `Universe.Qubit.expCoeff_hamiltonian`:
+i coefficienti coincidono perché H² = I nel quoziente. Questo modulo
+costruisce la forma chiusa.
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ def hamiltonian(scalars: Scalars) -> Operator:
 
 
 def evolution(scalars: Scalars, generator: Operator) -> Operator:
-    """Forma chiusa c I − i s H. Non è l'esponenziale simbolico: è la sua somma."""
+    """Forma chiusa c I − i s H, i coefficienti dati da expCoeff_hamiltonian."""
     eye = Operator.eye(scalars.ring, generator.n)
     minus_i = scalars.ring.constant(g(0, -1))
     return eye.scale(scalars.c) + generator.scale(minus_i * scalars.s)
