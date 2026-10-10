@@ -28,6 +28,13 @@ coefficiente del resto di reduce è zero. I cofattori sono un testimone.
 La nota è papers/qubit.md. L'argomento della divisione è
 researches/divisione-monica.md. L'indice è il README.
 
+CNOT scambia |10⟩ e |11⟩. Su |ψ⟩ ⊗ |0⟩ produce α|00⟩ + β|11⟩. Il determinante
+di un prodotto è zero nell'anello libero; nel punto razionale vale −12/25 i,
+quindi CNOT(Φ|0⟩ ⊗ |0⟩) non è un prodotto. I teoremi sono
+`Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`,
+`Universe.Observer.product_det`, `Universe.Observer.entangled_det`,
+`Universe.Observer.point_entangled` e `Universe.Observer.point_not_product`.
+
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """
 

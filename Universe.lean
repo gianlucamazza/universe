@@ -45,10 +45,15 @@ ogni coppia. `marginal_left_gen` è `‖φ‖² · P(U|ψ⟩)`. Con `|φ⟩ = |0
 è la costante `1` e si ritrova `marginal_ui`. `kronecker_iu_gen` e
 `marginal_right_gen` scambiano i fattori. Sul fattore generico il cofattore
 di `gA` è `marginal_left_sphere`.
+`Universe.Observer.applyCNOT` scambia `|10⟩` e `|11⟩`: `cnot_norm` e
+`product_det` stanno nell'anello libero, e `point_entangled` valuta il
+determinante di `CNOT(Φ|0⟩ ⊗ |0⟩)` in `−12/25 i`. `point_not_product`
+dice che quel valore non è un prodotto di due vettori di `ℚ(i)`.
 -/
 import Universe.Composition
 import Universe.Dynamics
 import Universe.Epistemology
+import Universe.Observer
 import Universe.Ontology
 import Universe.Qubit
 import Universe.Quotient

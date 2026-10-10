@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 24 righe.
+"""Certificato eseguibile del primo universo. Stampa 28 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -20,6 +20,12 @@ ridotti dei marginali nel caso `|φ⟩ = |0⟩`. `|00⟩` è il caso `α = 1`,
 confronta gli indici sull'anello `(i, j, k, nb, nc)` e le ampiezze con
 `(U ⊗ I ⊗ I)` sull'anello `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`.
 Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
+La sezione Osservatore costruisce CNOT su un anello di otto reali, il
+determinante di un prodotto su un altro anello fresco, e il determinante
+di CNOT(Φ|0⟩ ⊗ |0⟩) nel punto c = 3/5, s = 4/5, n = e_x. I nomi sono
+`Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`,
+`Universe.Observer.product_det`, `Universe.Observer.entangled_det`,
+`Universe.Observer.point_entangled` e `Universe.Observer.point_not_product`.
 """
 
 from __future__ import annotations
@@ -34,6 +40,7 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
+from universe.observer import cnot, determinant_2x2
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
 from universe.ring import ZERO_G, Gauss, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -254,6 +261,73 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "(I ⊗ U)(|0⟩ ⊗ |ψ⟩) riproduce le probabilità del secondo fattore",
         right_ok,
         detail if right_ok else f"P = ({right[0]}, {right[1]})",
+    )
+
+    # --- Osservatore: CNOT e il primo stato entangled ---
+    gate_ring = Ring(())
+    gate = cnot(gate_ring)
+    square = gate.matmul(gate)
+    eye4 = Operator.eye(gate_ring, 4)
+    add(
+        "Osservatore",
+        "CNOT² = I",
+        square.rows == eye4.rows,
+        "Universe.Observer.cnot_involutive",
+    )
+
+    quad_ring = Ring(("a0r", "a0i", "a1r", "a1i", "a2r", "a2i", "a3r", "a3i"))
+    imag = quad_ring.constant(g(0, 1))
+
+    def camp(index: int):
+        return quad_ring.var(f"a{index}r") + quad_ring.var(f"a{index}i") * imag
+
+    generic_quad = State(tuple(camp(index) for index in range(4)))
+    quad_gate = cnot(quad_ring)
+    norm_ok = norm_squared(quad_gate.apply(generic_quad)) == norm_squared(generic_quad)
+    add(
+        "Osservatore",
+        "‖CNOT v‖² = ‖v‖² su uno stato generico",
+        norm_ok,
+        "anello (a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)\nUniverse.Observer.cnot_norm",
+    )
+
+    factor_ring = Ring(("p0r", "p0i", "p1r", "p1i", "q0r", "q0i", "q1r", "q1i"))
+    factor_i = factor_ring.constant(g(0, 1))
+
+    def factor_amp(prefix: str, index: int):
+        return (
+            factor_ring.var(f"{prefix}{index}r")
+            + factor_ring.var(f"{prefix}{index}i") * factor_i
+        )
+
+    psi_factor = State((factor_amp("p", 0), factor_amp("p", 1)))
+    phi_factor = State((factor_amp("q", 0), factor_amp("q", 1)))
+    product_det_ok = determinant_2x2(tensor_state(psi_factor, phi_factor)).is_zero()
+    add(
+        "Osservatore",
+        "|ψ⟩ ⊗ |φ⟩ ha determinante zero",
+        product_det_ok,
+        "Universe.Observer.product_det, Universe.Observer.entangled_det",
+    )
+
+    rational = {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    coupled = cnot(ring).apply(tensor_state(ground, world.ground()))
+    det_point = determinant_2x2(coupled).evaluate(rational)
+    point_ok = det_point == g(0, Fraction(-12, 25))
+    add(
+        "Osservatore",
+        "nel punto razionale, det CNOT(Φ|0⟩ ⊗ |0⟩) = −12/25 i",
+        point_ok,
+        "non è un prodotto\n"
+        "Universe.Observer.point_entangled, Universe.Observer.point_not_product"
+        if point_ok
+        else f"det = {det_point}",
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

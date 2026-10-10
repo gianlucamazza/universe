@@ -13,7 +13,7 @@ python -m universe
 lake build
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 24 lines. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 28 lines. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare.
 
@@ -21,7 +21,7 @@ lake build
 
 The statements separate by the generators they use.
 
-In the free ring: `H† = H`, `|z|² = re(z)² + im(z)²` with rational coefficients, `⟨ψ|Π₀|ψ⟩ = |α|²`, `|0⟩ ⊗ |0⟩ = |00⟩`, and the Kronecker identities with an idle `|0⟩`.
+In the free ring: `H† = H`, `|z|² = re(z)² + im(z)²` with rational coefficients, `⟨ψ|Π₀|ψ⟩ = |α|²`, `|0⟩ ⊗ |0⟩ = |00⟩`, the Kronecker identities with an idle `|0⟩`, `CNOT² = I`, the sum of the four Born weights, and the vanishing of the product determinant.
 
 In the ideal `(gC, gN)`, one defect `δ = gC + s² gN`: `U†U − I`, `UU† − I`, `det U − 1`, norm preservation for arbitrary amplitudes, and `P(0) + P(1) − 1` on evolved `|0⟩`. The amplitudes of `|0⟩` are `1` and `0`.
 
@@ -33,7 +33,9 @@ In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + 
 
 `c` and `s` stay indeterminates of the circle quotient. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form.
 
-The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 24.
+`CNOT` swaps the cells `|10⟩` and `|11⟩`. It is an involution, and it preserves the sum of the four Born weights. On `|ψ⟩ ⊗ |0⟩` the image is `α|00⟩ + β|11⟩`. The determinant `a₀a₃ − a₁a₂` of every product state is the zero polynomial. At `c = 3/5`, `s = 4/5`, `n = e_x` that determinant is `−12/25 i`, so `CNOT(Φ|0⟩ ⊗ |0⟩)` is not a product.
+
+The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 28.
 
 `Universe.Dynamics.reduce_complete` is the converse for this `reduce`: membership in `(gC, gN)` means every coefficient of the remainder is zero. The statement is on `coeffOf`. Cofactors are a witness, and they are not unique. The rational point is the 3-4-5 triangle on the circle, so `9/25` and `16/25` are the squares of `3/5` and `4/5`. Those coefficients show which generator pays for which identity.
 
@@ -115,3 +117,4 @@ Three copies of that evolved `|0⟩` fill the eight cells. Each bit `0` contribu
 | Composition | `\|0⟩ ⊗ \|0⟩ = \|00⟩`, amplitude `1` in cell 0 | certificate | `Universe.Composition.ground_tensor` |
 | Composition | `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)` | certificate on `\|φ⟩ = \|0⟩`; `\|00⟩` is `α = 1`, `β = 0` | `kronecker_ui_gen`, `marginal_left_gen` |
 | Composition | `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)` | certificate on `\|ψ⟩ = \|0⟩`, same reading | `kronecker_iu_gen`, `marginal_right_gen` |
+| Composition | `CNOT² = I`, `‖CNOT v‖² = ‖v‖²`, a product has determinant zero, `CNOT(Φ\|0⟩ ⊗ \|0⟩)` has determinant `−12/25 i` | certificate | `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`, `Universe.Observer.product_det`, `Universe.Observer.point_entangled`, `Universe.Observer.point_not_product` |
