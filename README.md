@@ -24,7 +24,9 @@ lake build
 | `exp(-i φ a) = cos φ · 1 + (-i sin φ) · a` when `a² = 1` | cited | `Universe.Series.expCoeff` |
 | That instance on `H`, because `H² = I` in the quotient | `H² = I` certificate | `Universe.Qubit.expCoeff_hamiltonian` |
 | `U†U = I` | certificate | `Universe.Qubit.evolution_unitary` |
-| Amplitude sphere `ar² + ai² + br² + bi² = 1` | `Poly.certify_extra` | `gA`, `Universe.Qubit.evolved_on_sphere` |
+| `UU† = I` | certificate | `Universe.Qubit.evolution_unitary_rev` |
+| `det U − 1` with cofactors `gC + s² gN` | certificate | `Universe.Qubit.evolution_det` |
+| `‖Uψ‖² = ‖ψ‖²` for arbitrary amplitudes | certificate | `Universe.Qubit.evolution_norm` |
 | Tensor index associativity | `tensor_index` | `Universe.Ontology.tensorIndexAssoc` |
 
-`c` and `s` stay indeterminates of the circle quotient. They are not the cosine and sine series. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form.
+`c` and `s` stay indeterminates of the circle quotient. They are not the cosine and sine series. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form. `gA` is the amplitude sphere in `Universe.Quotient`. `reduce` rewrites only `c²` and `nx²`, and `gA` stays beside that rewrite. Python records the sphere with `Poly.certify_extra`.

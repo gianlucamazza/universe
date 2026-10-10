@@ -278,7 +278,7 @@ def render(theorems: list[Theorem], world: QubitUniverse) -> str:
     lines.append("")
     lines.append(f"{passed}/{len(theorems)} identità algebriche dimostrate.")
     lines.append("")
-    lines.append("Collasso della serie, teorema Universe.Series.expCoeff")
+    lines.append("Collasso della serie, teorema Universe.Qubit.expCoeff_hamiltonian")
     lines.append(f"  {ANALYTIC_PREMISE}")
     return "\n".join(lines)
 

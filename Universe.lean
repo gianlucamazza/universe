@@ -6,7 +6,8 @@ Kernel formale. Il corrispondente eseguibile sta nel pacchetto Python `universe`
 `gA`, nello stesso file, è la sfera delle ampiezze e non entra in `reduce`.
 `Universe.Series` è il collasso di `exp(-i φ a)` quando `a² = 1`.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
-`Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana.
+`Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,
+`det U − 1` e la norma per ampiezze arbitrarie, con cofattori `gC + s² · gN`.
 `Universe.Ontology` è X, la composizione dei sistemi.
 -/
 import Universe.Dynamics
