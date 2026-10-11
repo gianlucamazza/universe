@@ -80,10 +80,10 @@ theorem Mono.mul_assoc (a b c : Mono) : (a.mul b).mul c = a.mul (b.mul c) := by
   ext <;> simp [Mono.mul, Nat.add_assoc]
 
 theorem Mono.one_mul (m : Mono) : Mono.one.mul m = m := by
-  ext <;> simp [Mono.mul, Mono.one, Nat.zero_add]
+  ext <;> simp [Mono.mul, Nat.zero_add]
 
 theorem Mono.mul_one (m : Mono) : m.mul Mono.one = m := by
-  ext <;> simp [Mono.mul, Mono.one, Nat.add_zero]
+  ext <;> simp [Mono.mul, Nat.add_zero]
 
 /-! ### Operazioni libere -/
 

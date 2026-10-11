@@ -114,13 +114,13 @@ def pointBeta : Gauss := ⟨0, -pointS⟩
 theorem point_alpha :
     evalAt pointC pointS 1 0 0 (specPoly keepX evolution.a00) = pointAlpha := by
   rw [specX_a00, eval_single]
-  ext <;> simp [pointAlpha, monoVal, powR, c1, Mono.one, pointC, pointS, Gauss.re_one,
+  ext <;> simp [pointAlpha, monoVal, powR, c1, pointC, pointS, Gauss.re_one,
     Gauss.im_one] <;> grind
 
 theorem point_beta :
     evalAt pointC pointS 1 0 0 (specPoly keepX evolution.a10) = pointBeta := by
   rw [specX_a10, eval_single]
-  ext <;> simp [pointBeta, monoVal, powR, s1, Mono.one, pointC, pointS, Gauss.re_neg,
+  ext <;> simp [pointBeta, monoVal, powR, s1, pointC, pointS, Gauss.re_neg,
     Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
 
 /-- Le quattro celle di `CNOT(Φ|0⟩ ⊗ |0⟩)`, dopo `n = e_x`, valutate nel punto. -/
@@ -157,7 +157,7 @@ theorem point_entangled :
   rw [evolution_a00_bin, evolution_a10_bin, pmul_append_left, pmul_single_append,
     pmul_single_append, mulMono_single, mulMono_single, mulMono_single, mulMono_single]
   repeat rw [spec_append]
-  simp [specPoly, keepX, single, c1, s1, nx1, ny1, nz1, Mono.mul, Mono.one, evalAt,
+  simp [specPoly, keepX, single, c1, s1, nx1, ny1, nz1, Mono.mul, evalAt,
     Gauss.add_zero, monoVal, powR, pointC, pointS]
   grind
 
@@ -473,13 +473,13 @@ theorem purity_sphere :
 
 theorem eval_a00_point : evalAt pointC pointS 1 0 0 evolution.a00 = pointAlpha := by
   rw [evolution_a00_bin, eval_append, eval_single, eval_single]
-  simp [pointAlpha, monoVal, powR, c1, s1, nz1, Mono.mul, Mono.one, pointC, pointS,
+  simp [pointAlpha, monoVal, powR, c1, s1, nz1, Mono.mul, pointC, pointS,
     Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i]
   ext <;> simp <;> grind
 
 theorem eval_a10_point : evalAt pointC pointS 1 0 0 evolution.a10 = pointBeta := by
   rw [evolution_a10_bin, eval_append, eval_single, eval_single]
-  simp [pointBeta, monoVal, powR, s1, nx1, ny1, Mono.mul, Mono.one, pointC, pointS,
+  simp [pointBeta, monoVal, powR, s1, nx1, ny1, Mono.mul, pointC, pointS,
     Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i]
   ext <;> simp <;> grind
 

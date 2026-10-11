@@ -2,7 +2,8 @@
 Quoziente a due quadrati, con cofattori.
 
 Un polinomio è una lista di termini
-`coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi`.
+`coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi a2r^a2r a2i^a2i a3r^a3r a3i^a3i`.
+`a2r a2i a3r a3i` sono spettatori: `reduce` e `monoVal` non li leggono.
 `reduce` sbuccia solo `c²` e `nx²`. `gA` è il terzo generatore, la sfera delle
 ampiezze, e non entra in `reduce`.
 - `c² = (1 − s²) + (c² + s² − 1)`
@@ -33,11 +34,28 @@ structure Mono where
   ai : Nat
   br : Nat
   bi : Nat
+  a2r : Nat
+  a2i : Nat
+  a3r : Nat
+  a3i : Nat
   deriving DecidableEq, Repr
 
 namespace Mono
 
-def one : Mono := ⟨0, 0, 0, 0, 0, 0, 0, 0, 0⟩
+abbrev one : Mono where
+  c := 0
+  s := 0
+  nx := 0
+  ny := 0
+  nz := 0
+  ar := 0
+  ai := 0
+  br := 0
+  bi := 0
+  a2r := 0
+  a2i := 0
+  a3r := 0
+  a3i := 0
 
 def mul (m n : Mono) : Mono where
   c := m.c + n.c
@@ -49,47 +67,38 @@ def mul (m n : Mono) : Mono where
   ai := m.ai + n.ai
   br := m.br + n.br
   bi := m.bi + n.bi
+  a2r := m.a2r + n.a2r
+  a2i := m.a2i + n.a2i
+  a3r := m.a3r + n.a3r
+  a3i := m.a3i + n.a3i
 
 end Mono
 
 def subExp (t m : Mono) : Option Mono :=
   if _h : m.c ≤ t.c ∧ m.s ≤ t.s ∧ m.nx ≤ t.nx ∧ m.ny ≤ t.ny ∧ m.nz ≤ t.nz ∧
-      m.ar ≤ t.ar ∧ m.ai ≤ t.ai ∧ m.br ≤ t.br ∧ m.bi ≤ t.bi then
+      m.ar ≤ t.ar ∧ m.ai ≤ t.ai ∧ m.br ≤ t.br ∧ m.bi ≤ t.bi ∧
+      m.a2r ≤ t.a2r ∧ m.a2i ≤ t.a2i ∧ m.a3r ≤ t.a3r ∧ m.a3i ≤ t.a3i then
     some ⟨t.c - m.c, t.s - m.s, t.nx - m.nx, t.ny - m.ny, t.nz - m.nz,
-      t.ar - m.ar, t.ai - m.ai, t.br - m.br, t.bi - m.bi⟩
+      t.ar - m.ar, t.ai - m.ai, t.br - m.br, t.bi - m.bi,
+      t.a2r - m.a2r, t.a2i - m.a2i, t.a3r - m.a3r, t.a3i - m.a3i⟩
   else
     none
 
 theorem subExp_mul (m n : Mono) : subExp (m.mul n) m = some n := by
-  have hc : m.c ≤ m.c + n.c := Nat.le_add_right _ _
-  have hs : m.s ≤ m.s + n.s := Nat.le_add_right _ _
-  have hnx : m.nx ≤ m.nx + n.nx := Nat.le_add_right _ _
-  have hny : m.ny ≤ m.ny + n.ny := Nat.le_add_right _ _
-  have hnz : m.nz ≤ m.nz + n.nz := Nat.le_add_right _ _
-  have har : m.ar ≤ m.ar + n.ar := Nat.le_add_right _ _
-  have hai : m.ai ≤ m.ai + n.ai := Nat.le_add_right _ _
-  have hbr : m.br ≤ m.br + n.br := Nat.le_add_right _ _
-  have hbi : m.bi ≤ m.bi + n.bi := Nat.le_add_right _ _
   unfold subExp
-  rw [dite_eq_left ⟨hc, hs, hnx, hny, hnz, har, hai, hbr, hbi⟩]
-  apply congrArg some
-  ext <;> simp [Mono.mul, Nat.add_sub_cancel_left]
+  split
+  · apply congrArg some
+    ext <;> simp [Mono.mul, Nat.add_sub_cancel_left]
+  · rename_i hle
+    simp only [Mono.mul] at hle
+    omega
 
 theorem mul_subExp {t m k : Mono} (h : subExp t m = some k) : m.mul k = t := by
   unfold subExp at h
   split at h
   · rename_i hle
     cases h
-    ext
-    · exact Nat.add_sub_of_le hle.1
-    · exact Nat.add_sub_of_le hle.2.1
-    · exact Nat.add_sub_of_le hle.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.2.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.2.2.2.2.1
-    · exact Nat.add_sub_of_le hle.2.2.2.2.2.2.2.2
+    ext <;> simp only [Mono.mul] <;> omega
   · cases h
 
 abbrev Poly := List (Gauss × Mono)
@@ -172,11 +181,11 @@ theorem coeffOf_mul (p q : Poly) (t : Mono) :
 
 def single (a : Gauss) (m : Mono) : Poly := [(a, m)]
 
-def cSq : Mono := ⟨2, 0, 0, 0, 0, 0, 0, 0, 0⟩
-def sSq : Mono := ⟨0, 2, 0, 0, 0, 0, 0, 0, 0⟩
-def nxSq : Mono := ⟨0, 0, 2, 0, 0, 0, 0, 0, 0⟩
-def nySq : Mono := ⟨0, 0, 0, 2, 0, 0, 0, 0, 0⟩
-def nzSq : Mono := ⟨0, 0, 0, 0, 2, 0, 0, 0, 0⟩
+def cSq : Mono := {Mono.one with c := 2}
+def sSq : Mono := {Mono.one with s := 2}
+def nxSq : Mono := {Mono.one with nx := 2}
+def nySq : Mono := {Mono.one with ny := 2}
+def nzSq : Mono := {Mono.one with nz := 2}
 
 /-- `c² + s² − 1`. -/
 def gC : Poly := single 1 cSq ++ single 1 sSq ++ single (-1) Mono.one
@@ -191,19 +200,10 @@ def shiftNy (m : Mono) : Mono := {m with ny := m.ny + 2}
 def shiftNz (m : Mono) : Mono := {m with nz := m.nz + 2}
 
 theorem shiftC_cSq (m : Mono) (h : 2 ≤ m.c) : (shiftC m).mul cSq = m := by
-  ext
-  · simp [shiftC, Mono.mul, cSq, Nat.sub_add_cancel h]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
-  · simp [shiftC, Mono.mul, cSq]
+  ext <;> simp [shiftC, Mono.mul, cSq, Nat.sub_add_cancel h]
 
 theorem shiftC_one (m : Mono) : (shiftC m).mul Mono.one = shiftC m := by
-  ext <;> simp [shiftC, Mono.mul, Mono.one]
+  ext <;> simp [shiftC, Mono.mul]
 
 theorem shiftC_sSq (m : Mono) : (shiftC m).mul sSq = shiftS (shiftC m) := by
   ext <;> simp [shiftC, shiftS, Mono.mul, sSq]
@@ -477,19 +477,10 @@ theorem coeff_gN_other (k : Mono) (hx : k ≠ nxSq) (hy : k ≠ nySq) (hz : k �
   simp [gN, single, coeffOf, hx', hy', hz', ho', Gauss.add_zero]
 
 theorem shiftNx_nxSq (m : Mono) (h : 2 ≤ m.nx) : (shiftNx m).mul nxSq = m := by
-  ext
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq, Nat.sub_add_cancel h]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
-  · simp [shiftNx, Mono.mul, nxSq]
+  ext <;> simp [shiftNx, Mono.mul, nxSq, Nat.sub_add_cancel h]
 
 theorem shiftNx_one (m : Mono) : (shiftNx m).mul Mono.one = shiftNx m := by
-  ext <;> simp [shiftNx, Mono.mul, Mono.one]
+  ext <;> simp [shiftNx, Mono.mul]
 
 theorem shiftNx_nySq (m : Mono) : (shiftNx m).mul nySq = shiftNy (shiftNx m) := by
   ext <;> simp [shiftNx, shiftNy, Mono.mul, nySq]
@@ -1092,16 +1083,9 @@ def setC (k : Nat) (m : Mono) : Mono := {m with c := k}
 def setNx (k : Nat) (m : Mono) : Mono := {m with nx := k}
 
 theorem Mono.mul_right_cancel {a b c : Mono} (h : b.mul a = c.mul a) : b = c := by
-  ext
-  · have h1 := congrArg Mono.c h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.s h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.nx h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.ny h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.nz h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.ar h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.ai h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.br h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
-  · have h1 := congrArg Mono.bi h; simp only [Mono.mul] at h1; exact Nat.add_right_cancel h1
+  rw [Mono.ext_iff]
+  simp only [Mono.mul, Mono.mk.injEq, Nat.add_right_cancel_iff] at h
+  exact h
 
 def sliceC (k : Nat) : Poly → Poly
   | [] => []
@@ -1155,16 +1139,8 @@ theorem coeff_sliceC (k : Nat) (p : Poly) (t : Mono) :
           · have hrestore : setC 0 (setC k t) = t := by
               ext <;> simp [setC, ht]
             have hm : m = setC k t := by
-              ext
-              · simp [setC, hc]
-              · have hs := congrArg Mono.s he; simpa [setC] using hs
-              · have hs := congrArg Mono.nx he; simpa [setC] using hs
-              · have hs := congrArg Mono.ny he; simpa [setC] using hs
-              · have hs := congrArg Mono.nz he; simpa [setC] using hs
-              · have hs := congrArg Mono.ar he; simpa [setC] using hs
-              · have hs := congrArg Mono.ai he; simpa [setC] using hs
-              · have hs := congrArg Mono.br he; simpa [setC] using hs
-              · have hs := congrArg Mono.bi he; simpa [setC] using hs
+              rw [← he]
+              ext <;> simp [setC, hc]
             simp [hm, hrestore]
           · have hm : m ≠ setC k t := by
               intro eq
@@ -1201,16 +1177,8 @@ theorem coeff_sliceNx (k : Nat) (p : Poly) (t : Mono) :
           · have hrestore : setNx 0 (setNx k t) = t := by
               ext <;> simp [setNx, ht]
             have hm : m = setNx k t := by
-              ext
-              · have hs := congrArg Mono.c he; simpa [setNx] using hs
-              · have hs := congrArg Mono.s he; simpa [setNx] using hs
-              · simp [setNx, hx]
-              · have hs := congrArg Mono.ny he; simpa [setNx] using hs
-              · have hs := congrArg Mono.nz he; simpa [setNx] using hs
-              · have hs := congrArg Mono.ar he; simpa [setNx] using hs
-              · have hs := congrArg Mono.ai he; simpa [setNx] using hs
-              · have hs := congrArg Mono.br he; simpa [setNx] using hs
-              · have hs := congrArg Mono.bi he; simpa [setNx] using hs
+              rw [← he]
+              ext <;> simp [setNx, hx]
             simp [hm, hrestore]
           · have hm : m ≠ setNx k t := by
               intro eq
@@ -1835,10 +1803,10 @@ theorem reduceC_sound (p : Poly) (t : Mono) :
     coeffOf p t = coeffOf (cAssemble (reduceC p)) t :=
   (reduceCAux_spec (cWeight p) p (Nat.le_refl _)).2 t
 
-def arSq : Mono := ⟨0, 0, 0, 0, 0, 2, 0, 0, 0⟩
-def aiSq : Mono := ⟨0, 0, 0, 0, 0, 0, 2, 0, 0⟩
-def brSq : Mono := ⟨0, 0, 0, 0, 0, 0, 0, 2, 0⟩
-def biSq : Mono := ⟨0, 0, 0, 0, 0, 0, 0, 0, 2⟩
+def arSq : Mono := {Mono.one with ar := 2}
+def aiSq : Mono := {Mono.one with ai := 2}
+def brSq : Mono := {Mono.one with br := 2}
+def biSq : Mono := {Mono.one with bi := 2}
 
 /-- `ar² + ai² + br² + bi²`. -/
 def amp : Poly := single 1 arSq ++ single 1 aiSq ++ single 1 brSq ++ single 1 biSq

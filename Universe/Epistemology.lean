@@ -370,16 +370,9 @@ def genericA : Poly := single 1 ar1 ++ single Gauss.i ai1
 def genericB : Poly := single 1 br1 ++ single Gauss.i bi1
 
 theorem mono_mul_left_cancel {m a b : Mono} (h : m.mul a = m.mul b) : a = b := by
-  ext
-  · exact Nat.add_left_cancel (congrArg Mono.c h)
-  · exact Nat.add_left_cancel (congrArg Mono.s h)
-  · exact Nat.add_left_cancel (congrArg Mono.nx h)
-  · exact Nat.add_left_cancel (congrArg Mono.ny h)
-  · exact Nat.add_left_cancel (congrArg Mono.nz h)
-  · exact Nat.add_left_cancel (congrArg Mono.ar h)
-  · exact Nat.add_left_cancel (congrArg Mono.ai h)
-  · exact Nat.add_left_cancel (congrArg Mono.br h)
-  · exact Nat.add_left_cancel (congrArg Mono.bi h)
+  rw [Mono.ext_iff]
+  simp only [Mono.mul, Mono.mk.injEq, Nat.add_left_cancel_iff] at h
+  exact h
 
 theorem factor_lin (a : Gauss) (m : Mono) (c d : Gauss) (p q t : Mono) :
     factor a m (single c p ++ single d q) t =
@@ -842,20 +835,20 @@ theorem evolution_a10_bin :
 
 theorem specX_a00 : specPoly keepX evolution.a00 = single (1 : Gauss) c1 := by
   rw [evolution_a00_bin, spec_append]
-  simp [specPoly, keepX, single, c1, s1, nz1, Mono.mul, Mono.one]
+  simp [specPoly, keepX, single, c1, s1, nz1, Mono.mul]
 
 theorem specX_a10 : specPoly keepX evolution.a10 = single (-Gauss.i) s1 := by
   rw [evolution_a10_bin, spec_append]
-  simp [specPoly, keepX, single, s1, nx1, ny1, Mono.mul, Mono.one]
+  simp [specPoly, keepX, single, s1, nx1, ny1, Mono.mul]
 
 theorem specZ_a00 :
     specPoly keepZ evolution.a00 = single (1 : Gauss) c1 ++ single (-Gauss.i) s1 := by
   rw [evolution_a00_bin, spec_append]
-  simp [specPoly, keepZ, single, c1, s1, nz1, Mono.mul, Mono.one]
+  simp [specPoly, keepZ, single, c1, s1, nz1, Mono.mul]
 
 theorem specZ_a10 : specPoly keepZ evolution.a10 = [] := by
   rw [evolution_a10_bin, spec_append]
-  simp [specPoly, keepZ, single, s1, nx1, ny1, Mono.mul, Mono.one]
+  simp [specPoly, keepZ, single, s1, nx1, ny1, Mono.mul]
 
 /-- `1 − s²`. -/
 def oneMinusS : Poly := single (1 : Gauss) Mono.one ++ single (-1) sSq
@@ -1045,13 +1038,13 @@ theorem point_prob0 :
 
 theorem point_gC : evalAt pointC pointS 1 0 0 gC = 0 := by
   rw [gC, eval_append, eval_append, eval_single, eval_single, eval_single]
-  simp [monoVal, powR, cSq, sSq, Mono.one, pointC, pointS]
+  simp [monoVal, powR, cSq, sSq, pointC, pointS]
   ext <;> simp <;> grind
 
 theorem point_gN : evalAt pointC pointS 1 0 0 gN = 0 := by
   rw [gN, eval_append, eval_append, eval_append, eval_single, eval_single, eval_single,
     eval_single]
-  simp [monoVal, powR, nxSq, nySq, nzSq, Mono.one, pointC, pointS]
+  simp [monoVal, powR, nxSq, nySq, nzSq, pointC, pointS]
   ext <;> simp <;> grind
 
 theorem pmul_single_list (a : Gauss) (m : Mono) (q : Poly) :
@@ -1068,7 +1061,7 @@ theorem point_unitary : evalAt pointC pointS 1 0 0 unitaryDefect = 0 := by
   rw [unitaryDefect, eval_append, pmul_single_list, List.append_nil, gN, mulMono_append,
     mulMono_append, mulMono_append, eval_append, eval_append, eval_append, eval_mulMono_single,
     eval_mulMono_single, eval_mulMono_single, eval_mulMono_single, point_gC, Gauss.zero_add]
-  simp [monoVal, powR, Mono.mul, sSq, nxSq, nySq, nzSq, Mono.one, pointC, pointS]
+  simp [monoVal, powR, Mono.mul, sSq, nxSq, nySq, nzSq, pointC, pointS]
   ext <;> simp <;> grind
 
 end Universe.Epistemology
