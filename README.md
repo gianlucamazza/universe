@@ -65,21 +65,21 @@ lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 33 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 36 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
 
 ## Repository layout
 
-| Path              | Content                                                                                                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `proofs.py` |
-| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`  |
-| `tests/`          | unit tests of the Python side and the documentation guards                                                                                          |
-| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                |
-| `papers/figures/` | the figures, hand-written SVG                                                                                                                       |
-| `researches/`     | arguments behind single results                                                                                                                     |
-| `plans/`          | executed work plans                                                                                                                                 |
+| Path              | Content                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `proofs.py`            |
+| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`, `Symmetry` |
+| `tests/`          | unit tests of the Python side and the documentation guards                                                                                                     |
+| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                           |
+| `papers/figures/` | the figures, hand-written SVG                                                                                                                                  |
+| `researches/`     | arguments behind single results                                                                                                                                |
+| `plans/`          | executed work plans                                                                                                                                            |
 
 The README is in English. The notes in `papers/` and `researches/`, the docstrings and the certificate output are in Italian.
 
@@ -110,6 +110,8 @@ The rational point `c = 3/5`, `s = 4/5`, `n = eₓ` turns those polynomials into
 | along x                  | 1 − s² | s²    |
 | along z                  | 1      | 0     |
 | c = 3/5, s = 4/5, n = eₓ | 9/25   | 16/25 |
+
+**Energy is conserved.** `U = c I − i s H` commutes with `H` already in the free ring, since `UH` and `HU` are both `c H − i s H²` (`evolution_commutes_hamiltonian`). So `U†HU = U†UH`, and `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` lies in `(gC, gN)` for every amplitude (`energy_conserved`). At the rational point `⟨0|H|0⟩` is `0` along x and `1` along z, before and after the evolution.
 
 ## Several qubits
 
@@ -168,16 +170,17 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 
 ### Law
 
-| Fact                                                      | Python                                   | Lean                                                                                                       |
-| --------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `exp(−i φ a) = cos φ · 1 + (−i sin φ) · a` when `a² = 1`  | cited                                    | `Universe.Series.expCoeff`                                                                                 |
-| `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                   | `universe.dynamics.pauli`                | `Universe.Qubit.hamiltonian_pauli`                                                                         |
-| `H† = H` in the free ring                                 | certificate                              | `Universe.Qubit.hamiltonian_dagger`                                                                        |
-| `H² = I`, `H³ = H`, `H⁴ = I` in the quotient              | certificate                              | `Universe.Qubit.hamiltonian_sq`, `Universe.Qubit.hamiltonian_cube`, `Universe.Qubit.hamiltonian_fourth`    |
-| The collapse of the series on `H`                         | closed form                              | `Universe.Qubit.expCoeff_hamiltonian`                                                                      |
-| `U†U − I`, `UU† − I`, `det U − 1`, cofactors `gC + s² gN` | certificate                              | `Universe.Qubit.evolution_unitary`, `Universe.Qubit.evolution_unitary_rev`, `Universe.Qubit.evolution_det` |
-| `‖Uψ‖² = ‖ψ‖²` on a generic state                         | certificate, by `reduce`                 | `Universe.Epistemology.literal_evolution_norm`                                                             |
-| `ψ†(U†U)ψ − ‖ψ‖²` in `(gC, gN)`, any amplitudes           | same coefficients, by `literal_sandwich` | `Universe.Qubit.evolution_norm`                                                                            |
+| Fact                                                                | Python                                   | Lean                                                                                                       |
+| ------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `exp(−i φ a) = cos φ · 1 + (−i sin φ) · a` when `a² = 1`            | cited                                    | `Universe.Series.expCoeff`                                                                                 |
+| `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                             | `universe.dynamics.pauli`                | `Universe.Qubit.hamiltonian_pauli`                                                                         |
+| `H† = H` in the free ring                                           | certificate                              | `Universe.Qubit.hamiltonian_dagger`                                                                        |
+| `H² = I`, `H³ = H`, `H⁴ = I` in the quotient                        | certificate                              | `Universe.Qubit.hamiltonian_sq`, `Universe.Qubit.hamiltonian_cube`, `Universe.Qubit.hamiltonian_fourth`    |
+| The collapse of the series on `H`                                   | closed form                              | `Universe.Qubit.expCoeff_hamiltonian`                                                                      |
+| `U†U − I`, `UU† − I`, `det U − 1`, cofactors `gC + s² gN`           | certificate                              | `Universe.Qubit.evolution_unitary`, `Universe.Qubit.evolution_unitary_rev`, `Universe.Qubit.evolution_det` |
+| `‖Uψ‖² = ‖ψ‖²` on a generic state                                   | certificate, by `reduce`                 | `Universe.Epistemology.literal_evolution_norm`                                                             |
+| `UH = HU` in the free ring; `⟨Uψ\|H\|Uψ⟩ = ⟨ψ\|H\|ψ⟩` in `(gC, gN)` | certificate                              | `Universe.Symmetry.evolution_commutes_hamiltonian`, `Universe.Symmetry.energy_conserved`                   |
+| `ψ†(U†U)ψ − ‖ψ‖²` in `(gC, gN)`, any amplitudes                     | same coefficients, by `literal_sandwich` | `Universe.Qubit.evolution_norm`                                                                            |
 
 ### Observation
 

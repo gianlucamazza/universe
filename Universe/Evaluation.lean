@@ -179,4 +179,47 @@ theorem eval_conj (c s nx ny nz : Rat) (p : Poly) :
             monoImage c s nx ny nz a m + evalAt c s nx ny nz rest from rfl,
         conj_add]
 
+theorem eval_pneg (c s nx ny nz : Rat) (p : Poly) :
+    evalAt c s nx ny nz (pneg p) = -evalAt c s nx ny nz p := by
+  induction p with
+  | nil =>
+    simp [pneg, evalAt]
+    ext <;> simp
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pneg ((a, m) :: rest) = (-a, m) :: pneg rest from rfl, evalAt, ih]
+      rw [show evalAt c s nx ny nz ((a, m) :: rest) =
+        ⟨a.re * monoVal c s nx ny nz m, a.im * monoVal c s nx ny nz m⟩ +
+          evalAt c s nx ny nz rest from rfl]
+      ext <;> simp <;> grind
+
+theorem eval_psub (c s nx ny nz : Rat) (p q : Poly) :
+    evalAt c s nx ny nz (psub p q) = evalAt c s nx ny nz p + -evalAt c s nx ny nz q := by
+  rw [psub, eval_append, eval_pneg]
+
+theorem gauss_of_sub (a b : Gauss) (h : a + -b = 0) : a = b := by
+  calc
+    a = a + 0 := (Gauss.add_zero a).symm
+    _ = a + (-b + b) := by rw [Gauss.neg_add_cancel]
+    _ = a + -b + b := (Gauss.add_assoc a (-b) b).symm
+    _ = 0 + b := by rw [h]
+    _ = b := Gauss.zero_add b
+
+theorem eval_inIdeal {p : Poly} (hp : inIdeal p) (c s nx ny nz : Rat)
+    (hc : evalAt c s nx ny nz gC = 0) (hn : evalAt c s nx ny nz gN = 0) :
+    evalAt c s nx ny nz p = 0 := by
+  rcases hp with ⟨fc, fn, h⟩
+  have hs : polySame p (pmul fc gC ++ pmul fn gN) := h
+  calc
+    evalAt c s nx ny nz p = evalAt c s nx ny nz (pmul fc gC ++ pmul fn gN) :=
+      eval_polySame hs c s nx ny nz
+    _ = evalAt c s nx ny nz (pmul fc gC) + evalAt c s nx ny nz (pmul fn gN) :=
+      eval_append c s nx ny nz _ _
+    _ = evalAt c s nx ny nz fc * evalAt c s nx ny nz gC +
+          evalAt c s nx ny nz fn * evalAt c s nx ny nz gN := by
+        rw [eval_pmul, eval_pmul]
+    _ = evalAt c s nx ny nz fc * 0 + evalAt c s nx ny nz fn * 0 := by rw [hc, hn]
+    _ = 0 := by rw [Gauss.mul_zero, Gauss.mul_zero, Gauss.add_zero]
+
 end Universe.Evaluation

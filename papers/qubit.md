@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 33 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 36 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -71,6 +71,8 @@ Le quattro identità di conservazione hanno gli stessi cofattori. Sia
 Allora `evolution_unitary`, `evolution_unitary_rev` e `evolution_det` dicono che `U†U − I`, `UU† − I` e `det U − 1` sono `δ` sulle entrate diagonali, nel senso dell'ideale `(gC, gN)`. Per ogni coppia di ampiezze, `evolution_norm` dice che il sandwich `ψ†(U†U)ψ − ‖ψ‖²` sta nello stesso ideale. `literal_sandwich` dice che, per ogni matrice e ogni coppia di ampiezze, il modulo letterale `|γ₀|² + |γ₁|²` con `γ = Uψ` ha gli stessi coefficienti di `ψ†(U†U)ψ`. `born_norm` identifica `‖ψ‖²` nell'ordine `z · conj(z)` con `normAmp`. `literal_evolution_norm` trasporta l'ideale sul polinomio `‖Uψ‖² − ‖ψ‖²` che il certificato riduce.
 
 `Φ|0⟩` è la prima colonna di `U`, `(c − i s nz, s ny − i s nx)`. Le ampiezze di `|0⟩` sono `1` e `0`. `ground_prob_sum` mette `P(0) + P(1) − 1` di quello stato nello stesso ideale, con gli stessi cofattori di `δ`. La sfera qui non compare.
+
+`U` commuta con `H` nel libero: `UH` e `HU` sono entrambi `c H − i s H²`, `Universe.Symmetry.evolution_commutes_hamiltonian`. Quindi `U†HU = U†UH`, e `energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)` per ogni coppia di ampiezze: l'energia è conservata, con gli stessi cofattori di `δ`. `point_energy_x` e `point_energy_z` valutano `⟨0|H|0⟩` nel punto: `0` lungo x, `1` lungo z, prima e dopo `Φ`.
 
 ## 4. L'osservazione
 

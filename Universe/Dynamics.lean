@@ -1299,4 +1299,68 @@ theorem qmul_zero_right (x : QMat) : qmul x (Quotient.mk matSetoid matZero) =
   intro M
   rw [qmul_mk, matMul_zero_right]
 
+/-! ### Algebra di `matSame` e associatività del prodotto -/
+
+theorem matSame_symm {M N : Mat} (h : matSame M N) : matSame N M :=
+  ⟨h.1.symm, h.2.1.symm, h.2.2.1.symm, h.2.2.2.symm⟩
+
+theorem matSame_trans {M N P : Mat} (hMN : matSame M N) (hNP : matSame N P) : matSame M P :=
+  ⟨hMN.1.trans hNP.1, hMN.2.1.trans hNP.2.1, hMN.2.2.1.trans hNP.2.2.1,
+    hMN.2.2.2.trans hNP.2.2.2⟩
+
+theorem matSame_mul_right (M : Mat) {N N' : Mat} (h : matSame N N') :
+    matSame (matMul M N) (matMul M N') :=
+  ⟨polySame_append (polySame_pmul_right h.1 M.a00) (polySame_pmul_right h.2.2.1 M.a01),
+    polySame_append (polySame_pmul_right h.2.1 M.a00) (polySame_pmul_right h.2.2.2 M.a01),
+    polySame_append (polySame_pmul_right h.1 M.a10) (polySame_pmul_right h.2.2.1 M.a11),
+    polySame_append (polySame_pmul_right h.2.1 M.a10) (polySame_pmul_right h.2.2.2 M.a11)⟩
+
+theorem polySame_append_assoc (a b c : Poly) : polySame ((a ++ b) ++ c) (a ++ (b ++ c)) := by
+  intro t
+  rw [coeffOf_append, coeffOf_append, coeffOf_append, coeffOf_append, Gauss.add_assoc]
+
+theorem gauss_rot (a b c : Gauss) : a + (b + c) = b + (a + c) := by
+  rw [← Gauss.add_assoc, Gauss.add_comm a b, Gauss.add_assoc]
+
+/-- Una colonna di `(AB)C` e di `A(BC)`. -/
+theorem polySame_assoc_col (a00 a01 b00 b01 b10 b11 x y : Poly) :
+    polySame
+      (pmul (pmul a00 b00 ++ pmul a01 b10) x ++ pmul (pmul a00 b01 ++ pmul a01 b11) y)
+      (pmul a00 (pmul b00 x ++ pmul b01 y) ++ pmul a01 (pmul b10 x ++ pmul b11 y)) := by
+  intro t
+  calc
+    coeffOf
+          (pmul (pmul a00 b00 ++ pmul a01 b10) x ++
+            pmul (pmul a00 b01 ++ pmul a01 b11) y)
+          t
+        = coeffOf
+            ((pmul a00 (pmul b00 x) ++ pmul a01 (pmul b10 x)) ++
+              (pmul a00 (pmul b01 y) ++ pmul a01 (pmul b11 y)))
+            t := by
+          rw [pmul_append_left, pmul_append_left, pmul_assoc, pmul_assoc, pmul_assoc, pmul_assoc]
+    _ = coeffOf
+            ((pmul a00 (pmul b00 x) ++ pmul a00 (pmul b01 y)) ++
+              (pmul a01 (pmul b10 x) ++ pmul a01 (pmul b11 y)))
+            t :=
+          polySame_append4_mid _ _ _ _ t
+    _ = coeffOf
+            (pmul a00 (pmul b00 x ++ pmul b01 y) ++
+              pmul a01 (pmul b10 x ++ pmul b11 y))
+            t := by
+          rw [coeffOf_append,
+            ← (coeff_mul_append_right a00 (pmul b00 x) (pmul b01 y)) t,
+            ← (coeff_mul_append_right a01 (pmul b10 x) (pmul b11 y)) t, ← coeffOf_append]
+
+theorem matMul_assoc (A B C : Mat) :
+    matSame (matMul (matMul A B) C) (matMul A (matMul B C)) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · simpa only [matMul] using
+      polySame_assoc_col A.a00 A.a01 B.a00 B.a01 B.a10 B.a11 C.a00 C.a10
+  · simpa only [matMul] using
+      polySame_assoc_col A.a00 A.a01 B.a00 B.a01 B.a10 B.a11 C.a01 C.a11
+  · simpa only [matMul] using
+      polySame_assoc_col A.a10 A.a11 B.a00 B.a01 B.a10 B.a11 C.a00 C.a10
+  · simpa only [matMul] using
+      polySame_assoc_col A.a10 A.a11 B.a00 B.a01 B.a10 B.a11 C.a01 C.a11
+
 end Universe.Dynamics

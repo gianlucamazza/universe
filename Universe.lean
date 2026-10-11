@@ -61,6 +61,11 @@ dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
 in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono
 per ogni stato di due qubit; `no_signalling_gen_0` e `no_signalling_gen_1`
 sono il caso `genericQuad`.
+`Universe.Symmetry` dice che `U` commuta con `H` nell'anello libero
+(`evolution_commutes_hamiltonian`): `UH` e `HU` sono `c H − i s H²`.
+`energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)`, per ogni
+ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
+`e_z`, prima e dopo `Φ` (`point_energy_x`, `point_energy_z`).
 -/
 import Universe.Composition
 import Universe.Dynamics
@@ -72,3 +77,4 @@ import Universe.Qubit
 import Universe.Quotient
 import Universe.Ring
 import Universe.Series
+import Universe.Symmetry

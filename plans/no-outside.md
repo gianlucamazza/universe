@@ -1,11 +1,11 @@
 # Plan: nothing given from outside
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: proposed. Starts after `plans/parametric-mono.md`.
+Status: in progress; phase 1 done.
 
 | Phase | State | Goal                                                                  |
 | ----- | ----- | --------------------------------------------------------------------- |
-| 1     | open  | energy is conserved                                                   |
+| 1     | done  | energy is conserved                                                   |
 | 2     | open  | the interaction comes from a Hamiltonian; `CNOT` is one of its points |
 | 3     | open  | partial measurement: coherence shrinks by `⟨0\|U\|0⟩`                 |
 | 4     | open  | reading the pointer: the conditional state and repeatability          |

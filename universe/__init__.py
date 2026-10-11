@@ -49,6 +49,14 @@ e `Universe.Observer.no_signalling_any_1`; su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
 `Universe.Observer.no_signalling_gen_1`.
 
+`U` commuta con `H` nell'anello libero:
+`Universe.Symmetry.evolution_commutes_hamiltonian`. L'energia
+`⟨ψ|H|ψ⟩` è conservata nell'ideale `(gC, gN)`, per ogni ampiezza:
+`Universe.Symmetry.energy_conserved`. Nel punto `c = 3/5`, `s = 4/5`
+lo stato `|0⟩` ha energia `0` lungo `e_x` e `1` lungo `e_z`, prima e
+dopo `Φ` (`Universe.Symmetry.point_energy_x`,
+`Universe.Symmetry.point_energy_z`).
+
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """
 

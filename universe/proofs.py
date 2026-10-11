@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 33 righe.
+"""Certificato eseguibile del primo universo. Stampa 36 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -45,6 +45,12 @@ generico. Lean lo prova per ogni `Quad`,
 `Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
 `Universe.Observer.no_signalling_gen_1`.
+`UH = HU` ha origine libera zero
+(`Universe.Symmetry.evolution_commutes_hamiltonian`).
+`⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` ha resto zero in `(gC, gN)`
+(`Universe.Symmetry.energy_conserved`). Nel punto `c = 3/5`, `s = 4/5`,
+`ψ = |0⟩` l'energia vale `0` lungo `e_x` e `1` lungo `e_z`, prima e dopo
+`Φ` (`Universe.Symmetry.point_energy_x`, `Universe.Symmetry.point_energy_z`).
 """
 
 from __future__ import annotations
@@ -158,6 +164,24 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Legge",
         "‖Uψ‖² = ‖ψ‖² per ogni ampiezza",
         norm_squared(phi) - norm_squared(psi),
+    )
+
+    commute = world.U.matmul(world.H) - world.H.matmul(world.U)
+    commute_free = _free_zero(commute)
+    commute_cert = _first_certificate(commute)
+    add(
+        "Legge",
+        "UH = HU nell'anello libero",
+        commute_free and commute_cert is None,
+        "Universe.Symmetry.evolution_commutes_hamiltonian"
+        if commute_free and commute_cert is None
+        else (commute_cert or "l'origine libera non è zero"),
+    )
+    poly_zero(
+        "Legge",
+        "⟨Uψ|H|Uψ⟩ = ⟨ψ|H|ψ⟩",
+        expectation(phi, world.H) - expectation(psi, world.H),
+        "stato generico\nUniverse.Symmetry.energy_conserved",
     )
 
     # --- Osservazione ---
@@ -522,6 +546,25 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if probs_ok
         else f"P(0) = {prob0}, P(1) = {prob1}; celle = {cell_detail}",
     )
+    ket = world.ground()
+    evolved_ket = world.evolve(ket)
+    point_z = {**point, "nx": g(0), "ny": g(0), "nz": g(1)}
+    before_x = expectation(ket, world.H).evaluate(point)
+    after_x = expectation(evolved_ket, world.H).evaluate(point)
+    before_z = expectation(ket, world.H).evaluate(point_z)
+    after_z = expectation(evolved_ket, world.H).evaluate(point_z)
+    energy_point_ok = (
+        before_x == g(0) and after_x == g(0) and before_z == g(1) and after_z == g(1)
+    )
+    add(
+        "Corollario",
+        "n = e_x: ⟨H⟩ = 0; n = e_z: ⟨H⟩ = 1, prima e dopo Φ",
+        energy_point_ok,
+        "c = 3/5, s = 4/5, ψ = |0⟩\n"
+        "Universe.Symmetry.point_energy_x, Universe.Symmetry.point_energy_z"
+        if energy_point_ok
+        else f"x {before_x} → {after_x}; z {before_z} → {after_z}",
+    )
     return proven
 
 
@@ -655,6 +698,11 @@ def _power(operator: Operator, n: int) -> Operator:
     for _ in range(n):
         result = operator.matmul(result)
     return result
+
+
+def _free_zero(operator: Operator) -> bool:
+    """Ogni entrata ha origine nulla, prima di `reduce`."""
+    return all(entry.origin.is_zero() for row in operator.rows for entry in row)
 
 
 def _first_certificate(operator: Operator) -> str | None:
