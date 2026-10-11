@@ -9,6 +9,7 @@ from universe.observer import (
     cnot,
     cnot01,
     cnot02,
+    cnot12,
     determinant_2x2,
     no_signalling_gap,
     purity,
@@ -136,10 +137,11 @@ def test_three_qubit_cnots_swap_the_named_cells():
         amplitudes = [zero] * 8
         amplitudes[index] = one
         basis.append(State(tuple(amplitudes)))
-    first, second = cnot01(ring), cnot02(ring)
+    first, second, friend = cnot01(ring), cnot02(ring), cnot12(ring)
     eye = Operator.eye(ring, 8)
     assert first.matmul(first).rows == eye.rows
     assert second.matmul(second).rows == eye.rows
+    assert friend.matmul(friend).rows == eye.rows
     assert first.apply(basis[4]).amplitudes == basis[6].amplitudes
     assert first.apply(basis[5]).amplitudes == basis[7].amplitudes
     assert first.apply(basis[6]).amplitudes == basis[4].amplitudes
@@ -148,6 +150,10 @@ def test_three_qubit_cnots_swap_the_named_cells():
     assert second.apply(basis[5]).amplitudes == basis[4].amplitudes
     assert second.apply(basis[6]).amplitudes == basis[7].amplitudes
     assert second.apply(basis[7]).amplitudes == basis[6].amplitudes
+    assert friend.apply(basis[2]).amplitudes == basis[3].amplitudes
+    assert friend.apply(basis[3]).amplitudes == basis[2].amplitudes
+    assert friend.apply(basis[6]).amplitudes == basis[7].amplitudes
+    assert friend.apply(basis[7]).amplitudes == basis[6].amplitudes
 
 
 def test_two_observers_agree_on_a_fresh_ring():
@@ -168,6 +174,27 @@ def test_two_observers_agree_on_a_fresh_ring():
     assert second.apply(first.apply(prepared_right)).amplitudes == expected
     assert first.apply(second.apply(prepared_right)).amplitudes == expected
     weights = born(ghz)
+    assert weights[0] == alpha.modulus_squared()
+    assert weights[7] == beta.modulus_squared()
+    assert all(weight.is_zero() for weight in weights[1:7])
+
+
+def test_wigner_reads_the_friend_on_a_fresh_ring():
+    ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    imag = ring.constant(g(0, 1))
+    alpha = ring.var("p0r") + ring.var("p0i") * imag
+    beta = ring.var("p1r") + ring.var("p1i") * imag
+    psi = State((alpha, beta))
+    ket = State((ring.one(), ring.zero()))
+    zero = ring.zero()
+    prepared = tensor_state(tensor_state(psi, ket), ket)
+    friend, wigner, fanout = cnot01(ring), cnot12(ring), cnot02(ring)
+    expected = (alpha, zero, zero, zero, zero, zero, zero, beta)
+    chain = wigner.apply(friend.apply(prepared))
+    assert chain.amplitudes == expected
+    assert chain.amplitudes == fanout.apply(friend.apply(prepared)).amplitudes
+    assert wigner.matmul(wigner).rows == Operator.eye(ring, 8).rows
+    weights = born(chain)
     assert weights[0] == alpha.modulus_squared()
     assert weights[7] == beta.modulus_squared()
     assert all(weight.is_zero() for weight in weights[1:7])

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 59 righe.
+"""Certificato eseguibile del primo universo. Stampa 61 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -37,7 +37,11 @@ stessi pesi su Φ|0⟩ e sullo stato generico
 entrambi gli ordini e su entrambe le parentesizzazioni, danno
 α|000⟩ + β|111⟩: le celle 1–6 hanno peso zero
 (`Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`,
-`Universe.Observer.order_irrelevant`). Un unitario locale sull'apparato
+`Universe.Observer.order_irrelevant`). Wigner legge l'amico con `cnot12`:
+la catena è lo stesso stato del fan-out
+(`Universe.Observer.chain_pointers`, `Universe.Observer.chain_is_fanout`,
+`Universe.Observer.cnot12_involutive`) e i pesi delle celle 1–6 restano
+zero (`Universe.Observer.chain_agree`). Un unitario locale sull'apparato
 non cambia i due pesi del sistema. Il conto sta sull'anello
 `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`: lo stato è
 generico. Lean lo prova per ogni `Quad`,
@@ -132,6 +136,7 @@ from universe.observer import (
     cnot,
     cnot01,
     cnot02,
+    cnot12,
     determinant_2x2,
     no_signalling_gap,
     purity,
@@ -554,6 +559,38 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Observer.order_irrelevant_right"
         if agree_ok
         else "le due porte non coincidono",
+    )
+
+    wigner = cnot12(agree_ring)
+    chain = wigner.apply(first_observer.apply(prepared_left))
+    chain_state_ok = (
+        chain.amplitudes == expected_ghz
+        and chain.amplitudes == ghz.amplitudes
+        and wigner.matmul(wigner).rows == Operator.eye(agree_ring, 8).rows
+    )
+    add(
+        "Osservatore",
+        "Wigner, leggendo l'amico, legge il sistema",
+        chain_state_ok,
+        "α|000⟩ + β|111⟩, come cnot02 ∘ cnot01\n"
+        "Universe.Observer.chain_pointers, Universe.Observer.chain_is_fanout,\n"
+        "Universe.Observer.cnot12_involutive"
+        if chain_state_ok
+        else "la catena non è il fan-out",
+    )
+    chain_weights = born(chain)
+    chain_agree_ok = (
+        chain_weights[0] == agree_alpha.modulus_squared()
+        and chain_weights[7] == agree_beta.modulus_squared()
+        and all(weight.is_zero() for weight in chain_weights[1:7])
+    )
+    add(
+        "Osservatore",
+        "Wigner e l'amico non sono mai in disaccordo",
+        chain_agree_ok,
+        "celle 1–6 con peso zero\nUniverse.Observer.chain_agree"
+        if chain_agree_ok
+        else "i puntatori discordano",
     )
 
     gap0, gap1 = no_signalling_gap()

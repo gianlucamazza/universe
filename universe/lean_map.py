@@ -100,6 +100,12 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Observer.two_pointers",
         "Universe.Observer.two_pointers_right",
     ),
+    "Wigner, leggendo l'amico, legge il sistema": (
+        "Universe.Observer.chain_pointers",
+        "Universe.Observer.chain_is_fanout",
+        "Universe.Observer.cnot12_involutive",
+    ),
+    "Wigner e l'amico non sono mai in disaccordo": ("Universe.Observer.chain_agree",),
     "un unitario locale sull'apparato non cambia i pesi del sistema": (
         "Universe.Observer.no_signalling_any_0",
         "Universe.Observer.no_signalling_any_1",

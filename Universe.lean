@@ -56,6 +56,8 @@ diagonale dell'apparato dopo `Φ`. `point_purity` valuta la purezza del
 sistema ridotto in `337/625`.
 `cnot01` e `cnot02` danno `α|000⟩ + β|111⟩`: i due apparati non sono mai
 in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
+`cnot12` legge l'amico: `chain_pointers` è lo stesso stato,
+`chain_is_fanout` lo identifica col fan-out, `chain_agree` è l'accordo.
 `no_signalling_0` e `no_signalling_1` dicono che `I ⊗ U` sull'apparato,
 dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
 in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono

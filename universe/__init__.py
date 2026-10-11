@@ -41,7 +41,11 @@ ridotto è 337/625. I teoremi sono `Universe.Observer.decoherence`,
 Due apparati, accoppiati con CNOT in entrambi gli ordini, danno
 α|000⟩ + β|111⟩: le celle 1–6 hanno peso zero. I teoremi sono
 `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`
-e `Universe.Observer.order_irrelevant`. Un unitario locale sull'apparato
+e `Universe.Observer.order_irrelevant`. Wigner legge l'amico con
+`cnot12`: la catena è lo stesso stato
+(`Universe.Observer.chain_pointers`, `Universe.Observer.chain_is_fanout`,
+`Universe.Observer.cnot12_involutive`) e l'accordo è
+`Universe.Observer.chain_agree`. Un unitario locale sull'apparato
 non cambia i pesi del sistema. Dopo `CNOT` con `|0⟩` i teoremi sono
 `Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
 Per ogni stato di due qubit sono `Universe.Observer.no_signalling_any_0`

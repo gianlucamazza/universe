@@ -19,6 +19,12 @@ di Born delle celle 1–6 sono il polinomio zero: i due apparati non sono
 mai in disaccordo. `tensor_assoc` porta gli stessi fatti sulla
 parentesizzazione destra. Tutto sta nell'anello libero.
 
+`cnot12` è il `CNOT` di Wigner sull'amico: controllo sul bit medio,
+bersaglio sul bit basso, celle `2↔3` e `6↔7`. È un'involuzione.
+`cnot12 ∘ cnot01` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` è `α|000⟩ + β|111⟩`, lo stesso
+stato di `cnot02 ∘ cnot01`. I pesi di Born sono quelli di
+`observers_agree`: Wigner e l'amico non discordano.
+
 `I ⊗ U` sull'apparato, dopo `CNOT` con `|0⟩`, non cambia il marginale
 del sistema. La differenza sta in `(gC, gN)`: i cofattori di `δ`
 moltiplicati per `|α|²` e per `|β|²`. Lo stesso conto vale per ogni
@@ -520,6 +526,16 @@ def cnot01 (v : Oct) : Oct := ⟨v.a0, v.a1, v.a2, v.a3, v.a6, v.a7, v.a4, v.a5�
 /-- `CNOT` fra il sistema e il secondo apparato. Scambia le celle `4↔5` e `6↔7`. -/
 def cnot02 (v : Oct) : Oct := ⟨v.a0, v.a1, v.a2, v.a3, v.a5, v.a4, v.a7, v.a6⟩
 
+/-- `CNOT` di Wigner sull'amico. Il controllo è il bit medio, il bersaglio il bit basso.
+
+Scambia le celle `2↔3` e `6↔7`. -/
+def cnot12 (v : Oct) : Oct := ⟨v.a0, v.a1, v.a3, v.a2, v.a4, v.a5, v.a7, v.a6⟩
+
+/-- `cnot12` è un'involuzione. -/
+theorem cnot12_involutive (v : Oct) : cnot12 (cnot12 v) = v := by
+  cases v
+  rfl
+
 /-- `cnot02 ∘ cnot01` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` è `α|000⟩ + β|111⟩`. -/
 theorem two_pointers (ψ : Pair) :
     cnot02 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
@@ -565,6 +581,35 @@ theorem order_irrelevant_right (ψ : Pair) :
       cnot02 (cnot01 (tensorRight ψ (tensorPair ket0 ket0))) := by
   rw [← tensor_assoc]
   exact order_irrelevant ψ
+
+/-! ### Wigner legge l'amico -/
+
+/-- `cnot12 ∘ cnot01` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` è `α|000⟩ + β|111⟩`.
+
+Wigner, leggendo il puntatore dell'amico, legge il sistema. -/
+theorem chain_pointers (ψ : Pair) :
+    cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
+      ⟨ψ.a0, [], [], [], [], [], [], ψ.a1⟩ := by
+  rw [tensor_idle_right]
+  simp only [tensorLeft, ket0, cnot01, cnot12, pmul_one, pmul_nil]
+
+/-- La catena è il fan-out `cnot02 ∘ cnot01`.
+
+Quindi `observers_agree` e `order_irrelevant` valgono sullo stesso stato. -/
+theorem chain_is_fanout (ψ : Pair) :
+    cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
+      cnot02 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) := by
+  rw [chain_pointers, two_pointers]
+
+/-- Wigner e l'amico non sono mai in disaccordo.
+
+`bornOct` è quello di `observers_agree`: le celle 1–6 hanno peso zero,
+e le celle 0 e 7 portano `bornPair ψ`. -/
+theorem chain_agree (ψ : Pair) :
+    bornOct (cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0))) =
+      ⟨columnBorn ψ.a0, [], [], [], [], [], [], columnBorn ψ.a1⟩ := by
+  rw [chain_is_fanout]
+  exact observers_agree ψ
 
 /-! ### L'apparato non segnala -/
 

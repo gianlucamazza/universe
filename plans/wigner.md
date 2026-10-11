@@ -1,11 +1,11 @@
 # Plan: Wigner's friend
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: planned.
+Status: in progress.
 
 | Phase | State   | Goal                                                                 |
 | ----- | ------- | -------------------------------------------------------------------- |
-| 1     | planned | a chain: Wigner reads the friend, and that is reading the system     |
+| 1     | done    | a chain: Wigner reads the friend, and that is reading the system     |
 | 2     | planned | the friend's measurement can be undone, until the record is copied   |
 | 3     | planned | the rational point: purity `1` when undone, `337/625` after the copy |
 | 4     | planned | no-signalling between three parties, for every three-qubit state     |

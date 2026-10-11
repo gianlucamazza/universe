@@ -13,6 +13,10 @@ Su un prodotto il determinante è zero. Nel punto razionale
 secondo, coniugata dallo scambio dei due apparati. Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`
 restano ampiezze solo nelle celle 0 e 7.
 
+`cnot12` è `I ⊗ CNOT`: Wigner legge l'amico. Il controllo è il bit medio,
+il bersaglio il bit basso. Scambia le celle 2↔3 e 6↔7. Dopo `cnot01`
+sullo stesso stato resta `α|000⟩ + β|111⟩`, come `cnot02 ∘ cnot01`.
+
 `no_signalling_gap` è `I ⊗ U` su uno stato di due qubit generico. `U` è
 `c I − i s H` nel quoziente. La differenza dei pesi del sistema ha resto
 zero. Lean lo prova per ogni stato, `Universe.Observer.no_signalling_any_0`
@@ -135,6 +139,16 @@ def cnot02(ring: Ring) -> Operator:
     """
     swap = _swap_apparatuses(ring)
     return swap.matmul(cnot01(ring)).matmul(swap)
+
+
+def cnot12(ring: Ring) -> Operator:
+    """CNOT di Wigner sull'amico. È `I ⊗ CNOT`.
+
+    L'indice è `4 * i + 2 * j + k`. Il controllo è il bit medio, il
+    bersaglio il bit basso. Scambia le celle 2↔3 e 6↔7.
+    È `Universe.Observer.cnot12`.
+    """
+    return Operator.eye(ring, 2).tensor(cnot(ring))
 
 
 def purity(operator: Operator) -> Poly:
