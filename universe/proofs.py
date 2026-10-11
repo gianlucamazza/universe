@@ -592,9 +592,11 @@ def _tensor_associativity() -> tuple[str, bool, str]:
     return (
         name,
         True,
-        "tensor_index su (i, j, k, nb, nc)\n"
-        "ampiezze e (U⊗I⊗I) su (u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)\n"
-        "Universe.Composition.tensor_assoc, tensor_assoc_ui, tensor_assoc_obs",
+        (
+            "tensor_index su (i, j, k, nb, nc)\n"
+            "ampiezze e (U⊗I⊗I) su (u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)\n"
+            "Universe.Composition.tensor_assoc, tensor_assoc_ui, tensor_assoc_obs"
+        ),
     )
 
 

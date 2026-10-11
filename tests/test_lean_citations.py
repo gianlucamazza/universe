@@ -6,7 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CITED = re.compile(r"Universe\.([A-Z][A-Za-z]+)\.([A-Za-z_0-9]+)")
 DECL = re.compile(
-    r"^(?:theorem|lemma|def|abbrev|structure|inductive)\s+([A-Za-z_0-9.']+)", re.M
+    r"^(?:theorem|lemma|def|abbrev|structure|inductive)\s+([A-Za-z_0-9.']+)",
+    re.MULTILINE,
 )
 
 
