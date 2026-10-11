@@ -541,3 +541,29 @@ theorem tensorIndex_assoc_qubit (i j k : Nat) :
     _ = 4 * i + (2 * j + k) := by rw [Nat.mul_comm i 4, Nat.mul_comm j 2]
 
 end Universe.Composition
+
+/-! `|ψ⟩⟨ψ|` e il fattore `|x|²` della coerenza. Li usano `Observer` e `Qubits`. -/
+
+namespace Universe.Composition
+
+open Universe.Dynamics
+open Universe.Epistemology
+open Universe.Qubit
+open Universe.Quotient hiding mul
+
+/-- `|ψ⟩⟨ψ|`. -/
+def outer (ψ : Pair) : Mat where
+  a00 := columnBorn ψ.a0
+  a01 := pmul ψ.a0 (conjP ψ.a1)
+  a10 := pmul ψ.a1 (conjP ψ.a0)
+  a11 := columnBorn ψ.a1
+
+/-- Un fattore di `|φ|²` esce dal prodotto `α φ · conj(β φ)`. -/
+theorem coherence_scale (p y x : Poly) :
+    polySame (pmul (pmul p x) (conjP (pmul y x)))
+      (pmul (columnBorn x) (pmul p (conjP y))) := by
+  rw [conj_pmul]
+  exact polySame.trans (polySame_assoc_comm p x (conjP y) (conjP x))
+    (polySame_mul_comm (pmul p (conjP y)) (columnBorn x))
+
+end Universe.Composition

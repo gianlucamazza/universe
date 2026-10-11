@@ -47,11 +47,15 @@ Lo stesso argomento sui tre qubit, per ogni `Oct`. `I ⊗ I ⊗ U` sul
 qubit di Wigner e `I ⊗ U ⊗ I` sul qubit dell'amico lasciano la
 diagonale di `reduceSystem` in `(gC, gN)`. Quel marginale è la somma
 di due norme di un qubit, e ciascuna è `literal_evolution_norm`.
+`no_signalling_any_0`, `no_signalling_any_1`, `no_signalling_wigner` e
+`no_signalling_friend` sono i casi `n = 2` e `n = 3` di
+`no_signalling_at`. `reduce_product` è `reduceAt_product` sul qubit `0`.
 -/
 import Universe.Composition
 import Universe.Epistemology
 import Universe.Evaluation
 import Universe.Qubit
+import Universe.Qubits
 
 namespace Universe.Observer
 
@@ -62,6 +66,7 @@ open Universe.Epistemology
 open Universe.Evaluation
 open Universe.Composition
 open Universe.Qubit
+open Universe.Qubits
 
 /-- Controllo a sinistra, bersaglio a destra. Su `2 * i + k` scambia `|10⟩` e `|11⟩`. -/
 def applyCNOT (v : Quad) : Quad := ⟨v.a0, v.a1, v.a3, v.a2⟩
@@ -241,41 +246,12 @@ def reduceRight (v : Quad) : Mat where
 theorem reduceLeft_diag (v : Quad) :
     ⟨(reduceLeft v).a00, (reduceLeft v).a11⟩ = marginalLeft v := rfl
 
-/-- `|ψ⟩⟨ψ|`. -/
-def outer (ψ : Pair) : Mat where
-  a00 := columnBorn ψ.a0
-  a01 := pmul ψ.a0 (conjP ψ.a1)
-  a10 := pmul ψ.a1 (conjP ψ.a0)
-  a11 := columnBorn ψ.a1
+/-- Senza interazione il sistema resta puro, a meno di `‖φ‖²`.
 
-/-- Un fattore di `|φ|²` esce dal prodotto `α φ · conj(β φ)`. -/
-theorem coherence_scale (p y x : Poly) :
-    polySame (pmul (pmul p x) (conjP (pmul y x)))
-      (pmul (columnBorn x) (pmul p (conjP y))) := by
-  rw [conj_pmul]
-  exact polySame.trans (polySame_assoc_comm p x (conjP y) (conjP x))
-    (polySame_mul_comm (pmul p (conjP y)) (columnBorn x))
-
-/-- La riga fuori diagonale di un prodotto è `‖φ‖² · α conj(β)`. -/
-theorem coherence_row (p y x0 x1 : Poly) :
-    polySame
-      (pmul (pmul p x0) (conjP (pmul y x0)) ++ pmul (pmul p x1) (conjP (pmul y x1)))
-      (pmul (columnBorn x0 ++ columnBorn x1) (pmul p (conjP y))) :=
-  polySame.trans (polySame_append (coherence_scale p y x0) (coherence_scale p y x1))
-    (fun t => by rw [pmul_append_left])
-
-/-- Senza interazione il sistema resta puro, a meno di `‖φ‖²`. -/
+È `reduceAt_product` sul qubit `0`: il resto è `|φ⟩`. -/
 theorem reduce_product (ψ φ : Pair) :
-    matSame (reduceLeft (tensorPair ψ φ)) (matScale (normPair φ) (outer ψ)) := by
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · simpa only [reduceLeft, tensorPair, matScale, outer, normPair] using
-      marginal_scale_row ψ.a0 φ.a0 φ.a1
-  · simpa only [reduceLeft, tensorPair, matScale, outer, normPair] using
-      coherence_row ψ.a0 ψ.a1 φ.a0 φ.a1
-  · simpa only [reduceLeft, tensorPair, matScale, outer, normPair] using
-      coherence_row ψ.a1 ψ.a0 φ.a0 φ.a1
-  · simpa only [reduceLeft, tensorPair, matScale, outer, normPair] using
-      marginal_scale_row ψ.a1 φ.a0 φ.a1
+    matSame (reduceLeft (tensorPair ψ φ)) (matScale (normPair φ) (outer ψ)) :=
+  reduceAt_product ψ (0 : Fin 2) (ofPair φ)
 
 /-- Prima di `CNOT` la coerenza `α conj(β)` è ancora nello stato ridotto. -/
 theorem coherence_before (ψ : Pair) :
@@ -841,23 +817,21 @@ theorem point_copied :
 
 /-- `I ⊗ U` non cambia `P(0)` del sistema, per ogni stato di due qubit.
 
-Il blocco `(a0, a1)` è un'ampiezza di un qubit. `literal_evolution_norm`
-porta `‖Uγ‖² − ‖γ‖²` in `(gC, gN)`. I termini incrociati
-`u00 conj(u01) + u10 conj(u11)` sono l'entrata fuori diagonale di `U†U`:
-`evolution_unitary_01` e `evolution_unitary_10` le azzerano nel libero,
-e la diagonale porta `δ`. -/
+È la prima componente di `no_signalling_at` sul qubit `0`, con il
+unitario sul qubit `1`. `applyAt 1` è `applyIU` e `marginalAt 0` è
+`marginalLeft`. -/
 theorem no_signalling_any_0 (v : Quad) :
     inIdeal
       (psub (marginalLeft (applyIU evolution v)).a0 (marginalLeft v).a0) :=
-  literal_evolution_norm v.a0 v.a1
+  (no_signalling_at (0 : Fin 2) 1 (by decide) (ofQuad v)).1
 
 /-- `I ⊗ U` non cambia `P(1)` del sistema, per ogni stato di due qubit.
 
-Stesso argomento di `no_signalling_any_0`, sul blocco `(a2, a3)`. -/
+È la seconda componente dello stesso `no_signalling_at`. -/
 theorem no_signalling_any_1 (v : Quad) :
     inIdeal
       (psub (marginalLeft (applyIU evolution v)).a1 (marginalLeft v).a1) :=
-  literal_evolution_norm v.a2 v.a3
+  (no_signalling_at (0 : Fin 2) 1 (by decide) (ofQuad v)).2
 
 /-- `I ⊗ U` sull'apparato non cambia `P(0)` del sistema accoppiato da `CNOT`.
 
@@ -924,101 +898,57 @@ def applyIUI (U : Mat) (v : Oct) : Oct where
   a6 := pmul U.a10 v.a4 ++ pmul U.a11 v.a6
   a7 := pmul U.a10 v.a5 ++ pmul U.a11 v.a7
 
-/-- Quattro moduli, raggruppati a coppie consecutive. -/
-theorem polySame_paired (a b c d : Poly) :
-    polySame (((a ++ b) ++ c) ++ d) ((a ++ b) ++ (c ++ d)) :=
-  polySame_append_assoc (a ++ b) c d
+/-- `applyAt 1` su tre qubit è `I ⊗ U ⊗ I`. -/
+theorem applyAt_iui (U : Mat) (v : Oct) :
+    toOct (applyAt (1 : Fin 3) U (ofOct v)) = applyIUI U v := rfl
 
-/-- Gli stessi quattro moduli, sui blocchi `(0, 2)` e `(1, 3)`. -/
-theorem polySame_crossed (a b c d : Poly) :
-    polySame (((a ++ b) ++ c) ++ d) ((a ++ c) ++ (b ++ d)) :=
-  polySame.trans (polySame_paired a b c d) (polySame_append4_mid a b c d)
+/-- `applyAt 2` su tre qubit è `I ⊗ I ⊗ U`. -/
+theorem applyAt_iiu (U : Mat) (v : Oct) :
+    toOct (applyAt (2 : Fin 3) U (ofOct v)) = applyIIU U v := rfl
 
-/-- La somma di due norme di un qubit sta in `(gC, gN)` dopo `U`.
+/-- La diagonale di `reduceSystem` ha i coefficienti di `marginalAt 0`.
 
-È `literal_evolution_norm` su ciascun blocco, lo stesso passo di
-`no_signalling_any_0` e `no_signalling_any_1`, poi `inIdeal_append`. -/
-theorem block_pair_ideal (α β γ δ : Poly) :
-    inIdeal
-      (psub (literalNorm evolution α β ++ literalNorm evolution γ δ)
-        ((columnBorn α ++ columnBorn β) ++ (columnBorn γ ++ columnBorn δ))) :=
-  inIdeal_polySame
-    (polySame_psub_append (literalNorm evolution α β) (literalNorm evolution γ δ)
-      (columnBorn α ++ columnBorn β) (columnBorn γ ++ columnBorn δ))
-    (inIdeal_append (literal_evolution_norm α β) (literal_evolution_norm γ δ))
-
-/-- Dopo `I ⊗ I ⊗ U` il marginale del sistema è la somma delle due norme. -/
-theorem wigner_blocks (U : Mat) (v : Oct) :
-    polySame (reduceSystem (applyIIU U v)).a00
-        (literalNorm U v.a0 v.a1 ++ literalNorm U v.a2 v.a3) ∧
-      polySame (reduceSystem (applyIIU U v)).a11
-        (literalNorm U v.a4 v.a5 ++ literalNorm U v.a6 v.a7) := by
-  simp only [reduceSystem, applyIIU, literalNorm]
-  exact ⟨polySame_paired _ _ _ _, polySame_paired _ _ _ _⟩
-
-/-- Prima di `I ⊗ I ⊗ U` gli stessi blocchi sono le coppie di celle. -/
-theorem wigner_born (v : Oct) :
-    polySame (reduceSystem v).a00
-        ((columnBorn v.a0 ++ columnBorn v.a1) ++
-          (columnBorn v.a2 ++ columnBorn v.a3)) ∧
-      polySame (reduceSystem v).a11
-        ((columnBorn v.a4 ++ columnBorn v.a5) ++
-          (columnBorn v.a6 ++ columnBorn v.a7)) := by
-  simp only [reduceSystem]
-  exact ⟨polySame_paired _ _ _ _, polySame_paired _ _ _ _⟩
+`reduceSystem` associa a sinistra. `normQ` associa a coppie. -/
+theorem reduceSystem_marginal (v : Oct) :
+    polySame (reduceSystem v).a00 (marginalAt (0 : Fin 3) (ofOct v)).a0 ∧
+      polySame (reduceSystem v).a11 (marginalAt (0 : Fin 3) (ofOct v)).a1 := by
+  have hmarg : marginalAt (0 : Fin 3) (ofOct v) =
+      ⟨(columnBorn v.a0 ++ columnBorn v.a1) ++ (columnBorn v.a2 ++ columnBorn v.a3),
+        (columnBorn v.a4 ++ columnBorn v.a5) ++ (columnBorn v.a6 ++ columnBorn v.a7)⟩ :=
+    rfl
+  simp only [hmarg, reduceSystem]
+  exact ⟨polySame_append_assoc (columnBorn v.a0 ++ columnBorn v.a1)
+      (columnBorn v.a2) (columnBorn v.a3),
+    polySame_append_assoc (columnBorn v.a4 ++ columnBorn v.a5)
+      (columnBorn v.a6) (columnBorn v.a7)⟩
 
 /-- `I ⊗ I ⊗ U` non cambia i pesi di Born del sistema, per ogni `Oct`.
 
-La diagonale di `reduceSystem` è quel marginale. Ogni componente è
-la somma di due blocchi, e `block_pair_ideal` la mette in `(gC, gN)`. -/
+È `no_signalling_at` fra il qubit `0` e il qubit `2`. La diagonale di
+`reduceSystem` ha i coefficienti di `marginalAt 0`. -/
 theorem no_signalling_wigner (v : Oct) :
     inIdeal
         (psub (reduceSystem (applyIIU evolution v)).a00 (reduceSystem v).a00) ∧
       inIdeal
         (psub (reduceSystem (applyIIU evolution v)).a11 (reduceSystem v).a11) := by
-  have hU := wigner_blocks evolution v
-  have hBorn := wigner_born v
-  exact
-    ⟨inIdeal_polySame (polySame_psub hU.1 hBorn.1)
-        (block_pair_ideal v.a0 v.a1 v.a2 v.a3),
-      inIdeal_polySame (polySame_psub hU.2 hBorn.2)
-        (block_pair_ideal v.a4 v.a5 v.a6 v.a7)⟩
-
-/-- Dopo `I ⊗ U ⊗ I` il marginale è la somma dei blocchi dell'amico. -/
-theorem friend_blocks (U : Mat) (v : Oct) :
-    polySame (reduceSystem (applyIUI U v)).a00
-        (literalNorm U v.a0 v.a2 ++ literalNorm U v.a1 v.a3) ∧
-      polySame (reduceSystem (applyIUI U v)).a11
-        (literalNorm U v.a4 v.a6 ++ literalNorm U v.a5 v.a7) := by
-  simp only [reduceSystem, applyIUI, literalNorm]
-  exact ⟨polySame_crossed _ _ _ _, polySame_crossed _ _ _ _⟩
-
-/-- Prima di `I ⊗ U ⊗ I` i blocchi sono `(0, 2)`, `(1, 3)` e i due alti. -/
-theorem friend_born (v : Oct) :
-    polySame (reduceSystem v).a00
-        ((columnBorn v.a0 ++ columnBorn v.a2) ++
-          (columnBorn v.a1 ++ columnBorn v.a3)) ∧
-      polySame (reduceSystem v).a11
-        ((columnBorn v.a4 ++ columnBorn v.a6) ++
-          (columnBorn v.a5 ++ columnBorn v.a7)) := by
-  simp only [reduceSystem]
-  exact ⟨polySame_crossed _ _ _ _, polySame_crossed _ _ _ _⟩
+  have h := no_signalling_at (0 : Fin 3) (2 : Fin 3) (by decide) (ofOct v)
+  have hU := reduceSystem_marginal (applyIIU evolution v)
+  have hB := reduceSystem_marginal v
+  exact ⟨inIdeal_polySame (polySame_psub hU.1 hB.1) h.1,
+    inIdeal_polySame (polySame_psub hU.2 hB.2) h.2⟩
 
 /-- `I ⊗ U ⊗ I` non cambia i pesi di Born del sistema, per ogni `Oct`.
 
-Stesso ideale di `no_signalling_wigner`. I blocchi sono le fibre del
-bit medio, e `block_pair_ideal` è di nuovo `literal_evolution_norm`. -/
+Stesso ideale di `no_signalling_wigner`. Il unitario sta sul qubit `1`. -/
 theorem no_signalling_friend (v : Oct) :
     inIdeal
         (psub (reduceSystem (applyIUI evolution v)).a00 (reduceSystem v).a00) ∧
       inIdeal
         (psub (reduceSystem (applyIUI evolution v)).a11 (reduceSystem v).a11) := by
-  have hU := friend_blocks evolution v
-  have hBorn := friend_born v
-  exact
-    ⟨inIdeal_polySame (polySame_psub hU.1 hBorn.1)
-        (block_pair_ideal v.a0 v.a2 v.a1 v.a3),
-      inIdeal_polySame (polySame_psub hU.2 hBorn.2)
-        (block_pair_ideal v.a4 v.a6 v.a5 v.a7)⟩
+  have h := no_signalling_at (0 : Fin 3) (1 : Fin 3) (by decide) (ofOct v)
+  have hU := reduceSystem_marginal (applyIUI evolution v)
+  have hB := reduceSystem_marginal v
+  exact ⟨inIdeal_polySame (polySame_psub hU.1 hB.1) h.1,
+    inIdeal_polySame (polySame_psub hU.2 hB.2) h.2⟩
 
 end Universe.Observer

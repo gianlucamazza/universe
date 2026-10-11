@@ -9,7 +9,7 @@ Status: in progress. Milestone M2 of `plans/roadmap.md`, release `v0.6.0`.
 | 1     | done    | no-signalling between any two qubits, for every `n`                     |
 | 2     | done    | gates on different qubits commute; the state of one qubit               |
 | 3     | done    | `n` observers on one system: `α\|0…0⟩ + β\|1…1⟩`, and every pair agrees |
-| 4     | planned | the `Quad` and `Oct` theorems are the cases `n = 2` and `n = 3`         |
+| 4     | done    | the `Quad` and `Oct` theorems are the cases `n = 2` and `n = 3`         |
 | 5     | planned | docs, figure, release                                                   |
 
 ## 1. Why

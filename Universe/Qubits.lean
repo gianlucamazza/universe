@@ -33,17 +33,22 @@ su `|ψ⟩ ⊗ |0…0⟩`. `fanout_ghz` è `α|0…0⟩ + β|1…1⟩`: ogni alt
 è il polinomio zero. `fanout_agree` somma il peso di Born sulle celle
 in cui due qubit differiscono, ed è zero. `fanout_decoherence`, per
 `n ≥ 2`, rende il sistema diagonale con `bornPair ψ`.
+
+`ofQuad` e `toQuad` identificano `QState 2` con `Quad`. `ofOct` e
+`toOct` identificano `QState 3` con `Oct`. Sotto queste mappe
+`applyAt 0` è `applyUI` e `applyUII`, e `applyAt 1` su due qubit è
+`applyIU`. Su tre qubit `applyAt 1` è `applyIUI` e `applyAt 2` è
+`applyIIU`: quei due lemmi stanno in `Observer`, accanto alle
+definizioni.
 -/
 import Universe.Composition
 import Universe.Epistemology
-import Universe.Observer
 
 namespace Universe.Qubits
 
 open Universe.Composition
 open Universe.Dynamics
 open Universe.Epistemology
-open Universe.Observer
 open Universe.Qubit
 open Universe.Quotient hiding mul
 
@@ -875,5 +880,45 @@ theorem fanout_decoherence {n : Nat} (ψ : Pair) :
   simp only [ghz, reduceAt, reduceNat]
   exact Mat.ext (norm_onZero ψ.a0) (zipCoh_on_split ψ.a0 ψ.a1)
     (zipCoh_on_split_rev ψ.a0 ψ.a1) (norm_onOne ψ.a1)
+
+/-! ### `Quad` e `Oct` sono i casi `n = 2` e `n = 3` -/
+
+/-- Un qubit, nell'ordine di `Pair`. -/
+def ofPair (ψ : Pair) : QState 1 :=
+  .node (.leaf ψ.a0) (.leaf ψ.a1)
+
+/-- Due qubit, nell'ordine di `Quad`: `2 * i + k`. -/
+def ofQuad (v : Quad) : QState 2 :=
+  .node (.node (.leaf v.a0) (.leaf v.a1)) (.node (.leaf v.a2) (.leaf v.a3))
+
+/-- Le quattro foglie di `QState 2`, nell'ordine di `Quad`. -/
+def toQuad : QState 2 → Quad
+  | .node (.node (.leaf a0) (.leaf a1)) (.node (.leaf a2) (.leaf a3)) =>
+    ⟨a0, a1, a2, a3⟩
+
+/-- Tre qubit, nell'ordine di `Oct`: `4 * i + 2 * j + k`. -/
+def ofOct (v : Oct) : QState 3 :=
+  .node
+    (.node (.node (.leaf v.a0) (.leaf v.a1)) (.node (.leaf v.a2) (.leaf v.a3)))
+    (.node (.node (.leaf v.a4) (.leaf v.a5)) (.node (.leaf v.a6) (.leaf v.a7)))
+
+/-- Le otto foglie di `QState 3`, nell'ordine di `Oct`. -/
+def toOct : QState 3 → Oct
+  | .node
+      (.node (.node (.leaf a0) (.leaf a1)) (.node (.leaf a2) (.leaf a3)))
+      (.node (.node (.leaf a4) (.leaf a5)) (.node (.leaf a6) (.leaf a7))) =>
+    ⟨a0, a1, a2, a3, a4, a5, a6, a7⟩
+
+/-- `applyAt 0` su due qubit è `U ⊗ I`. -/
+theorem applyAt_ui (U : Mat) (v : Quad) :
+    toQuad (applyAt (0 : Fin 2) U (ofQuad v)) = applyUI U v := rfl
+
+/-- `applyAt 1` su due qubit è `I ⊗ U`. -/
+theorem applyAt_iu (U : Mat) (v : Quad) :
+    toQuad (applyAt (1 : Fin 2) U (ofQuad v)) = applyIU U v := rfl
+
+/-- `applyAt 0` su tre qubit è `U ⊗ I ⊗ I`. -/
+theorem applyAt_uii (U : Mat) (v : Oct) :
+    toOct (applyAt (0 : Fin 3) U (ofOct v)) = applyUII U v := rfl
 
 end Universe.Qubits
