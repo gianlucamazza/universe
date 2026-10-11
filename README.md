@@ -59,7 +59,7 @@ lake build
 
 `python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 32 lines. `lake build` typechecks the library `Universe`.
 
-`./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare.
+`./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push (`.github/workflows/check.yml`).
 
 ## Reading
 

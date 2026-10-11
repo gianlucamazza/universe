@@ -152,6 +152,36 @@ Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = e_x`, riempiono l
 | 6 | 110 | 2304/15625 |
 | 7 | 111 | 4096/15625 |
 
-## 7. Fuori da questa nota
+## 7. L'osservatore
+
+`Obs` era un assioma. Qui diventa la diagonale di un sottosistema. Il modulo è `Universe.Observer`; ogni enunciato vale per ogni coppia di ampiezze, nell'anello libero, salvo dove è detto.
+
+`applyCNOT` scambia le celle `|10⟩` e `|11⟩`. `cnot_involutive` è `CNOT² = I`, come uguaglianza di liste. `cnot_norm` conserva la somma dei quattro pesi di Born. `cnot_ket0` è
+
+```
+CNOT(|ψ⟩ ⊗ |0⟩) = α|00⟩ + β|11⟩.
+```
+
+`quadDet` è `a₀a₃ − a₁a₂`. `product_det` lo annulla su ogni prodotto: è la commutatività e l'associatività di `pmul` nei coefficienti. `entangled_det` dà `α β` dopo `CNOT`. Nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, `point_bell` valuta le quattro celle in `3/5`, `0`, `0`, `−4/5 i`, `point_entangled` dà `−12/25 i`, e `point_not_product` dice che nessuna coppia di vettori di `ℚ(i)` ha quel tensore.
+
+![CNOT e la griglia delle ampiezze](figures/cnot.svg)
+
+`reduceLeft` è la traccia parziale sull'apparato, `reduceRight` sul sistema. `reduceLeft_diag` dice che la diagonale è `marginalLeft`, per definizione. `reduce_product` dà `‖φ‖² |ψ⟩⟨ψ|` su un prodotto: senza interazione il sistema resta puro. `coherence_before` dà `α β̄` fuori diagonale prima di `CNOT`. `decoherence` dice che dopo `CNOT` i due termini fuori diagonale sono il polinomio zero e la diagonale è `bornPair ψ`. `pointer_born` è lo stesso fatto letto sull'apparato, per `Φ|ψ⟩`: la diagonale dello stato ridotto dell'apparato è `bornPair (Φ|ψ⟩)`. È l'enunciato che prende il posto dell'assioma.
+
+`pointer_born` non usa né `δ` né `gA`. I pesi che l'apparato legge sono quelli di `Φ|ψ⟩`, normalizzati o no; la loro somma è il fatto della sezione 4.
+
+`purity` è `Tr(ρ²)`. `purity_before` dà `‖ψ‖⁴` su `|ψ⟩⟨ψ|`. `purity_after` dà `|α|⁴ + |β|⁴` dopo `CNOT`. `purity_sphere` mette `1 − purezza − 2|α|²|β|²` nell'ideale `(gC, gN, gA)`, sullo stato generico, con il solo cofattore di `gA`. `point_purity` vale `337/625` nel punto, minore di `1`: lo stato ridotto è misto. Le valutazioni passano per `Universe.Evaluation`, dove `eval_polySame`, `eval_pmul` ed `eval_conj` fanno di `evalAt` un omomorfismo.
+
+![Lo stato ridotto prima e dopo CNOT](figures/decoerenza.svg)
+
+Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto al bit basso. `two_pointers` dà `α|000⟩ + β|111⟩` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`. `observers_agree` dice che i pesi delle celle 1–6, dove i due puntatori differiscono, sono il polinomio zero. `order_irrelevant` scambia l'ordine dei due `CNOT`. Le versioni `_right` passano per `tensor_assoc`.
+
+![Due apparati sullo stesso sistema](figures/osservatori.svg)
+
+La ripartizione è questa. Tutto sta nel libero, tranne `purity_sphere`, che usa `gA`. Il certificato Python esegue `CNOT`, il determinante, la decoerenza, `pointer_born`, la purezza nel punto e i due osservatori. `reduceLeft_diag`, `reduce_product`, `purity_before` e `purity_sphere` sono solo in Lean.
+
+Questo non dice quale esito avviene, né perché la base sia quella computazionale: la base è scelta da `CNOT`. Dice che, dentro il modello, i pesi di Born sono ciò che un sottosistema registra, e che due registrazioni coincidono.
+
+## 8. Fuori da questa nota
 
 Un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.

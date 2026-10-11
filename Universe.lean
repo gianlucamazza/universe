@@ -10,6 +10,7 @@ La nota è `papers/qubit.md`.
 `gA`, nello stesso file, è la sfera delle ampiezze e non entra in `reduce`.
 `Universe.Series` è il collasso di `exp(-i φ a)` quando `a² = 1`.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
+`Universe.Evaluation` dice che `evalAt` rispetta `polySame`, il prodotto e il coniugio.
 `Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,
 `det U − 1` e `ψ†(U†U)ψ − ‖ψ‖²` per ampiezze arbitrarie, con cofattori `gC + s² · gN`.
 `Universe.Epistemology.ground_prob_sum` è `P(0) + P(1) − 1` su `Φ|0⟩`,
@@ -59,6 +60,7 @@ in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
 import Universe.Composition
 import Universe.Dynamics
 import Universe.Epistemology
+import Universe.Evaluation
 import Universe.Observer
 import Universe.Ontology
 import Universe.Qubit

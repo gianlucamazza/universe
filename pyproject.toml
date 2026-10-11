@@ -8,5 +8,8 @@ version = "0.0.1"
 description = "Kernel esatto di un universo: stato, legge, osservabile."
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.15"]
+
 [tool.setuptools.packages.find]
 include = ["universe*"]

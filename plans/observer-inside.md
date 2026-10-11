@@ -1,7 +1,16 @@
 # Plan: the observer inside the universe
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: proposed. Baseline: `13cb4f3`, `./check.sh` green, certificate prints 24 lines.
+Status: phases 1–3 done (`9996340`, `919b254`, `09a8442`); phase 4 next.
+Baseline for phase 4: `./check.sh` green, certificate prints 32 lines.
+
+| Phase | State | Key theorems |
+|---|---|---|
+| 1 | done | `cnot_involutive`, `cnot_norm`, `product_det`, `point_not_product` |
+| 2 | done | `decoherence`, `pointer_born`, `purity_sphere`, `point_purity` |
+| 3 | done | `two_pointers`, `observers_agree`, `order_irrelevant` |
+| 4 | next | no-signalling |
+| 5 | open | research note |
 
 ## 1. Why
 
@@ -170,6 +179,11 @@ line: "due osservatori non sono mai in disaccordo".
 
 ### Phase 4 (exploratory): no-signalling
 
+Since phase 2, `Universe/Evaluation.lean` holds the generic evaluation lemmas
+(`eval_polySame`, `eval_pmul`, `eval_conj`). Reuse them; new generic lemmas go there,
+observer facts go in `Observer.lean`. `papers/qubit.md` section 7 describes phases 1–3;
+extend it rather than duplicating it.
+
 Claim: a local unitary on the apparatus does not change the system's statistics.
 
 - Lean, within the nine exponents: take `w = applyCNOT (tensorPair ψ ket0)` and the apparatus
@@ -188,9 +202,10 @@ for Lean.
 
 ### Phase 5 (exploratory): research note and next questions
 
-Write `researches/osservatore.md` (Italian, same tone and length as
+`papers/qubit.md` section 7 already states what phases 1–3 prove. Write `researches/osservatore.md` (Italian, same tone and length as
 `researches/associazione.md`):
 
+- the argument, not the inventory: why decoherence and agreement hold in the free ring;
 - what "Obs derived" means here and what it does **not** mean: no collapse, no single outcome,
   no preferred basis derived (the basis is fixed by `CNOT`);
 - which identities are free-ring, which need `(gC, gN)`, which need `gA`;
