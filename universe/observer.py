@@ -119,16 +119,6 @@ def reduced(state: State, factor: int, left: int, right: int) -> Operator:
     return Operator.from_rows(rows)
 
 
-def _basis_permutation(ring: Ring, images: tuple[int, ...]) -> Operator:
-    """Manda il vettore di base `e_j` in `e_{images[j]}`."""
-    size = len(images)
-    one, zero = ring.one(), ring.zero()
-    rows = [[zero for _ in range(size)] for _ in range(size)]
-    for source, target in enumerate(images):
-        rows[target][source] = one
-    return Operator.from_rows(rows)
-
-
 def _swap_apparatuses(ring: Ring) -> Operator:
     """Scambia i due apparati.
 
@@ -139,7 +129,7 @@ def _swap_apparatuses(ring: Ring) -> Operator:
         system, rest = divmod(index, 4)
         first, second = divmod(rest, 2)
         images.append(4 * system + 2 * second + first)
-    return _basis_permutation(ring, tuple(images))
+    return Operator.permutation(ring, tuple(images))
 
 
 def cnot01(ring: Ring) -> Operator:

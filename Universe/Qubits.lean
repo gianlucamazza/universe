@@ -26,6 +26,13 @@ lo stesso valore di `a`, e la differenza è `zip_ideal`.
 per foglia, a coefficienti. `reduceAt` è la traccia parziale su un
 qubit: la diagonale è `marginalAt`. Su `|ψ⟩` al qubit `k` e un resto
 sugli altri, è `‖resto‖² |ψ⟩⟨ψ|`.
+
+`cnotFrom0 k` è il `CNOT` dal qubit `0` al qubit `k`. `k = 0` lascia
+lo stato: il controllo non è un bersaglio. `fanout` li applica tutti
+su `|ψ⟩ ⊗ |0…0⟩`. `fanout_ghz` è `α|0…0⟩ + β|1…1⟩`: ogni altra foglia
+è il polinomio zero. `fanout_agree` somma il peso di Born sulle celle
+in cui due qubit differiscono, ed è zero. `fanout_decoherence`, per
+`n ≥ 2`, rende il sistema diagonale con `bornPair ψ`.
 -/
 import Universe.Composition
 import Universe.Epistemology
@@ -544,5 +551,329 @@ theorem reduceAt_product (ψ : Pair) : {n : Nat} → (k : Fin (n + 1)) → (rest
         (polySame_sum_right (normQ l) (normQ r) (outer ψ).a10)
     · exact polySame.trans (polySame_append hl.2.2.2 hr.2.2.2)
         (polySame_sum_right (normQ l) (normQ r) (outer ψ).a11)
+
+/-! ### n osservatori -/
+
+/-- Ogni foglia è il polinomio zero. -/
+def zeroQ : {n : Nat} → QState n
+  | 0 => .leaf []
+  | _ + 1 => .node zeroQ zeroQ
+
+/-- `|0…0⟩`. La foglia tutta zero vale `1`. -/
+def ket0Q : {n : Nat} → QState n
+  | 0 => .leaf (single 1 Mono.one)
+  | _ + 1 => .node ket0Q zeroQ
+
+/-- `|1…1⟩`. La foglia tutta uno vale `1`. -/
+def ket1Q : {n : Nat} → QState n
+  | 0 => .leaf (single 1 Mono.one)
+  | _ + 1 => .node zeroQ ket1Q
+
+/-- Ampiezza `z` su `|0…0⟩`, zero sulle altre foglie. -/
+def onZero (z : Poly) : {n : Nat} → QState n
+  | 0 => .leaf z
+  | _ + 1 => .node (onZero z) zeroQ
+
+/-- Ampiezza `z` su `|1…1⟩`, zero sulle altre foglie. -/
+def onOne (z : Poly) : {n : Nat} → QState n
+  | 0 => .leaf z
+  | _ + 1 => .node zeroQ (onOne z)
+
+/-- `α|0…0⟩ + β|1…1⟩`. Le altre foglie sono il polinomio zero. -/
+def ghz (ψ : Pair) : {n : Nat} → QState n
+  | 0 => .leaf []
+  | _ + 1 => .node (onZero ψ.a0) (onOne ψ.a1)
+
+/-- Capovolge il qubit `k`. `k = 0` scambia i due figli. -/
+def flipNat (k : Nat) : {n : Nat} → QState n → QState n
+  | 0, v => v
+  | _ + 1, .node l r =>
+    match k with
+    | 0 => .node r l
+    | j + 1 => .node (flipNat j l) (flipNat j r)
+
+/-- Capovolge i qubit da `k` in poi. `flipFrom 0` li capovolge tutti. -/
+def flipFrom (k : Nat) : {n : Nat} → QState n → QState n
+  | 0, v => v
+  | _ + 1, .node l r =>
+    match k with
+    | 0 => .node (flipFrom 0 r) (flipFrom 0 l)
+    | j + 1 => .node (flipFrom j l) (flipFrom j r)
+
+/-- `CNOT` dal qubit `0` al qubit `k`.
+
+Il controllo è il bit alto. Il ramo `0` resta. Nel ramo `1` si
+capovolge il qubit `k`. `k = 0` è l'identità. -/
+def cnotFrom0Nat (k : Nat) : {n : Nat} → QState n → QState n
+  | 0, v => v
+  | _ + 1, .node l r =>
+    match k with
+    | 0 => .node l r
+    | j + 1 => .node l (flipNat j r)
+
+/-- `CNOT` dal qubit `0` al qubit `k`. -/
+def cnotFrom0 {n : Nat} (k : Fin n) (v : QState n) : QState n :=
+  cnotFrom0Nat k.val v
+
+/-- `cnotFrom0` verso i qubit `k, k + 1, …`. `k = 0` parte dal primo bersaglio. -/
+def cnotsFrom (k : Nat) : {n : Nat} → QState n → QState n
+  | 0, v => v
+  | _ + 1, .node l r =>
+    match k with
+    | 0 => .node l (flipFrom 0 r)
+    | j + 1 => .node l (flipFrom j r)
+
+/-- Tutti i `CNOT` dal qubit `0` verso gli altri qubit. -/
+def fanoutNat : {n : Nat} → QState n → QState n :=
+  cnotsFrom 0
+
+/-- `flipNat k` dopo i capovolgimenti da `k + 1` in poi è `flipFrom k`. -/
+theorem flipNat_flipFrom (k : Nat) : {n : Nat} → (v : QState n) →
+    flipNat k (flipFrom (k + 1) v) = flipFrom k v
+  | 0, _ => by simp only [flipNat, flipFrom]
+  | _ + 1, .node l r =>
+    match k with
+    | 0 => by simp only [flipNat, flipFrom]
+    | j + 1 => by
+      simp only [flipNat, flipFrom]
+      rw [flipNat_flipFrom j l, flipNat_flipFrom j r]
+
+/-- Un passo del fan-out è un `CNOT` dal qubit `0`. -/
+theorem cnotsFrom_step (j : Nat) {n : Nat} (l r : QState n) :
+    cnotFrom0Nat (j + 1) (cnotsFrom (j + 2) (.node l r)) =
+      cnotsFrom (j + 1) (.node l r) := by
+  simp only [cnotFrom0Nat, cnotsFrom]
+  rw [flipNat_flipFrom]
+
+/-- Il controllo non è un bersaglio: `cnotsFrom 0` e `cnotsFrom 1` coincidono. -/
+theorem cnots_skip_control {n : Nat} (l r : QState n) :
+    cnotsFrom 0 (.node l r) = cnotsFrom 1 (.node l r) := rfl
+
+/-- I `CNOT` dal sistema verso ogni altro qubit, su `|ψ⟩ ⊗ |0…0⟩`.
+
+`ψ` sta sul qubit `0`. Gli altri qubit partono da `|0⟩`. -/
+def fanout (ψ : Pair) : {n : Nat} → QState n
+  | 0 => .leaf []
+  | n + 1 => fanoutNat (embedAt ψ ⟨0, Nat.succ_pos n⟩ (ket0Q : QState n))
+
+theorem norm_zero : {n : Nat} → normQ (zeroQ : QState n) = []
+  | 0 => by simp only [zeroQ, normQ, columnBorn_nil]
+  | _ + 1 => by
+    simp only [zeroQ, normQ, norm_zero, List.append_nil]
+
+theorem norm_onZero (z : Poly) : {n : Nat} → normQ (onZero z : QState n) = columnBorn z
+  | 0 => rfl
+  | _ + 1 => by
+    simp only [onZero, normQ]
+    rw [norm_onZero z, norm_zero, List.append_nil]
+
+theorem norm_onOne (z : Poly) : {n : Nat} → normQ (onOne z : QState n) = columnBorn z
+  | 0 => rfl
+  | _ + 1 => by
+    simp only [onOne, normQ]
+    rw [norm_zero, norm_onOne z, List.nil_append]
+
+theorem scale_zero (μ : Poly) : {n : Nat} → scaleQ μ (zeroQ : QState n) = zeroQ
+  | 0 => by simp only [scaleQ, zeroQ, pmul_nil]
+  | _ + 1 => by
+    simp only [scaleQ, zeroQ, scale_zero]
+
+theorem scale_onZero (μ : Poly) : {n : Nat} → scaleQ μ (ket0Q : QState n) = onZero μ
+  | 0 => by
+    simp only [scaleQ, ket0Q, onZero]
+    rw [pmul_one]
+  | _ + 1 => by
+    simp only [scaleQ, ket0Q, onZero]
+    rw [scale_onZero μ, scale_zero μ]
+
+theorem scale_onOne (μ : Poly) : {n : Nat} → scaleQ μ (ket1Q : QState n) = onOne μ
+  | 0 => by
+    simp only [scaleQ, ket1Q, onOne]
+    rw [pmul_one]
+  | _ + 1 => by
+    simp only [scaleQ, ket1Q, onOne]
+    rw [scale_zero μ, scale_onOne μ]
+
+theorem flip_zero : {n : Nat} → flipFrom 0 (zeroQ : QState n) = zeroQ
+  | 0 => by simp only [flipFrom, zeroQ]
+  | _ + 1 => by
+    simp only [zeroQ, flipFrom, flip_zero]
+
+theorem flip_ket0 : {n : Nat} → flipFrom 0 (ket0Q : QState n) = ket1Q
+  | 0 => rfl
+  | _ + 1 => by
+    simp only [ket0Q, ket1Q, flipFrom]
+    rw [flip_zero, flip_ket0]
+
+theorem flip_scale (μ : Poly) : {n : Nat} → (v : QState n) →
+    flipFrom 0 (scaleQ μ v) = scaleQ μ (flipFrom 0 v)
+  | _, .leaf _ => rfl
+  | _, .node l r => by
+    simp only [flipFrom, scaleQ]
+    rw [flip_scale μ r, flip_scale μ l]
+
+/-- Il fan-out è `α|0…0⟩ + β|1…1⟩`. Ogni altra foglia è il polinomio zero. -/
+theorem fanout_ghz (ψ : Pair) : {n : Nat} → (fanout ψ : QState n) = ghz ψ
+  | 0 => rfl
+  | _ + 1 => by
+    simp only [fanout, fanoutNat, embedAt, cnotsFrom, ghz]
+    rw [flip_scale, flip_ket0, scale_onZero, scale_onOne]
+
+/-- Peso di Born sulle foglie in cui il qubit `k` vale `high`. -/
+def bitBorn : Bool → Nat → {n : Nat} → QState n → Poly
+  | _, _, 0, _ => []
+  | false, 0, _ + 1, .node l _ => normQ l
+  | true, 0, _ + 1, .node _ r => normQ r
+  | high, j + 1, _ + 1, .node l r => bitBorn high j l ++ bitBorn high j r
+
+/-- Peso di Born sulle foglie in cui il qubit `a` e il qubit `b` differiscono. -/
+def disagreeBorn : Nat → Nat → {n : Nat} → QState n → Poly
+  | _, _, 0, _ => []
+  | 0, 0, _ + 1, _ => []
+  | 0, j + 1, _ + 1, .node l r => bitBorn true j l ++ bitBorn false j r
+  | i + 1, 0, _ + 1, .node l r => bitBorn true i l ++ bitBorn false i r
+  | i + 1, j + 1, _ + 1, .node l r => disagreeBorn i j l ++ disagreeBorn i j r
+
+theorem bitBorn_zero (high : Bool) (k : Nat) :
+    {n : Nat} → bitBorn high k (zeroQ : QState n) = []
+  | 0 => by simp only [bitBorn, zeroQ]
+  | _ + 1 => by
+    cases high <;> cases k <;>
+      simp only [bitBorn, zeroQ, norm_zero, bitBorn_zero, List.append_nil]
+
+theorem disagree_zero (a b : Nat) : {n : Nat} → disagreeBorn a b (zeroQ : QState n) = []
+  | 0 => by simp only [disagreeBorn, zeroQ]
+  | _ + 1 => by
+    cases a <;> cases b <;>
+      simp only [disagreeBorn, zeroQ, bitBorn_zero, disagree_zero, List.append_nil]
+
+theorem bitBorn_onZero_one (k : Nat) (z : Poly) :
+    {n : Nat} → k < n → bitBorn true k (onZero z : QState n) = []
+  | 0, hk => absurd hk (Nat.not_lt_zero _)
+  | _ + 1, hk =>
+    match k with
+    | 0 => by
+      simp only [bitBorn, onZero]
+      exact norm_zero
+    | j + 1 => by
+      simp only [bitBorn, onZero]
+      rw [bitBorn_onZero_one j z (Nat.lt_of_succ_lt_succ hk), bitBorn_zero,
+        List.append_nil]
+
+theorem bitBorn_onOne_zero (k : Nat) (z : Poly) :
+    {n : Nat} → k < n → bitBorn false k (onOne z : QState n) = []
+  | 0, hk => absurd hk (Nat.not_lt_zero _)
+  | _ + 1, hk =>
+    match k with
+    | 0 => by
+      simp only [bitBorn, onOne]
+      exact norm_zero
+    | j + 1 => by
+      simp only [bitBorn, onOne]
+      rw [bitBorn_zero, bitBorn_onOne_zero j z (Nat.lt_of_succ_lt_succ hk),
+        List.nil_append]
+
+theorem disagree_onZero (a b : Nat) (h : a ≠ b) (z : Poly) :
+    {n : Nat} → a < n → b < n → disagreeBorn a b (onZero z : QState n) = []
+  | 0, ha, _ => absurd ha (Nat.not_lt_zero _)
+  | _ + 1, ha, hb =>
+    match a, b with
+    | 0, 0 => absurd rfl h
+    | 0, j + 1 => by
+      simp only [onZero, disagreeBorn]
+      rw [bitBorn_onZero_one j z (Nat.lt_of_succ_lt_succ hb), bitBorn_zero,
+        List.append_nil]
+    | i + 1, 0 => by
+      simp only [onZero, disagreeBorn]
+      rw [bitBorn_onZero_one i z (Nat.lt_of_succ_lt_succ ha), bitBorn_zero,
+        List.append_nil]
+    | i + 1, j + 1 => by
+      simp only [onZero, disagreeBorn]
+      rw [disagree_onZero i j (fun eq => h (congrArg Nat.succ eq)) z
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb),
+        disagree_zero, List.append_nil]
+
+theorem disagree_onOne (a b : Nat) (h : a ≠ b) (z : Poly) :
+    {n : Nat} → a < n → b < n → disagreeBorn a b (onOne z : QState n) = []
+  | 0, ha, _ => absurd ha (Nat.not_lt_zero _)
+  | _ + 1, ha, hb =>
+    match a, b with
+    | 0, 0 => absurd rfl h
+    | 0, j + 1 => by
+      simp only [onOne, disagreeBorn]
+      rw [bitBorn_zero, bitBorn_onOne_zero j z (Nat.lt_of_succ_lt_succ hb),
+        List.append_nil]
+    | i + 1, 0 => by
+      simp only [onOne, disagreeBorn]
+      rw [bitBorn_zero, bitBorn_onOne_zero i z (Nat.lt_of_succ_lt_succ ha),
+        List.append_nil]
+    | i + 1, j + 1 => by
+      simp only [onOne, disagreeBorn]
+      rw [disagree_zero, disagree_onOne i j (fun eq => h (congrArg Nat.succ eq)) z
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb),
+        List.append_nil]
+
+theorem disagree_ghz (a b : Nat) (h : a ≠ b) (ψ : Pair) :
+    {n : Nat} → a < n → b < n → disagreeBorn a b (ghz ψ : QState n) = []
+  | 0, ha, _ => absurd ha (Nat.not_lt_zero _)
+  | _ + 1, ha, hb =>
+    match a, b with
+    | 0, 0 => absurd rfl h
+    | 0, j + 1 => by
+      simp only [ghz, disagreeBorn]
+      rw [bitBorn_onZero_one j ψ.a0 (Nat.lt_of_succ_lt_succ hb),
+        bitBorn_onOne_zero j ψ.a1 (Nat.lt_of_succ_lt_succ hb), List.append_nil]
+    | i + 1, 0 => by
+      simp only [ghz, disagreeBorn]
+      rw [bitBorn_onZero_one i ψ.a0 (Nat.lt_of_succ_lt_succ ha),
+        bitBorn_onOne_zero i ψ.a1 (Nat.lt_of_succ_lt_succ ha), List.append_nil]
+    | i + 1, j + 1 => by
+      simp only [ghz, disagreeBorn]
+      rw [disagree_onZero i j (fun eq => h (congrArg Nat.succ eq)) ψ.a0
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb),
+        disagree_onOne i j (fun eq => h (congrArg Nat.succ eq)) ψ.a1
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb),
+        List.append_nil]
+
+/-- Due qubit del fan-out non discordano.
+
+La somma dei pesi di Born sulle celle in cui differiscono è il
+polinomio zero. Gli osservatori sono i qubit diversi dal sistema, e
+il sistema è il qubit `0`: la coppia è una coppia qualsiasi. -/
+theorem fanout_agree {n : Nat} (a b : Fin n) (h : a ≠ b) (ψ : Pair) :
+    disagreeBorn a.val b.val (fanout ψ : QState n) = [] := by
+  rw [fanout_ghz]
+  exact disagree_ghz a.val b.val (Fin.val_ne_of_ne h) ψ a.isLt b.isLt
+
+theorem zipCoh_zero_right : {n : Nat} → (v : QState n) → zipCoh v zeroQ = []
+  | _, .leaf _ => by simp only [zipCoh, zeroQ, conjP, pmul_nil]
+  | _, .node l r => by
+    simp only [zipCoh, zeroQ]
+    rw [zipCoh_zero_right l, zipCoh_zero_right r, List.append_nil]
+
+theorem zipCoh_zero_left : {n : Nat} → (v : QState n) → zipCoh zeroQ v = []
+  | _, .leaf _ => by simp only [zipCoh, zeroQ, pmul_nil_left]
+  | _, .node l r => by
+    simp only [zipCoh, zeroQ]
+    rw [zipCoh_zero_left l, zipCoh_zero_left r, List.append_nil]
+
+theorem zipCoh_on_split (α β : Poly) {n : Nat} :
+    zipCoh (onZero α : QState (n + 1)) (onOne β) = [] := by
+  simp only [onZero, onOne, zipCoh]
+  rw [zipCoh_zero_right, zipCoh_zero_left, List.append_nil]
+
+theorem zipCoh_on_split_rev (α β : Poly) {n : Nat} :
+    zipCoh (onOne β : QState (n + 1)) (onZero α) = [] := by
+  simp only [onZero, onOne, zipCoh]
+  rw [zipCoh_zero_left, zipCoh_zero_right, List.append_nil]
+
+/-- Per `n ≥ 2` il sistema, il qubit `0`, è diagonale con `bornPair ψ`. -/
+theorem fanout_decoherence {n : Nat} (ψ : Pair) :
+    reduceAt ⟨0, Nat.succ_pos (n + 1)⟩ (fanout ψ : QState (n + 2)) =
+      ⟨(bornPair ψ).a0, [], [], (bornPair ψ).a1⟩ := by
+  rw [fanout_ghz]
+  simp only [ghz, reduceAt, reduceNat]
+  exact Mat.ext (norm_onZero ψ.a0) (zipCoh_on_split ψ.a0 ψ.a1)
+    (zipCoh_on_split_rev ψ.a0 ψ.a1) (norm_onOne ψ.a1)
 
 end Universe.Qubits

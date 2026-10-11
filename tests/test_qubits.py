@@ -1,11 +1,19 @@
 import pytest
 
 from universe.dynamics import evolution, hamiltonian
-from universe.epistemology import marginal, norm_squared
-from universe.observer import reduced
+from universe.epistemology import born, marginal, norm_squared
+from universe.observer import cnot, cnot01, cnot02, reduced
 from universe.ontology import Operator, State
-from universe.qubits import embed_qubit, generic_state, marginal_at, on_qubit, reduce_at
-from universe.ring import g
+from universe.qubits import (
+    cnot_from_0,
+    embed_qubit,
+    fanout,
+    generic_state,
+    marginal_at,
+    on_qubit,
+    reduce_at,
+)
+from universe.ring import Ring, g
 
 
 def test_generic_state_has_free_amplitudes():
@@ -146,3 +154,47 @@ def test_gates_on_different_qubits_commute():
     forward = on_qubit(left, 0, 2).apply(on_qubit(right, 1, 2).apply(state))
     backward = on_qubit(right, 1, 2).apply(on_qubit(left, 0, 2).apply(state))
     assert forward.amplitudes == backward.amplitudes
+
+
+def test_cnot_from_0_matches_the_observer_gates():
+    ring = Ring(())
+    assert cnot_from_0(2, 0, ring).rows == Operator.eye(ring, 4).rows
+    assert cnot_from_0(2, 1, ring).rows == cnot(ring).rows
+    assert cnot_from_0(3, 1, ring).rows == cnot01(ring).rows
+    assert cnot_from_0(3, 2, ring).rows == cnot02(ring).rows
+
+
+def test_cnot_from_0_rejects_a_missing_qubit():
+    ring = Ring(())
+    with pytest.raises(ValueError):
+        cnot_from_0(2, 2, ring)
+
+
+def test_fanout_is_ghz_and_the_system_is_diagonal():
+    _, psi = generic_state(1)
+    alpha, beta = psi.amplitudes
+    weights = born(psi)
+    for n in range(1, 5):
+        state = fanout(psi, n)
+        assert state.amplitudes[0] == alpha
+        assert state.amplitudes[-1] == beta
+        assert all(amplitude.is_zero() for amplitude in state.amplitudes[1:-1])
+    copied = fanout(psi, 3)
+    for left in range(3):
+        for right in range(left + 1, 3):
+            for index, amplitude in enumerate(copied.amplitudes):
+                bit_left = (index >> (2 - left)) & 1
+                bit_right = (index >> (2 - right)) & 1
+                if bit_left != bit_right:
+                    assert amplitude.modulus_squared().is_zero()
+    rho = reduce_at(copied, 0)
+    assert rho.rows[0][1].is_zero()
+    assert rho.rows[1][0].is_zero()
+    assert rho.rows[0][0] == weights[0]
+    assert rho.rows[1][1] == weights[1]
+
+
+def test_fanout_rejects_a_state_that_is_not_one_qubit():
+    _, state = generic_state(2)
+    with pytest.raises(ValueError):
+        fanout(state, 3)

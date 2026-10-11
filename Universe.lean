@@ -111,6 +111,12 @@ foglia per foglia, e sul qubit `k + 1` agisce nei due figli.
 `norm_applyAt` mette `‖applyAt k U v‖² − ‖v‖²` in `(gC, gN)`.
 `marginalAt` è la coppia di Born di un qubit. `no_signalling_at` la lascia
 in `(gC, gN)` quando il unitario agisce su un qubit diverso.
+`applyAt_comm` fa commutare due matrici su qubit diversi. `reduceAt` è
+la traccia parziale su un qubit. `cnotFrom0` è il `CNOT` dal qubit `0`.
+`fanout` li applica tutti su `|ψ⟩ ⊗ |0…0⟩`: `fanout_ghz` è
+`α|0…0⟩ + β|1…1⟩`, `fanout_agree` azzera il peso delle celle in cui
+due qubit differiscono, e `fanout_decoherence` rende il sistema
+diagonale con `bornPair`, per `n ≥ 2`.
 -/
 import Universe.Composition
 import Universe.Dynamics

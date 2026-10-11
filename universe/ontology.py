@@ -99,6 +99,17 @@ class Operator:
             rows.append([ring.one() if i == j else ring.zero() for j in range(size)])
         return Operator.from_rows(rows)
 
+    @staticmethod
+    def permutation(ring: Ring, images: tuple[int, ...]) -> Operator:
+        """Manda il vettore di base `e_j` in `e_{images[j]}`."""
+        size = len(images)
+        if sorted(images) != list(range(size)):
+            raise ValueError("le immagini non sono una permutazione")
+        rows = [[ring.zero() for _ in range(size)] for _ in range(size)]
+        for source, target in enumerate(images):
+            rows[target][source] = ring.one()
+        return Operator.from_rows(rows)
+
     def __add__(self, other: Operator) -> Operator:
         self._match(other)
         rows = tuple(

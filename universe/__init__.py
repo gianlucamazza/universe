@@ -68,6 +68,11 @@ e `Universe.Observer.no_signalling_any_1`; su `genericQuad`,
 `Universe.Observer.no_signalling_friend` dicono lo stesso di un unitario
 sul qubit di Wigner e su quello dell'amico. Per ogni `n` e ogni coppia di
 qubit distinti, lo stesso è `Universe.Qubits.no_signalling_at`.
+`Universe.Qubits.cnotFrom0` copia il sistema su un altro qubit.
+`Universe.Qubits.fanout` li applica tutti su `|ψ⟩ ⊗ |0…0⟩`:
+`fanout_ghz` è `α|0…0⟩ + β|1…1⟩`, `fanout_agree` azzera il peso
+delle celle in cui due qubit differiscono, e `fanout_decoherence`
+rende il sistema diagonale con `bornPair`.
 
 `U` commuta con `H` nell'anello libero:
 `Universe.Symmetry.evolution_commutes_hamiltonian`. L'energia

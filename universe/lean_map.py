@@ -145,6 +145,15 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Qubits.norm_applyAt",
     ),
     "porte su qubit diversi commutano, n ≤ 4": ("Universe.Qubits.applyAt_comm",),
+    "il fan-out su |ψ⟩ ⊗ |0…0⟩ è α|0…0⟩ + β|1…1⟩, n ≤ 5": (
+        "Universe.Qubits.fanout_ghz",
+    ),
+    "nel fan-out ogni coppia di osservatori concorda, n ≤ 5": (
+        "Universe.Qubits.fanout_agree",
+    ),
+    "dopo il fan-out il sistema è diagonale con i pesi di Born, n ≤ 5": (
+        "Universe.Qubits.fanout_decoherence",
+    ),
     "c = 3/5, s = 4/5, n = e_x: U†U = I nei razionali di Gauss": (
         "Universe.Epistemology.point_unitary",
     ),

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 73 righe.
+"""Certificato eseguibile del primo universo. Stampa 76 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -75,6 +75,12 @@ per `n = 2, 3, 4`; Lean lo prova per ogni coppia di matrici
 (`Universe.Qubits.applyAt_comm`). La traccia parziale su un qubit ha
 diagonale uguale al marginale (`Universe.Qubits.reduceAt_diag`). Su un
 prodotto è `‖resto‖² |ψ⟩⟨ψ|` (`Universe.Qubits.reduceAt_product`).
+Il fan-out di `|ψ⟩ ⊗ |0…0⟩`, un `CNOT` dal sistema verso ogni altro
+qubit, è `α|0…0⟩ + β|1…1⟩` (`Universe.Qubits.fanout_ghz`). Ogni coppia
+di qubit ha peso zero sulle celle in cui i due bit differiscono
+(`Universe.Qubits.fanout_agree`). Per `n ≥ 2` il sistema ridotto è
+diagonale con i pesi di Born (`Universe.Qubits.fanout_decoherence`).
+Python lo controlla per `n ≤ 5` su un `ψ` generico.
 `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
 `(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
@@ -171,7 +177,14 @@ from universe.observer import (
     reduced,
 )
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
-from universe.qubits import embed_qubit, generic_state, marginal_at, on_qubit, reduce_at
+from universe.qubits import (
+    embed_qubit,
+    fanout,
+    generic_state,
+    marginal_at,
+    on_qubit,
+    reduce_at,
+)
 from universe.ring import ZERO_G, Gauss, Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
@@ -814,6 +827,35 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "ψ e resto generici, n ≤ 4; Lean per ogni n\nUniverse.Qubits.reduceAt_product"
         if on_product is None
         else on_product,
+    )
+
+    copied = _fanout_ghz(5)
+    add(
+        "Osservatore",
+        "il fan-out su |ψ⟩ ⊗ |0…0⟩ è α|0…0⟩ + β|1…1⟩, n ≤ 5",
+        copied is None,
+        "ψ generico; Lean per ogni n\nUniverse.Qubits.fanout_ghz"
+        if copied is None
+        else copied,
+    )
+    agreed = _fanout_agree(5)
+    add(
+        "Osservatore",
+        "nel fan-out ogni coppia di osservatori concorda, n ≤ 5",
+        agreed is None,
+        "ψ generico, ogni coppia di qubit; Lean per ogni n\n"
+        "Universe.Qubits.fanout_agree"
+        if agreed is None
+        else agreed,
+    )
+    decohered = _fanout_decoherence(5)
+    add(
+        "Osservatore",
+        "dopo il fan-out il sistema è diagonale con i pesi di Born, n ≤ 5",
+        decohered is None,
+        "ψ generico, n ≥ 2; Lean per ogni n\nUniverse.Qubits.fanout_decoherence"
+        if decohered is None
+        else decohered,
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---
@@ -1543,6 +1585,50 @@ def _marginal_on_other_qubits(max_n: int) -> str | None:
                             f"n = {n}, a = {target}, b = {source}, "
                             f"P({component}): {reason}"
                         )
+    return None
+
+
+def _fanout_ghz(max_n: int) -> str | None:
+    """Il fan-out è `α|0…0⟩ + β|1…1⟩`. Le altre ampiezze sono zero."""
+    for n in range(1, max_n + 1):
+        _, psi = generic_state(1)
+        alpha, beta = psi.amplitudes
+        state = fanout(psi, n)
+        if state.amplitudes[0] != alpha or state.amplitudes[-1] != beta:
+            return f"n = {n}: le ampiezze estreme"
+        if any(not amplitude.is_zero() for amplitude in state.amplitudes[1:-1]):
+            return f"n = {n}: una foglia interna"
+    return None
+
+
+def _fanout_agree(max_n: int) -> str | None:
+    """Ogni coppia di qubit: le celle in cui differiscono hanno peso zero."""
+    for n in range(2, max_n + 1):
+        _, psi = generic_state(1)
+        weights = born(fanout(psi, n))
+        for left in range(n):
+            for right in range(left + 1, n):
+                for index, weight in enumerate(weights):
+                    bit_left = (index >> (n - 1 - left)) & 1
+                    bit_right = (index >> (n - 1 - right)) & 1
+                    if bit_left != bit_right and not weight.is_zero():
+                        return f"n = {n}, qubit {left} e {right}, cella {index}"
+    return None
+
+
+def _fanout_decoherence(max_n: int) -> str | None:
+    """Per `n ≥ 2` il sistema ridotto è diagonale, con i pesi di Born di `ψ`."""
+    for n in range(2, max_n + 1):
+        _, psi = generic_state(1)
+        weights = born(psi)
+        rho = reduce_at(fanout(psi, n), 0)
+        if (
+            not rho.rows[0][1].is_zero()
+            or not rho.rows[1][0].is_zero()
+            or rho.rows[0][0] != weights[0]
+            or rho.rows[1][1] != weights[1]
+        ):
+            return f"n = {n}"
     return None
 
 

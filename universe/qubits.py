@@ -8,13 +8,16 @@ della legge. `on_qubit` è `I ⊗ … ⊗ U ⊗ … ⊗ I`, `Universe.Qubits.app
 `reduce_at` è la traccia parziale su un qubit, `Universe.Qubits.reduceAt`.
 `embed_qubit` mette `|ψ⟩` su un qubit e un resto sugli altri,
 `Universe.Qubits.embedAt`.
+`cnot_from_0` è il `CNOT` dal qubit `0`, `Universe.Qubits.cnotFrom0`.
+Sul bersaglio `0` è l'identità. `fanout` applica quei `CNOT` a
+`|ψ⟩ ⊗ |0…0⟩`, `Universe.Qubits.fanout`.
 """
 
 from __future__ import annotations
 
 from universe.epistemology import marginal
 from universe.ontology import Operator, State
-from universe.ring import Law, Poly, law_ring
+from universe.ring import Law, Poly, Ring, law_ring
 
 
 def _qubit_count(dim: int) -> int:
@@ -122,3 +125,39 @@ def embed_qubit(psi: State, rest: tuple[Poly, ...], qubit: int) -> State:
             rest_index = (rest_index << 1) | ((index >> (n - 1 - other)) & 1)
         amplitudes.append(psi.amplitudes[bit] * rest[rest_index])
     return State(tuple(amplitudes))
+
+
+def cnot_from_0(n: int, target: int, ring: Ring) -> Operator:
+    """`CNOT` dal qubit `0` al qubit `target`. È `Universe.Qubits.cnotFrom0`.
+
+    Il qubit `0` è il bit alto. Se vale `1`, il bit `target` si
+    capovolge. `target = 0` è l'identità: il controllo non è un
+    bersaglio. Su due qubit, bersaglio `1`, è `universe.observer.cnot`.
+    """
+    _check_qubit(target, n)
+    dim = 1 << n
+    if target == 0:
+        return Operator.eye(ring, dim)
+    flip = 1 << (n - 1 - target)
+    images = tuple(
+        index ^ flip if index >> (n - 1) & 1 else index for index in range(dim)
+    )
+    return Operator.permutation(ring, images)
+
+
+def fanout(psi: State, n: int) -> State:
+    """`|ψ⟩ ⊗ |0…0⟩` e i `CNOT` dal qubit `0` verso gli altri.
+
+    È `Universe.Qubits.fanout`. `ψ` ha due ampiezze. Il qubit `0` è il
+    sistema; gli altri partono da `|0⟩`.
+    """
+    if psi.dim != 2:
+        raise ValueError("ψ ha due ampiezze")
+    if n < 1:
+        raise ValueError("il fan-out chiede almeno un qubit")
+    ring = psi.ring
+    rest = (ring.one(),) + (ring.zero(),) * ((1 << (n - 1)) - 1)
+    state = embed_qubit(psi, rest, 0)
+    for target in range(1, n):
+        state = cnot_from_0(n, target, ring).apply(state)
+    return state
