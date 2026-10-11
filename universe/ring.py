@@ -351,7 +351,10 @@ class Poly:
         return cofactors, remainder.is_zero()
 
     def certification(self) -> str | None:
-        """`None` se il resto è zero e l'espansione libera dei cofattori ridà l'origine."""
+        """`None` se il resto è zero.
+
+        E se l'espansione libera dei cofattori ridà l'origine.
+        """
         cofactors, is_zero = self.witness()
         if not cofactors:
             return "cofattori non tornano"

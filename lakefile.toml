@@ -2,5 +2,9 @@ name = "universe"
 version = "0.3.0"
 defaultTargets = ["Universe"]
 
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
 [[lean_lib]]
 name = "Universe"

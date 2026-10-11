@@ -528,7 +528,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "α|000⟩ + β|111⟩, celle 1–6 nulle\n"
         "Universe.Observer.two_pointers, Universe.Observer.observers_agree,\n"
         "Universe.Observer.order_irrelevant, Universe.Observer.two_pointers_right,\n"
-        "Universe.Observer.observers_agree_right, Universe.Observer.order_irrelevant_right"
+        "Universe.Observer.observers_agree_right, "
+        "Universe.Observer.order_irrelevant_right"
         if agree_ok
         else "le due porte non coincidono",
     )
@@ -888,7 +889,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "c = 3/5, s = 4/5, n = e_x, ψ = |0⟩\n"
         "Universe.Symmetry.point_conj_evolution, Universe.Symmetry.point_conj_born"
         if drawn and change.evolution
-        else f"stato {_format_gauss(change.image[0])}, {_format_gauss(change.image[1])}; "
+        else f"stato {_format_gauss(change.image[0])}, "
+        f"{_format_gauss(change.image[1])}; "
         f"pesi {_format_gauss(change.weights[0])}, {_format_gauss(change.weights[1])}",
     )
 
@@ -942,7 +944,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Simmetria",
         "nel punto, U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩ con c = −7/25, s = 24/25",
         point_ok,
-        "c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = e_x; evalAt ignora c2 e s2\n"
+        "c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = e_x; evalAt2 legge anche c2 e s2\n"
         "Universe.Symmetry.evolution_compose, Universe.Symmetry.compose_circle, "
         "Universe.Symmetry.point_compose"
         if point_ok

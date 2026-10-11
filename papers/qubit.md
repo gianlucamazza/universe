@@ -194,7 +194,7 @@ Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto a
 
 ![Due apparati sullo stesso sistema](figures/osservatori.svg)
 
-Un unitario locale sull'apparato non cambia i pesi del sistema, per ogni stato di due qubit. `no_signalling_any_0` e `no_signalling_any_1` confrontano `marginalLeft (applyIU evolution v)` con `marginalLeft v` per ogni `v : Quad`. L'argomento è una riga: `I ⊗ U` agisce su ciascun blocco `(a₀, a₁)` e `(a₂, a₃)` come `U` su un qubit, quindi ogni componente della differenza è `‖Uγ‖² − ‖γ‖²`, che `literal_evolution_norm` mette in `(gC, gN)`. `no_signalling_gen_0` e `no_signalling_gen_1` sono il caso `genericQuad`, le cui quattro celle usano i tredici esponenti di `Mono`. `no_signalling_0` e `no_signalling_1` sono il caso `CNOT(|ψ⟩ ⊗ |0⟩)`.
+Un unitario locale sull'apparato non cambia i pesi del sistema, per ogni stato di due qubit. `no_signalling_any_0` e `no_signalling_any_1` confrontano `marginalLeft (applyIU evolution v)` con `marginalLeft v` per ogni `v : Quad`. L'argomento è una riga: `I ⊗ U` agisce su ciascun blocco `(a₀, a₁)` e `(a₂, a₃)` come `U` su un qubit, quindi ogni componente della differenza è `‖Uγ‖² − ‖γ‖²`, che `literal_evolution_norm` mette in `(gC, gN)`. `no_signalling_gen_0` e `no_signalling_gen_1` sono il caso `genericQuad`, le cui quattro celle usano gli otto esponenti delle ampiezze di `Mono`. `no_signalling_0` e `no_signalling_1` sono il caso `CNOT(|ψ⟩ ⊗ |0⟩)`.
 
 Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`, e cita `no_signalling_gen_0` e `no_signalling_gen_1`.
 

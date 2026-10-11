@@ -65,7 +65,7 @@ The model does not simulate our universe, and it does not try to. It is a labora
 Requirements: Python 3.11 or later, and Lean 4 through [elan](https://github.com/leanprover/elan) (the version is pinned in `lean-toolchain`). There are no other dependencies: no Mathlib, no numerical libraries.
 
 ```sh
-pip install -e ".[dev]"   # pytest and the pinned ruff
+pip install -e . --group dev   # pytest and the pinned ruff (pip ≥ 25.1)
 python -m universe        # the Python certificate
 lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI

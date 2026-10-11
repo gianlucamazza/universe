@@ -12,5 +12,5 @@ if command -v uvx >/dev/null; then ruff=(uvx -q ruff@0.17.0); else ruff=(ruff); 
 if command -v prettier >/dev/null; then prettier --check --log-level warn "**/*.md"; fi
 python -m pytest -q tests
 python -m universe >/dev/null
-lake build
+lake build --wfail
 echo "ok"
