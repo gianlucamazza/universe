@@ -511,13 +511,12 @@ def _piece(coeff: Gauss, mono: str) -> str:
 
 
 @dataclass
-class Scalars:
-    """Linguaggio scalare del primo universo.
+class Law:
+    """La legge del primo universo.
 
     c, s sono le indeterminate del quoziente c² + s² = 1.
     Nella forma chiusa si leggono come cos φ e sin φ, con φ = ω t / 2.
     n = (nx, ny, nz) è l'asse dell'Hamiltoniana, con nx² + ny² + nz² = 1.
-    ar, ai, br, bi sono le parti reali e immaginarie di uno stato generico.
     """
 
     ring: Ring
@@ -526,6 +525,29 @@ class Scalars:
     nx: Poly
     ny: Poly
     nz: Poly
+
+
+def law_ring(extra: tuple[str, ...] = ()) -> Law:
+    """`(c, s, nx, ny, nz, *extra)` con le regole `c²` e `nx²`.
+
+    Le variabili di `extra` restano libere: ampiezze, o altre indeterminate.
+    """
+    ring = Ring(("c", "s", "nx", "ny", "nz", *extra))
+    c, s, nx, ny, nz = (ring.var(name) for name in ("c", "s", "nx", "ny", "nz"))
+    one = ring.one()
+    # Orientamento della riscrittura: c prima di s, nx prima di ny e di nz.
+    ring.set_square("c", one - s**2)
+    ring.set_square("nx", one - ny**2 - nz**2)
+    return Law(ring=ring, c=c, s=s, nx=nx, ny=ny, nz=nz)
+
+
+@dataclass
+class Scalars(Law):
+    """La legge e uno stato generico di un qubit.
+
+    ar, ai, br, bi sono le parti reali e immaginarie delle due ampiezze.
+    """
+
     ar: Poly
     ai: Poly
     br: Poly
@@ -541,11 +563,17 @@ class Scalars:
 
 
 def qubit_scalars() -> Scalars:
-    names = ("c", "s", "nx", "ny", "nz", "ar", "ai", "br", "bi")
-    ring = Ring(names)
-    symbol = {name: ring.var(name) for name in names}
-    one = ring.one()
-    # Orientamento della riscrittura: c prima di s, nx prima di ny e di nz.
-    ring.set_square("c", one - symbol["s"] ** 2)
-    ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
-    return Scalars(ring=ring, **symbol)
+    law = law_ring(("ar", "ai", "br", "bi"))
+    ar, ai, br, bi = (law.ring.var(name) for name in ("ar", "ai", "br", "bi"))
+    return Scalars(
+        ring=law.ring,
+        c=law.c,
+        s=law.s,
+        nx=law.nx,
+        ny=law.ny,
+        nz=law.nz,
+        ar=ar,
+        ai=ai,
+        br=br,
+        bi=bi,
+    )

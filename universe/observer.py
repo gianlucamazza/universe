@@ -50,7 +50,8 @@ from __future__ import annotations
 from universe.dynamics import evolution, hamiltonian
 from universe.epistemology import marginal
 from universe.ontology import Operator, State, tensor_index
-from universe.ring import Poly, Ring, Scalars, g
+from universe.qubits import generic_state, on_qubit
+from universe.ring import Poly, Ring
 
 
 def cnot(ring: Ring) -> Operator:
@@ -190,42 +191,8 @@ def no_signalling_gap() -> tuple[Poly, Poly]:
     `Universe.Observer.no_signalling_gen_0` e
     `Universe.Observer.no_signalling_gen_1`.
     """
-    names = (
-        "c",
-        "s",
-        "nx",
-        "ny",
-        "nz",
-        "a0r",
-        "a0i",
-        "a1r",
-        "a1i",
-        "a2r",
-        "a2i",
-        "a3r",
-        "a3i",
-    )
-    ring = Ring(names)
-    symbol = {name: ring.var(name) for name in names}
-    one = ring.one()
-    ring.set_square("c", one - symbol["s"] ** 2)
-    ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
-    zero = ring.zero()
-    scalars = Scalars(
-        ring=ring,
-        c=symbol["c"],
-        s=symbol["s"],
-        nx=symbol["nx"],
-        ny=symbol["ny"],
-        nz=symbol["nz"],
-        ar=zero,
-        ai=zero,
-        br=zero,
-        bi=zero,
-    )
-    imag = ring.constant(g(0, 1))
-    state = State(tuple(symbol[f"a{k}r"] + symbol[f"a{k}i"] * imag for k in range(4)))
-    local = Operator.eye(ring, 2).tensor(evolution(scalars, hamiltonian(scalars)))
+    law, state = generic_state(2)
+    local = on_qubit(evolution(law, hamiltonian(law)), 1, 2)
     before = marginal(state, 0, 2, 2)
     after = marginal(local.apply(state), 0, 2, 2)
     return after[0] - before[0], after[1] - before[1]
@@ -243,38 +210,10 @@ def no_signalling_three() -> tuple[Poly, Poly, Poly, Poly]:
     `Universe.Observer.no_signalling_wigner`. Le altre due sono
     `I ⊗ U ⊗ I`, `Universe.Observer.no_signalling_friend`.
     """
-    names = (
-        "c",
-        "s",
-        "nx",
-        "ny",
-        "nz",
-        *(name for k in range(8) for name in (f"a{k}r", f"a{k}i")),
-    )
-    ring = Ring(names)
-    symbol = {name: ring.var(name) for name in names}
-    one = ring.one()
-    ring.set_square("c", one - symbol["s"] ** 2)
-    ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
-    zero = ring.zero()
-    scalars = Scalars(
-        ring=ring,
-        c=symbol["c"],
-        s=symbol["s"],
-        nx=symbol["nx"],
-        ny=symbol["ny"],
-        nz=symbol["nz"],
-        ar=zero,
-        ai=zero,
-        br=zero,
-        bi=zero,
-    )
-    imag = ring.constant(g(0, 1))
-    state = State(tuple(symbol[f"a{k}r"] + symbol[f"a{k}i"] * imag for k in range(8)))
-    law = evolution(scalars, hamiltonian(scalars))
-    idle = Operator.eye(ring, 2)
-    on_wigner = idle.tensor(idle).tensor(law)
-    on_friend = idle.tensor(law.tensor(idle))
+    law, state = generic_state(3)
+    gate = evolution(law, hamiltonian(law))
+    on_wigner = on_qubit(gate, 2, 3)
+    on_friend = on_qubit(gate, 1, 3)
     before = marginal(state, 0, 2, 4)
     wigner = marginal(on_wigner.apply(state), 0, 2, 4)
     friend = marginal(on_friend.apply(state), 0, 2, 4)

@@ -1,11 +1,11 @@
 # Plan: every number of qubits
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: planned. Milestone M2 of `plans/roadmap.md`, release `v0.6.0`.
+Status: in progress. Milestone M2 of `plans/roadmap.md`, release `v0.6.0`.
 
 | Phase | State   | Goal                                                                    |
 | ----- | ------- | ----------------------------------------------------------------------- |
-| 0     | planned | spike: `n`-qubit states, a gate on any qubit, the norm is kept          |
+| 0     | done    | spike: `n`-qubit states, a gate on any qubit, the norm is kept          |
 | 1     | planned | no-signalling between any two qubits, for every `n`                     |
 | 2     | planned | gates on different qubits commute; the state of one qubit               |
 | 3     | planned | `n` observers on one system: `α\|0…0⟩ + β\|1…1⟩`, and every pair agrees |
@@ -35,15 +35,21 @@ inductive QState : Nat → Type where
 `node l r` splits on the first qubit: `l` is the branch where it reads `0`, `r` where it reads
 `1`. The cell order is the one of `Quad` and `Oct` (`2i + k`, `4i + 2j + k`).
 
+Phase 0 note: the spike closed in 134 lines. Its review moved the law out of `Scalars`
+(`Law`, `law_ring` in `universe/ring.py`), so `dynamics.py` no longer asks for amplitudes it
+does not read, and created `universe/qubits.py` (`generic_state`, `on_qubit`): the three copies
+of the same fresh-ring construction in `universe/observer.py` and in the tests are gone.
+
 ## 2. Ground rules
 
 Section 2 of `plans/observer-inside.md` and of `plans/no-outside.md` apply in full. In
 addition:
 
-- New Lean file `Universe/Qubits.lean`, imported by `Universe.lean`. New Python module
-  `universe/qubits.py` only if `universe/ontology.py` (`State`, `Operator.tensor`,
-  `tensor_state`) and `universe/observer.py` (`reduced`, `marginal`) do not already cover
-  `n` qubits; prefer reusing them.
+- Lean in `Universe/Qubits.lean`. Python in `universe/qubits.py` (`generic_state`, `on_qubit`),
+  reusing `universe/ontology.py` and `universe/observer.py` (`reduced`, `marginal`).
+- No workaround and no technical debt: no duplicated construction, no helper that returns
+  something other than what its name says, no doc left behind. Each phase adds its
+  certificate lines and their `lean_map` keys.
 - No new `Mono` field. Every theorem quantifies over every state (`QState n`) and every `n`.
 - Reuse: `literal_evolution_norm`, `inIdeal_append` and the `inIdeal` congruences,
   `columnBorn`, `matMul`, `evolution`, `polySame` lemmas.

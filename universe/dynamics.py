@@ -14,11 +14,11 @@ costruisce la forma chiusa.
 from __future__ import annotations
 
 from universe.ontology import Operator
-from universe.ring import Scalars, g
+from universe.ring import Law, g
 
 
-def pauli(scalars: Scalars) -> tuple[Operator, Operator, Operator]:
-    ring = scalars.ring
+def pauli(law: Law) -> tuple[Operator, Operator, Operator]:
+    ring = law.ring
     one, zero = ring.one(), ring.zero()
     i = ring.constant(g(0, 1))
     minus_i = ring.constant(g(0, -1))
@@ -28,17 +28,13 @@ def pauli(scalars: Scalars) -> tuple[Operator, Operator, Operator]:
     return sigma_x, sigma_y, sigma_z
 
 
-def hamiltonian(scalars: Scalars) -> Operator:
-    sigma_x, sigma_y, sigma_z = pauli(scalars)
-    return (
-        sigma_x.scale(scalars.nx)
-        + sigma_y.scale(scalars.ny)
-        + sigma_z.scale(scalars.nz)
-    )
+def hamiltonian(law: Law) -> Operator:
+    sigma_x, sigma_y, sigma_z = pauli(law)
+    return sigma_x.scale(law.nx) + sigma_y.scale(law.ny) + sigma_z.scale(law.nz)
 
 
-def evolution(scalars: Scalars, generator: Operator) -> Operator:
+def evolution(law: Law, generator: Operator) -> Operator:
     """Forma chiusa c I − i s H, i coefficienti dati da expCoeff_hamiltonian."""
-    eye = Operator.eye(scalars.ring, generator.n)
-    minus_i = scalars.ring.constant(g(0, -1))
-    return eye.scale(scalars.c) + generator.scale(minus_i * scalars.s)
+    eye = Operator.eye(law.ring, generator.n)
+    minus_i = law.ring.constant(g(0, -1))
+    return eye.scale(law.c) + generator.scale(minus_i * law.s)

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 68 righe.
+"""Certificato eseguibile del primo universo. Stampa 69 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -64,6 +64,9 @@ ampiezza più `c`, `s`, `n`, un unitario sul qubit di Wigner e uno sul
 qubit dell'amico lasciano i pesi del sistema con resto zero
 (`Universe.Observer.no_signalling_wigner`,
 `Universe.Observer.no_signalling_friend`).
+Una `U` su un qubit qualsiasi di uno stato generico di `n ≤ 4` qubit lascia
+la norma con resto zero; Lean lo prova per ogni `n`
+(`Universe.Qubits.norm_applyAt`).
 `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
 `(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
@@ -130,6 +133,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 
+from universe.dynamics import evolution, hamiltonian
 from universe.epistemology import (
     born,
     computational_projector,
@@ -159,6 +163,7 @@ from universe.observer import (
     reduced,
 )
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
+from universe.qubits import generic_state, on_qubit
 from universe.ring import ZERO_G, Gauss, Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
@@ -405,6 +410,16 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "(I ⊗ U)(|0⟩ ⊗ |ψ⟩) riproduce le probabilità del secondo fattore",
         right_ok,
         detail if right_ok else f"P = ({right[0]}, {right[1]})",
+    )
+
+    qubits_reason = _norm_on_every_qubit(4)
+    add(
+        "Composizione",
+        "U su un qubit qualsiasi di n conserva la norma, n ≤ 4",
+        qubits_reason is None,
+        "stato generico di n qubit; Lean per ogni n\nUniverse.Qubits.norm_applyAt"
+        if qubits_reason is None
+        else qubits_reason,
     )
 
     # --- Osservatore: CNOT e il primo stato entangled ---
@@ -1384,6 +1399,20 @@ class _TimeLaw:
     circle: bool
     angle: tuple[Gauss, Gauss]
     image: tuple[Gauss, Gauss]
+
+
+def _norm_on_every_qubit(max_n: int) -> str | None:
+    """`‖U_k v‖² − ‖v‖²` in `(gC, gN)` per ogni `n ≤ max_n` e ogni qubit `k`."""
+    for n in range(1, max_n + 1):
+        law, state = generic_state(n)
+        gate = evolution(law, hamiltonian(law))
+        before = norm_squared(state)
+        for qubit in range(n):
+            gap = norm_squared(on_qubit(gate, qubit, n).apply(state)) - before
+            reason = gap.certification()
+            if reason is not None:
+                return f"n = {n}, qubit {qubit}: {reason}"
+    return None
 
 
 def _pauli_product() -> bool:

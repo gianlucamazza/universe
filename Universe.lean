@@ -105,6 +105,10 @@ l'antidiagonale `α β̄ · conj(⟨0|U|0⟩)` nell'anello libero, con
 `luders` è la lettura del puntatore dopo `CNOT`: `(α, 0)` e `(0, β)`,
 con norme `bornPair`. `repeatable` ripete l'esito su un apparato fresco.
 Nel punto le norme sono `9/25` e `16/25`.
+`Universe.Qubits` è un albero binario perfetto di `n` qubit. `applyAt`
+applica una matrice `2×2` al qubit `k`: sul bit alto mescola le branche
+foglia per foglia, e sul qubit `k + 1` agisce nei due figli.
+`norm_applyAt` mette `‖applyAt k U v‖² − ‖v‖²` in `(gC, gN)`.
 -/
 import Universe.Composition
 import Universe.Dynamics
@@ -114,6 +118,7 @@ import Universe.Interaction
 import Universe.Observer
 import Universe.Ontology
 import Universe.Qubit
+import Universe.Qubits
 import Universe.Quotient
 import Universe.Ring
 import Universe.Series
