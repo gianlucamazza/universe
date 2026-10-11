@@ -277,6 +277,7 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 - [`plans/no-outside.md`](plans/no-outside.md): removing what the model still takes from outside: the interaction, perfect measurement, time composition, conservation, change of basis.
 - [`plans/axes.md`](plans/axes.md): rotations about different axes, and why their order matters.
 - [`plans/wigner.md`](plans/wigner.md): an observer on an observer, and when a measurement can be undone.
+- [`plans/n-qubits.md`](plans/n-qubits.md): every number of qubits, with no wider monomial.
 - [`plans/roadmap.md`](plans/roadmap.md): the road to 1.0, and what "complete" means here.
 - [`researches/misura.md`](researches/misura.md): the kernel gives the Born pair, never one outcome.
 - [`researches/born.md`](researches/born.md): where the Born rule comes from, and what deriving it would cost here.
