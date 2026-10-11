@@ -1,11 +1,11 @@
 # Plan: rotations about different axes
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: planned.
+Status: in progress.
 
 | Phase | State   | Goal                                                                |
 | ----- | ------- | ------------------------------------------------------------------- |
-| 1     | planned | the Pauli product `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ`, free ring     |
+| 1     | done    | the Pauli product `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ`, free ring     |
 | 2     | planned | `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, free ring              |
 | 3     | planned | the product stays unitary: `a² + \|b\|² − 1` in `(gC, gN, gC2, gM)` |
 | 4     | planned | the rational point, and two rotations that do not commute           |

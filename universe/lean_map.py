@@ -21,6 +21,9 @@ LEAN: dict[str, tuple[str, ...]] = {
     "H² = I": ("Universe.Qubit.hamiltonian_sq",),
     "H³ = H": ("Universe.Qubit.hamiltonian_cube",),
     "H⁴ = I": ("Universe.Qubit.hamiltonian_fourth",),
+    "(n·σ)(m·σ) = (n·m) I + i (n×m)·σ nell'anello libero": (
+        "Universe.Qubit.pauli_product",
+    ),
     "U†U = I": ("Universe.Qubit.evolution_unitary",),
     "UU† = I": ("Universe.Qubit.evolution_unitary_rev",),
     "det U = 1": ("Universe.Qubit.evolution_det",),

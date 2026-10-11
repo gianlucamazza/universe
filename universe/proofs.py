@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 54 righe.
+"""Certificato eseguibile del primo universo. Stampa 55 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -45,6 +45,8 @@ generico. Lean lo prova per ogni `Quad`,
 `Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
 `Universe.Observer.no_signalling_gen_1`.
+`(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
+`(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
 (`Universe.Symmetry.evolution_commutes_hamiltonian`).
 `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` ha resto zero in `(gC, gN)`
@@ -204,6 +206,15 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     op_zero("Legge", "H² = I", world.H.matmul(world.H) - eye)
     op_zero("Legge", "H³ = H", _power(world.H, 3) - world.H)
     op_zero("Legge", "H⁴ = I", _power(world.H, 4) - eye)
+    pauli_free = _pauli_product()
+    add(
+        "Legge",
+        "(n·σ)(m·σ) = (n·m) I + i (n×m)·σ nell'anello libero",
+        pauli_free,
+        "anello (nx, ny, nz, mx, my, mz), senza regole\nUniverse.Qubit.pauli_product"
+        if pauli_free
+        else "il prodotto di Pauli non è zero nell'anello libero",
+    )
     op_zero("Legge", "U†U = I", world.U.dagger().matmul(world.U) - eye)
     op_zero("Legge", "UU† = I", world.U.matmul(world.U.dagger()) - eye)
     poly_zero("Legge", "det U = 1", determinant(world.U) - one)
@@ -1096,6 +1107,26 @@ class _TimeLaw:
     circle: bool
     angle: tuple[Gauss, Gauss]
     image: tuple[Gauss, Gauss]
+
+
+def _pauli_product() -> bool:
+    """`(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` nell'anello libero, senza regole."""
+    ring = Ring(("nx", "ny", "nz", "mx", "my", "mz"))
+    nx, ny, nz, mx, my, mz = (ring.var(name) for name in ring.variables)
+    product = _axis_hamiltonian(ring, nx, ny, nz).matmul(
+        _axis_hamiltonian(ring, mx, my, mz)
+    )
+    dot = nx * mx + ny * my + nz * mz
+    crossed = _axis_hamiltonian(
+        ring,
+        ny * mz - nz * my,
+        nz * mx - nx * mz,
+        nx * my - ny * mx,
+    )
+    imag = ring.constant(g(0, 1))
+    closed = Operator.eye(ring, 2).scale(dot) + crossed.scale(imag)
+    gap = product - closed
+    return _free_zero(gap) and _first_certificate(gap) is None
 
 
 def _axis_hamiltonian(ring: Ring, nx: Poly, ny: Poly, nz: Poly) -> Operator:
