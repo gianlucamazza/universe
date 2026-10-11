@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" role="img">
+  <title>Time composes: U(φ₁) U(φ₂) = U(φ₁ + φ₂)</title>
+  <desc>On the circle c² + s² = 1, the point (3/5, 4/5) composed with itself gives (−7/25, 24/25), by c = c₁c₂ − s₁s₂ and s = s₁c₂ + c₁s₂. The group law uses only H² = I, the rule gN; staying on the circle uses gC₁ and gC₂.</desc>
+  <rect width="920" height="520" fill="#faf8f4"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8c3a2f"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .axis { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .circle { fill: none; stroke: #1a1814; stroke-width: 1.6; }
+    .ray { stroke: #b8b0a2; stroke-width: 1.2; }
+    .arc { fill: none; stroke: #8c3a2f; stroke-width: 2; marker-end: url(#arrow); }
+    .point { fill: #8c3a2f; }
+    .head { font-size: 18px; }
+    .label { font-size: 17px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <text class="head" x="36" y="44">two steps of time are one step</text>
+  <line class="axis" x1="60" y1="290" x2="500" y2="290"/>
+  <line class="axis" x1="280" y1="490" x2="280" y2="70"/>
+  <circle class="circle" cx="280" cy="290" r="180"/>
+  <line class="ray" x1="280" y1="290" x2="388" y2="146"/>
+  <line class="ray" x1="280" y1="290" x2="229.6" y2="117.2"/>
+  <path class="arc" d="M 340 290 A 60 60 0 0 0 316 242"/>
+  <path class="arc" d="M 323.2 232.4 A 72 72 0 0 0 259.8 220.9"/>
+  <circle class="point" cx="460" cy="290" r="5"/>
+  <circle class="point" cx="388" cy="146" r="5.5"/>
+  <circle class="point" cx="229.6" cy="117.2" r="5.5"/>
+  <text class="label" x="468" y="282">(1, 0)</text>
+  <text class="label" x="398" y="140">(3/5, 4/5)</text>
+  <text class="small muted" x="398" y="160">U(φ)</text>
+  <text class="label" x="110" y="108">(−7/25, 24/25)</text>
+  <text class="small muted" x="160" y="128">U(2φ)</text>
+  <text class="small" x="346" y="270" style="fill:#8c3a2f">φ</text>
+  <text class="small" x="300" y="214" style="fill:#8c3a2f">φ</text>
+  <text class="label" x="506" y="296">c</text>
+  <text class="label" x="288" y="80">s</text>
+
+  <text class="head" x="560" y="120">the group law</text>
+  <text class="label" x="560" y="156">U(c₁, s₁) U(c₂, s₂) = U(c, s)</text>
+  <text class="label" x="560" y="186">c = c₁c₂ − s₁s₂</text>
+  <text class="label" x="560" y="212">s = s₁c₂ + c₁s₂</text>
+  <text class="small muted" x="560" y="244">needs only H² = I, the rule gN:</text>
+  <text class="small muted" x="560" y="264">no circle is used</text>
+  <text class="lemma" x="560" y="288">evolution_compose</text>
+
+  <text class="head" x="560" y="340">staying on the circle</text>
+  <text class="label" x="560" y="374">c² + s² − 1 =</text>
+  <text class="label" x="560" y="400">(c₂² + s₂²) gC₁ + gC₂</text>
+  <text class="lemma" x="560" y="424">compose_circle</text>
+
+  <text class="small" x="560" y="470">(3/5, 4/5) twice: 9/25 − 16/25 = −7/25,</text>
+  <text class="small" x="560" y="490">2 · 12/25 = 24/25</text>
+</svg>

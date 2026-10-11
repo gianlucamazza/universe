@@ -160,6 +160,69 @@ theorem neg_add_cancel (z : Gauss) : -z + z = 0 := by
 theorem neg_neg (z : Gauss) : - -z = z := by
   ext <;> simp <;> grind
 
+theorem add_assoc4 (a b c d : Gauss) : (a + b) + (c + d) = a + (b + (c + d)) := by
+  rw [add_assoc]
+
+/-- Il secondo e il terzo addendo si scambiano. -/
+theorem add_swap_mid (a b c d : Gauss) : (a + b) + (c + d) = a + (c + (b + d)) := by
+  calc
+    (a + b) + (c + d) = a + (b + (c + d)) := add_assoc a b (c + d)
+    _ = a + ((b + c) + d) := congrArg (fun x => a + x) (add_assoc b c d).symm
+    _ = a + ((c + b) + d) := congrArg (fun x => a + (x + d)) (add_comm b c)
+    _ = a + (c + (b + d)) := congrArg (fun x => a + x) (add_assoc c b d)
+
+theorem add_assoc5 (a b c d e : Gauss) :
+    ((a + b) + (c + d)) + e = a + (b + (c + (d + e))) := by
+  calc
+    ((a + b) + (c + d)) + e = (a + b) + ((c + d) + e) := add_assoc (a + b) (c + d) e
+    _ = (a + b) + (c + (d + e)) := congrArg (fun x => (a + b) + x) (add_assoc c d e)
+    _ = a + (b + (c + (d + e))) := add_assoc a b (c + (d + e))
+
+/-- I quattro addendi di croce sommano a zero e escono dalla somma. -/
+theorem kill_cross (a b c d u v : Gauss) (h : u + (u + (v + v)) = 0) :
+    (a + (u + (u + b))) + (c + (v + (v + d))) = a + (d + (c + b)) := by
+  ext
+  · have hr := congrArg re h
+    simp only [re_add, re_zero] at hr ⊢
+    grind
+  · have hi := congrArg im h
+    simp only [im_add, im_zero] at hi ⊢
+    grind
+
+/-- `b` in mezzo e `−b` in coda si cancellano. -/
+theorem cancel_inserted (a b c d e f : Gauss) :
+    ((a + b) + (c + d)) + ((e + f) + -b) = a + (c + (d + (e + f))) := by
+  ext <;> simp <;> grind
+
+/-- Cinque addendi, con la somma piatta a sinistra. -/
+theorem add_assoc5_flat (a b c d e : Gauss) :
+    ((a + b) + (c + d)) + e = (((a + b) + c) + d) + e :=
+  congrArg (fun x => x + e) (add_assoc (a + b) c d).symm
+
+/-- Il secondo e il terzo addendo si scambiano, in somma piatta. -/
+theorem add_swap_mid_flat (a b c d : Gauss) :
+    (a + b) + (c + d) = ((a + c) + b) + d := by
+  calc
+    (a + b) + (c + d) = ((a + b) + c) + d := (add_assoc (a + b) c d).symm
+    _ = (a + (b + c)) + d := congrArg (fun x => x + d) (add_assoc a b c)
+    _ = (a + (c + b)) + d := congrArg (fun x => (a + x) + d) (add_comm b c)
+    _ = ((a + c) + b) + d := congrArg (fun x => x + d) (add_assoc a c b).symm
+
+/-- `b` e `−b` si cancellano e la somma resta piatta a sinistra. -/
+theorem cancel_to_flat (a b c d e f : Gauss) :
+    ((a + b) + (c + d)) + ((e + f) + -b) = (((a + c) + d) + e) + f := by
+  ext <;> simp <;> grind
+
+/-- Come `cancel_to_flat`, con gli ultimi due addendi scambiati. -/
+theorem cancel_to_flat_swap (a b c d e f : Gauss) :
+    ((a + b) + (c + d)) + ((e + f) + -b) = (((a + c) + d) + f) + e := by
+  ext <;> simp <;> grind
+
+/-- Gli ultimi due addendi di una somma piatta si scambiano. -/
+theorem flat_swap_tail (a c b d : Gauss) :
+    ((a + c) + b) + d = (a + c) + (d + b) := by
+  ext <;> simp <;> grind
+
 end Gauss
 
 end Universe.Ring

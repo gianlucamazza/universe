@@ -1411,6 +1411,24 @@ theorem pmul_unit_scale (z : Gauss) (p : Poly) : pmul (single z Mono.one) p = sc
     simp [pmul, Universe.Quotient.mul, single]
   rw [h, mulMono_unit, List.append_nil]
 
+theorem pmul_right_unit (z : Gauss) (p : Poly) : pmul p (single z Mono.one) = scale z p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pmul ((a, m) :: rest) (single z Mono.one) =
+        (a * z, m.mul Mono.one) :: pmul rest (single z Mono.one) from rfl]
+      rw [ih, Mono.mul_one, Gauss.mul_comm a z]
+      rfl
+
+theorem scale_neg_one (p : Poly) : scale (-1) p = pneg p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m => simp only [scale, pneg, ih, Gauss.neg_one_mul]
+
 theorem polySame_scale (z : Gauss) {p q : Poly} (h : polySame p q) :
     polySame (scale z p) (scale z q) := by
   intro t
@@ -1468,5 +1486,40 @@ theorem polySame_const_dot_zero (a b c d : Gauss) (h : a * b + c * d = 0) :
     · rw [ite_eq_right ht]
   rw [hnil] at hdot
   simpa [coeffOf] using hdot
+
+theorem polySame_append_comm (p q : Poly) : polySame (p ++ q) (q ++ p) := by
+  intro t
+  rw [coeffOf_append, coeffOf_append, Gauss.add_comm]
+
+theorem polySame_add_neg (p : Poly) : polySame (p ++ pneg p) [] := by
+  intro t
+  rw [coeffOf_append, coeff_pneg, coeffOf_nil, Gauss.add_neg_cancel]
+
+/-- `(a b)(c d)` e `(a c)(b d)` hanno gli stessi coefficienti. -/
+theorem polySame_middle_comm (a b c d : Poly) :
+    polySame (pmul (pmul a b) (pmul c d)) (pmul (pmul a c) (pmul b d)) := by
+  refine polySame.trans (polySame_pmul_assoc a b (pmul c d)) ?_
+  refine polySame.trans (polySame_pmul_right (polySame.symm (polySame_pmul_assoc b c d)) a) ?_
+  refine polySame.trans
+    (polySame_pmul_right (polySame_pmul_left (fun t => coeff_mul_comm b c t) d) a) ?_
+  refine polySame.trans (polySame_pmul_right (polySame_pmul_assoc c b d) a) ?_
+  exact polySame.symm (polySame_pmul_assoc a c (pmul b d))
+
+/-- Il fattore destro attraversa il fattore medio. -/
+theorem polySame_slide_mid (q a r : Poly) :
+    polySame (pmul (pmul q a) r) (pmul (pmul q r) a) := by
+  refine polySame.trans (polySame_pmul_assoc q a r) ?_
+  refine polySame.trans (polySame_pmul_right (fun t => coeff_mul_comm a r t) q) ?_
+  exact polySame.symm (polySame_pmul_assoc q r a)
+
+theorem polySame_sub_left {a b c : Poly} (h : polySame a (b ++ c)) : polySame (psub a b) c := by
+  intro t
+  rw [coeff_psub, h t, coeffOf_append]
+  ext <;> simp <;> grind
+
+theorem coeffOf_append4 (a b c d : Poly) (t : Mono) :
+    coeffOf (a ++ (b ++ (c ++ d))) t =
+      coeffOf a t + (coeffOf b t + (coeffOf c t + coeffOf d t)) := by
+  rw [coeffOf_append, coeffOf_append, coeffOf_append]
 
 end Universe.Dynamics

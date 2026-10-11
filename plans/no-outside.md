@@ -1,7 +1,7 @@
 # Plan: nothing given from outside
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress; phases 1–5 done.
+Status: complete. All seven phases are done and pushed.
 
 | Phase | State | Goal                                                                  |
 | ----- | ----- | --------------------------------------------------------------------- |
@@ -10,8 +10,8 @@ Status: in progress; phases 1–5 done.
 | 3     | done  | partial measurement: coherence shrinks by `⟨0\|U\|0⟩`                 |
 | 4     | done  | reading the pointer: the conditional state and repeatability          |
 | 5     | done  | a unitary change of basis is the same universe                        |
-| 6     | open  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                             |
-| 7     | open  | docs and figures                                                      |
+| 6     | done  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                             |
+| 7     | done  | docs and figures                                                      |
 
 ## 1. Why
 

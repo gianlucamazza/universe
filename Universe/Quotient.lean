@@ -2,8 +2,8 @@
 Quoziente a due quadrati, con cofattori.
 
 Un polinomio è una lista di termini
-`coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi a2r^a2r a2i^a2i a3r^a3r a3i^a3i`.
-`a2r a2i a3r a3i` sono spettatori: `reduce` e `monoVal` non li leggono.
+`coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi a2r^a2r a2i^a2i a3r^a3r a3i^a3i c2^c2 s2^s2`.
+`a2r a2i a3r a3i c2 s2` sono spettatori: `reduce` e `monoVal` non li leggono.
 `reduce` sbuccia solo `c²` e `nx²`. `gA` è il terzo generatore, la sfera delle
 ampiezze, e non entra in `reduce`.
 - `c² = (1 − s²) + (c² + s² − 1)`
@@ -38,6 +38,8 @@ structure Mono where
   a2i : Nat
   a3r : Nat
   a3i : Nat
+  c2 : Nat
+  s2 : Nat
   deriving DecidableEq, Repr
 
 namespace Mono
@@ -56,6 +58,8 @@ abbrev one : Mono where
   a2i := 0
   a3r := 0
   a3i := 0
+  c2 := 0
+  s2 := 0
 
 def mul (m n : Mono) : Mono where
   c := m.c + n.c
@@ -71,16 +75,20 @@ def mul (m n : Mono) : Mono where
   a2i := m.a2i + n.a2i
   a3r := m.a3r + n.a3r
   a3i := m.a3i + n.a3i
+  c2 := m.c2 + n.c2
+  s2 := m.s2 + n.s2
 
 end Mono
 
 def subExp (t m : Mono) : Option Mono :=
   if _h : m.c ≤ t.c ∧ m.s ≤ t.s ∧ m.nx ≤ t.nx ∧ m.ny ≤ t.ny ∧ m.nz ≤ t.nz ∧
       m.ar ≤ t.ar ∧ m.ai ≤ t.ai ∧ m.br ≤ t.br ∧ m.bi ≤ t.bi ∧
-      m.a2r ≤ t.a2r ∧ m.a2i ≤ t.a2i ∧ m.a3r ≤ t.a3r ∧ m.a3i ≤ t.a3i then
+      m.a2r ≤ t.a2r ∧ m.a2i ≤ t.a2i ∧ m.a3r ≤ t.a3r ∧ m.a3i ≤ t.a3i ∧
+      m.c2 ≤ t.c2 ∧ m.s2 ≤ t.s2 then
     some ⟨t.c - m.c, t.s - m.s, t.nx - m.nx, t.ny - m.ny, t.nz - m.nz,
       t.ar - m.ar, t.ai - m.ai, t.br - m.br, t.bi - m.bi,
-      t.a2r - m.a2r, t.a2i - m.a2i, t.a3r - m.a3r, t.a3i - m.a3i⟩
+      t.a2r - m.a2r, t.a2i - m.a2i, t.a3r - m.a3r, t.a3i - m.a3i,
+      t.c2 - m.c2, t.s2 - m.s2⟩
   else
     none
 

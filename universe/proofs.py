@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 49 righe.
+"""Certificato eseguibile del primo universo. Stampa 52 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -80,6 +80,15 @@ nell'anello libero (`Universe.Symmetry.point_basis_unitary`,
 `Vψ` nella base `V|k⟩` sono quelli di `ψ` (`Universe.Symmetry.conj_born`).
 Nel punto `V(U|0⟩)` vale `−7/25` e `−24/25 i`, con pesi `1` e `0`
 (`Universe.Symmetry.point_conj_evolution`, `Universe.Symmetry.point_conj_born`).
+`U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)` ha resto zero
+nell'ideale di `gN` solo, sull'anello fresco `(c1, s1, c2, s2, nx, ny, nz)`
+(`Universe.Symmetry.evolution_compose`). Senza quadrati il resto non è zero,
+e il quadrato di `c1` da solo non paga la legge. `c² + s² − 1` ha resto zero
+con `c1² = 1 − s1²` e la regola extra `c2² = 1 − s2²`
+(`Universe.Symmetry.compose_circle`): `gC2` sta fuori da `reduce`, come `gA`.
+Nel punto `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x` l'angolo composto è
+`−7/25`, `24/25` e `U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`. `evalAt` non legge
+`c2` e `s2`.
 """
 
 from __future__ import annotations
@@ -880,6 +889,43 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         else f"stato {_format_gauss(change.image[0])}, {_format_gauss(change.image[1])}; "
         f"pesi {_format_gauss(change.weights[0])}, {_format_gauss(change.weights[1])}",
     )
+
+    law = _time_composition()
+    add(
+        "Simmetria",
+        "U(c₁, s₁) U(c₂, s₂) − U(c, s) sta nell'ideale di gN",
+        law.group,
+        "solo nx² = 1 − ny² − nz²; senza quadrati il resto non è zero\n"
+        "Universe.Symmetry.evolution_compose"
+        if law.group
+        else "la legge di gruppo non sta in (gN)",
+    )
+    add(
+        "Simmetria",
+        "se le due coppie stanno sul cerchio, ci sta (c, s)",
+        law.circle,
+        "gC2 fuori da reduce, come gA: regola extra c2² = 1 − s2²\n"
+        "Universe.Symmetry.compose_circle"
+        if law.circle
+        else "il composto non sta in (gC, gC2)",
+    )
+    point_ok = law.angle == (
+        g(Fraction(-7, 25)),
+        g(Fraction(24, 25)),
+    ) and law.image == (
+        g(Fraction(-7, 25)),
+        g(0, Fraction(-24, 25)),
+    )
+    add(
+        "Simmetria",
+        "nel punto, U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩ con c = −7/25, s = 24/25",
+        point_ok,
+        "c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = e_x; evalAt ignora c2 e s2\n"
+        "Universe.Symmetry.evolution_compose, Universe.Symmetry.compose_circle"
+        if point_ok
+        else f"angolo {_format_gauss(law.angle[0])}, {_format_gauss(law.angle[1])}; "
+        f"stato {_format_gauss(law.image[0])}, {_format_gauss(law.image[1])}",
+    )
     return proven
 
 
@@ -965,6 +1011,95 @@ def _change_of_basis(world: QubitUniverse) -> _BasisChange:
         born,
         point_image,
         point_weights,
+    )
+
+
+_LAW = ("c1", "s1", "c2", "s2", "nx", "ny", "nz")
+
+
+@dataclass(frozen=True)
+class _TimeLaw:
+    group: bool
+    circle: bool
+    angle: tuple[Gauss, Gauss]
+    image: tuple[Gauss, Gauss]
+
+
+def _axis_hamiltonian(ring: Ring, nx: Poly, ny: Poly, nz: Poly) -> Operator:
+    """`n · σ` su un anello qualsiasi, con `Y = [[0, −i], [i, 0]]`."""
+    zero, one = ring.zero(), ring.one()
+    imag = ring.constant(g(0, 1))
+    minus = ring.constant(g(0, -1))
+    sigma_x = Operator.from_rows([[zero, one], [one, zero]])
+    sigma_y = Operator.from_rows([[zero, minus], [imag, zero]])
+    sigma_z = Operator.from_rows([[one, zero], [zero, -one]])
+    return sigma_x.scale(nx) + sigma_y.scale(ny) + sigma_z.scale(nz)
+
+
+def _evolution_cs(cosine: Poly, sine: Poly, generator: Operator) -> Operator:
+    """`c I − i s H`."""
+    eye = Operator.eye(cosine.ring, generator.n)
+    minus = cosine.ring.constant(g(0, -1))
+    return eye.scale(cosine) + generator.scale(minus * sine)
+
+
+def _composition(ring: Ring) -> tuple[Operator, Poly, Poly, Operator]:
+    symbol = {name: ring.var(name) for name in _LAW}
+    generator = _axis_hamiltonian(ring, symbol["nx"], symbol["ny"], symbol["nz"])
+    first = _evolution_cs(symbol["c1"], symbol["s1"], generator)
+    second = _evolution_cs(symbol["c2"], symbol["s2"], generator)
+    cosine = symbol["c1"] * symbol["c2"] - symbol["s1"] * symbol["s2"]
+    sine = symbol["s1"] * symbol["c2"] + symbol["c1"] * symbol["s2"]
+    closed = _evolution_cs(cosine, sine, generator)
+    return first.matmul(second) - closed, cosine, sine, closed
+
+
+def _certified(operator: Operator) -> bool:
+    return all(entry.certification() is None for row in operator.rows for entry in row)
+
+
+def _time_composition() -> _TimeLaw:
+    """Legge di gruppo in `(gN)` e cerchio in `(gC, gC2)`, su anelli freschi.
+
+    `set_square` sbuccia solo `nx`, poi solo `c1`. `c2` entra con `certify_extra`,
+    come `gA`: `reduce` non lo sbuccia.
+    """
+    axis = Ring(_LAW)
+    one = axis.one()
+    axis.set_square("nx", one - axis.var("ny") ** 2 - axis.var("nz") ** 2)
+    on_axis = _certified(_composition(axis)[0])
+    not_free = not _certified(_composition(Ring(_LAW))[0])
+    circle_ring = Ring(_LAW)
+    circle_ring.set_square("c1", circle_ring.one() - circle_ring.var("s1") ** 2)
+    circle_misses = not _certified(_composition(circle_ring)[0])
+
+    sphere = Ring(_LAW)
+    sphere.set_square("c1", sphere.one() - sphere.var("s1") ** 2)
+    _, cosine, sine, _closed = _composition(sphere)
+    gap = cosine**2 + sine**2 - sphere.one()
+    needs_extra = gap.certification() is not None
+    paid = gap.certify_extra("c2", sphere.one() - sphere.var("s2") ** 2) is None
+
+    point_ring = Ring(_LAW)
+    _, cosine, sine, closed = _composition(point_ring)
+    point = {
+        "c1": g(Fraction(3, 5)),
+        "s1": g(Fraction(4, 5)),
+        "c2": g(Fraction(3, 5)),
+        "s2": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    evolved = closed.apply(State((point_ring.one(), point_ring.zero())))
+    return _TimeLaw(
+        group=on_axis and not_free and circle_misses,
+        circle=needs_extra and paid,
+        angle=(cosine.evaluate(point), sine.evaluate(point)),
+        image=(
+            evolved.amplitudes[0].evaluate(point),
+            evolved.amplitudes[1].evaluate(point),
+        ),
     )
 
 

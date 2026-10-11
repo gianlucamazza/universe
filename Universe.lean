@@ -66,6 +66,9 @@ sono il caso `genericQuad`.
 `energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)`, per ogni
 ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 `e_z`, prima e dopo `Φ` (`point_energy_x`, `point_energy_z`).
+`evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)`
+nell'ideale di `gN`: l'unica regola è `H² = I`. `compose_circle` mette
+`c² + s² − 1` in `(gC, gC2)`, e `gC2` resta fuori da `reduce`.
 `Universe.Interaction` costruisce `G = |1⟩⟨1| ⊗ H`. `generator_cube` è
 `G³ = G`. `controlled_from_hamiltonian` è l'evoluzione controllata, e
 `cnot_point` la legge nel punto `c = 0`, `s = 1`, `n = e_x` come `CNOT`

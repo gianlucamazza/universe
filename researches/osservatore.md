@@ -66,7 +66,7 @@ Una hermitiana su `ℂ² ⊗ ℂ²` ha 16 reali e non quadra a `I`. `Universe.Qu
 
 ## Dopo la nota
 
-Il monomio è passato da nove a tredici esponenti (`plans/parametric-mono.md`, fase 1), con quattro spettatori che la divisione non legge. Lo stato generico di due qubit è entrato in Lean, ma la prova non ne ha avuto bisogno: `no_signalling_any_0` e `no_signalling_any_1` valgono per ogni `v : Quad`, e sono `literal_evolution_norm` applicato ai due blocchi del sistema. La prova della fase 4, circa novanta righe con `born_column_defect` e i due lemmi di colonna, era un caso particolare dello stesso argomento ed è stata tolta: `no_signalling_0` e `no_signalling_1` ne sono ora corollari di una riga.
+Il monomio è passato da nove a tredici esponenti (`plans/parametric-mono.md`, fase 1), con quattro spettatori che la divisione non legge; poi a quindici, con `c2 s2` per la composizione dei tempi (`plans/no-outside.md`, fase 6). Lo stato generico di due qubit è entrato in Lean, ma la prova non ne ha avuto bisogno: `no_signalling_any_0` e `no_signalling_any_1` valgono per ogni `v : Quad`, e sono `literal_evolution_norm` applicato ai due blocchi del sistema. La prova della fase 4, circa novanta righe con `born_column_defect` e i due lemmi di colonna, era un caso particolare dello stesso argomento ed è stata tolta: `no_signalling_0` e `no_signalling_1` ne sono ora corollari di una riga.
 
 Il vicolo cieco non era il monomio. Era cercare la prova sulla forma `α|00⟩ + β|11⟩` invece che sul blocco.
 
@@ -76,4 +76,4 @@ Il vicolo cieco non era il monomio. Era cercare la prova sulla forma `α|00⟩ +
 
 ## Verifica
 
-`lake build` sulla libreria `Universe`. `python -m universe` stampa 49 righe, chiude con `49/49` ed esce 0.
+`lake build` sulla libreria `Universe`. `python -m universe` stampa 52 righe, chiude con `52/52` ed esce 0.
