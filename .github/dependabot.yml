@@ -8,3 +8,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Lower bounds stay as declared; bump only when a new release falls outside them.
+    versioning-strategy: increase-if-necessary
