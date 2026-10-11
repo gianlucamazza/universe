@@ -111,3 +111,12 @@ def test_real_imag_split():
     z = s.ar + s.ai * i
     assert z.modulus_squared().imag_is_zero()
     assert z.modulus_squared() == s.ar**2 + s.ai**2
+
+
+def test_equal_polys_hash_equal():
+    ring = Ring(("x",))
+    x = ring.var("x")
+    ring.set_square("x", ring.one())
+    assert x * x == ring.one()
+    assert hash(x * x) == hash(ring.one())
+    assert len({x * x, ring.one()}) == 1

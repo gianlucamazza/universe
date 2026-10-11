@@ -69,7 +69,7 @@ ONE_G = g(1)
 class Ring:
     """Anello di polinomi sui razionali di Gauss, con quadrati riscrivibili."""
 
-    def __init__(self, variables: tuple[str, ...]):
+    def __init__(self, variables: tuple[str, ...]) -> None:
         if len(set(variables)) != len(variables):
             raise ValueError("variabile duplicata")
         self.variables = variables
@@ -95,7 +95,7 @@ class Ring:
         return _from_origin(_mono(self, value))
 
     def var(self, name: str) -> Poly:
-        return _from_origin(_mono(self, **{name: 1}))
+        return _from_origin(_mono(self, ONE_G, **{name: 1}))
 
     def set_square(self, name: str, replacement: Poly) -> None:
         """Dichiara name² = replacement. Il peeling legge questa regola."""
@@ -292,6 +292,10 @@ class Poly:
         if self.ring is not other.ring:
             raise ValueError("confronto fra anelli diversi")
         return self.terms == other.terms
+
+    def __hash__(self) -> int:
+        # Equal polynomials share `terms`, not `origin`.
+        return hash(self.terms)
 
     def __add__(self, other: Poly) -> Poly:
         self._same(other)

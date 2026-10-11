@@ -367,12 +367,12 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     # --- Osservatore: CNOT e il primo stato entangled ---
     gate_ring = Ring(())
     gate = cnot(gate_ring)
-    square = gate.matmul(gate)
+    cnot_square = gate.matmul(gate)
     eye4 = Operator.eye(gate_ring, 4)
     add(
         "Osservatore",
         "CNOT² = I",
-        square.rows == eye4.rows,
+        cnot_square.rows == eye4.rows,
         "Universe.Observer.cnot_involutive",
     )
 
@@ -557,13 +557,13 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "nz": g(0),
     }
     matrix = [[entry.evaluate(point) for entry in row] for row in world.U.rows]
-    product = _gauss_matmul(_gauss_dagger(matrix), matrix)
-    rational_ok = _is_gauss_identity(product)
+    point_product = _gauss_matmul(_gauss_dagger(matrix), matrix)
+    rational_ok = _is_gauss_identity(point_product)
     add(
         "Corollario",
         "c = 3/5, s = 4/5, n = e_x: U†U = I nei razionali di Gauss",
         rational_ok,
-        _format_matrix(matrix) if rational_ok else _format_matrix(product),
+        _format_matrix(matrix) if rational_ok else _format_matrix(point_product),
     )
     column = (matrix[0][0], matrix[1][0])
     prob0 = _modulus_sq(column[0])
@@ -619,9 +619,9 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
 
     generated = generator(scalars)
     cube = _power(generated, 3) - generated
-    square = generated.matmul(generated) - projector_one(scalars)
+    generated_square = generated.matmul(generated) - projector_one(scalars)
     cube_reason = _first_certificate(cube)
-    square_reason = _first_certificate(square)
+    square_reason = _first_certificate(generated_square)
     powers_ok = cube_reason is None and square_reason is None
     add(
         "Interazione",
@@ -675,7 +675,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "bi": g(Fraction(-4, 5)),
     }
     drawn = [amplitude.evaluate(sample) for amplitude in phased]
-    weights = [
+    phased_weights = [
         _real_fraction(amplitude.modulus_squared().evaluate(sample))
         for amplitude in phased
     ]
@@ -684,7 +684,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         g(0),
         g(0),
         g(Fraction(-4, 5)),
-    ] and weights == [
+    ] and phased_weights == [
         Fraction(9, 25),
         Fraction(0),
         Fraction(0),
@@ -698,7 +698,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "α = 3/5, β = −4/5 i → 3/5|00⟩ − 4/5|11⟩, pesi 9/25 e 16/25\n"
         "Universe.Interaction.cnot_point, Universe.Interaction.cnot_point_born"
         if point_ok
-        else f"stato {phased}; pesi {weights}",
+        else f"stato {phased}; pesi {phased_weights}",
     )
 
     system = world.generic()
@@ -813,7 +813,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if repeat_ok
         else f"0 → {second0}; 1 → {second1}",
     )
-    evolved = world.evolve(world.ground())
+    evolved_ground = world.evolve(world.ground())
     sample = {
         "c": g(Fraction(3, 5)),
         "s": g(Fraction(4, 5)),
@@ -821,7 +821,9 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "ny": g(0),
         "nz": g(0),
     }
-    pointed = cnot(evolved.ring).apply(tensor_state(evolved, world.ground()))
+    pointed = cnot(evolved_ground.ring).apply(
+        tensor_state(evolved_ground, world.ground())
+    )
     pointed0 = condition(pointed, 0)
     pointed1 = condition(pointed, 1)
     got0 = tuple(amplitude.evaluate(sample) for amplitude in pointed0.amplitudes)
@@ -842,8 +844,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if point_luders_ok
         else f"0 = {got0}, norma {norm0}; 1 = {got1}, norma {norm1}",
     )
-    again0 = marginal(reread(evolved, 0), 1, 2, 2)
-    again1 = marginal(reread(evolved, 1), 1, 2, 2)
+    again0 = marginal(reread(evolved_ground, 0), 1, 2, 2)
+    again1 = marginal(reread(evolved_ground, 1), 1, 2, 2)
     point_repeat_ok = (
         again0[0].evaluate(sample) == g(Fraction(9, 25))
         and again0[1].evaluate(sample) == g(0)
@@ -878,17 +880,17 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if change.born
         else "i pesi non coincidono",
     )
-    drawn = change.image == (
+    conj_drawn = change.image == (
         g(Fraction(-7, 25)),
         g(0, Fraction(-24, 25)),
     ) and change.weights == (g(1), g(0))
     add(
         "Simmetria",
         "nel punto, V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩, pesi 1 e 0",
-        drawn and change.evolution,
+        conj_drawn and change.evolution,
         "c = 3/5, s = 4/5, n = e_x, ψ = |0⟩\n"
         "Universe.Symmetry.point_conj_evolution, Universe.Symmetry.point_conj_born"
-        if drawn and change.evolution
+        if conj_drawn and change.evolution
         else f"stato {_format_gauss(change.image[0])}, "
         f"{_format_gauss(change.image[1])}; "
         f"pesi {_format_gauss(change.weights[0])}, {_format_gauss(change.weights[1])}",
@@ -914,29 +916,29 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         else "i pesi simbolici non stanno in (gC, gN)",
     )
 
-    law = _time_composition()
+    time_law = _time_composition()
     add(
         "Simmetria",
         "U(c₁, s₁) U(c₂, s₂) − U(c, s) sta nell'ideale di gN",
-        law.group,
+        time_law.group,
         "solo nx² = 1 − ny² − nz²; senza quadrati il resto non è zero\n"
         "Universe.Symmetry.evolution_compose"
-        if law.group
+        if time_law.group
         else "la legge di gruppo non sta in (gN)",
     )
     add(
         "Simmetria",
         "se le due coppie stanno sul cerchio, ci sta (c, s)",
-        law.circle,
+        time_law.circle,
         "gC2 fuori da reduce, come gA: regola extra c2² = 1 − s2²\n"
         "Universe.Symmetry.compose_circle"
-        if law.circle
+        if time_law.circle
         else "il composto non sta in (gC, gC2)",
     )
-    point_ok = law.angle == (
+    point_ok = time_law.angle == (
         g(Fraction(-7, 25)),
         g(Fraction(24, 25)),
-    ) and law.image == (
+    ) and time_law.image == (
         g(Fraction(-7, 25)),
         g(0, Fraction(-24, 25)),
     )
@@ -948,8 +950,9 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Symmetry.evolution_compose, Universe.Symmetry.compose_circle, "
         "Universe.Symmetry.point_compose"
         if point_ok
-        else f"angolo {_format_gauss(law.angle[0])}, {_format_gauss(law.angle[1])}; "
-        f"stato {_format_gauss(law.image[0])}, {_format_gauss(law.image[1])}",
+        else "angolo {}, {}; stato {}, {}".format(
+            *map(_format_gauss, time_law.angle + time_law.image)
+        ),
     )
     return proven
 
@@ -1069,8 +1072,8 @@ def _change_of_basis(world: QubitUniverse) -> _BasisChange:
             ground.amplitudes, conjugated_ground.amplitudes, strict=True
         )
     )
-    point_image = tuple(amplitude.evaluate(axis) for amplitude in ground.amplitudes)
-    point_weights = tuple(
+    image0, image1 = (amplitude.evaluate(axis) for amplitude in ground.amplitudes)
+    weight0, weight1 = (
         bracket(basis.apply(ket), basis.apply(world.ground()))
         .modulus_squared()
         .evaluate(axis)
@@ -1079,8 +1082,8 @@ def _change_of_basis(world: QubitUniverse) -> _BasisChange:
     return _BasisChange(
         evolution_same and same_point,
         born,
-        point_image,
-        point_weights,
+        (image0, image1),
+        (weight0, weight1),
     )
 
 

@@ -14,7 +14,7 @@ from universe.observer import (
     purity,
     reduced,
 )
-from universe.ontology import Operator, State, tensor_state
+from universe.ontology import Operator, State, tensor_index_assoc, tensor_state
 from universe.ring import Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
@@ -177,3 +177,14 @@ def test_local_unitary_on_a_generic_state_does_not_signal():
     gap0, gap1 = no_signalling_gap()
     assert gap0.certification() is None
     assert gap1.certification() is None
+
+
+def test_tensor_index_assoc():
+    assert all(
+        tensor_index_assoc(i, j, k, nb, nc)
+        for nb in range(1, 4)
+        for nc in range(1, 4)
+        for i in range(3)
+        for j in range(nb)
+        for k in range(nc)
+    )
