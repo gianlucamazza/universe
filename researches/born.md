@@ -12,7 +12,7 @@ Ciò che i teoremi mostrano è la coerenza della scelta. I pesi sommano a `1` (`
 
 **Gleason (1957).** Su uno spazio di Hilbert di dimensione almeno 3, ogni misura di probabilità sui sottospazi chiusi, additiva sulle famiglie di sottospazi ortogonali, è data da un operatore densità con la regola della traccia. In dimensione 2 il teorema è falso: un solo qubit ammette assegnazioni non quadratiche.
 
-**Busch (2003).** Se la probabilità è definita sugli effetti, cioè sulle misure POVM, e non solo sui proiettori, la stessa conclusione vale anche in dimensione 2, con una prova breve. Caves, Fuchs, Manne e Renes (2004) ne danno la versione nel linguaggio delle decisioni.
+**Busch (2003).** Se la probabilità è definita sugli effetti, cioè sulle misure POVM, e non solo sui proiettori, la stessa conclusione vale anche in dimensione 2, con una prova breve. Caves, Fuchs, Manne e Renes (2004) danno una prova elementare sulle POVM che copre anche il qubit e gli spazi vettoriali su campi razionali, dove il teorema originale fallisce.
 
 **Zurek (2003).** L'«envariance»: in uno stato entangled con l'ambiente, una simmetria che scambia i rami dà pesi uguali ai rami di ampiezza uguale. Da lì la regola del modulo quadro. L'argomento presuppone la struttura del prodotto tensoriale e una nozione di indipendenza dall'ambiente.
 
@@ -20,7 +20,7 @@ Ciò che i teoremi mostrano è la coerenza della scelta. I pesi sommano a `1` (`
 
 ## Che cosa costerebbe qui
 
-Il teorema di Gleason chiede l'analisi su uno spazio di dimensione almeno 3 e una misura su tutti i sottospazi. Senza Mathlib è fuori portata. La versione di Busch è finita e algebrica: lineare negli effetti, normalizzata, positiva. Il passo critico è la linearità sugli effetti con coefficienti razionali, estesa per continuità. Nel nucleo la continuità non c'è, perché i coefficienti sono razionali di Gauss.
+Il teorema di Gleason chiede l'analisi su uno spazio di dimensione almeno 3 e una misura su tutti i sottospazi. Senza Mathlib è fuori portata. La versione di Busch è algebrica: lineare negli effetti, normalizzata, positiva. La sua prova ricava la linearità sui coefficienti razionali e la estende ai reali per continuità, e nel nucleo la continuità non c'è. La versione di Caves, Fuchs, Manne e Renes sugli spazi su campi razionali non ha bisogno di quel passo: è la più vicina a un nucleo i cui coefficienti sono razionali di Gauss.
 
 Una versione che si può enunciare qui: ogni funzione additiva sugli effetti diagonali di un qubit, con coefficienti razionali, normalizzata a `1`, è il modulo quadro sui due vettori di base. È un teorema di algebra lineare su `ℚ`, alla portata di Lean. Non sarebbe la regola di Born derivata, ma la sua unicità in un caso finito. È un candidato per dopo la 1.0, non un criterio della roadmap.
 
