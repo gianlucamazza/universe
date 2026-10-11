@@ -221,3 +221,7 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 - [`researches/associazione.md`](researches/associazione.md): the three-qubit associativity.
 - [`researches/osservatore.md`](researches/osservatore.md): what the observer construction settles, and what it does not.
 - [`plans/observer-inside.md`](plans/observer-inside.md): the plan that built the observer, phase by phase.
+
+## License
+
+[MIT](LICENSE).
