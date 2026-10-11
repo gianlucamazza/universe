@@ -167,6 +167,28 @@ theorem pairSame.trans {a b c : Pair} (hab : pairSame a b) (hbc : pairSame b c) 
     pairSame a c :=
   ⟨polySame.trans hab.1 hbc.1, polySame.trans hab.2 hbc.2⟩
 
+theorem pairSame.symm {ψ φ : Pair} (h : pairSame ψ φ) : pairSame φ ψ :=
+  ⟨h.1.symm, h.2.symm⟩
+
+theorem pairSame_refl (ψ : Pair) : pairSame ψ ψ :=
+  ⟨polySame_refl _, polySame_refl _⟩
+
+/-- `I` agisce come l'identità sulle ampiezze. -/
+theorem applyMat_one (ψ : Pair) : applyMat matOne ψ = ψ := by
+  ext
+  · simp [applyMat, matOne, one_pmul, pmul_nil_left, List.append_nil]
+  · simp [applyMat, matOne, one_pmul, pmul_nil_left, List.nil_append]
+
+theorem apply_matSame {A B : Mat} (h : matSame A B) (ψ : Pair) :
+    pairSame (applyMat A ψ) (applyMat B ψ) :=
+  ⟨polySame_append (polySame_pmul_left h.1 ψ.a0) (polySame_pmul_left h.2.1 ψ.a1),
+    polySame_append (polySame_pmul_left h.2.2.1 ψ.a0) (polySame_pmul_left h.2.2.2 ψ.a1)⟩
+
+theorem apply_pairSame (A : Mat) {ψ φ : Pair} (h : pairSame ψ φ) :
+    pairSame (applyMat A ψ) (applyMat A φ) :=
+  ⟨polySame_append (polySame_pmul_right h.1 A.a00) (polySame_pmul_right h.2 A.a01),
+    polySame_append (polySame_pmul_right h.1 A.a10) (polySame_pmul_right h.2 A.a11)⟩
+
 /-- Il fattore destro di `(p · x)` attraversa `p`. -/
 theorem slide_right (a p x : Poly) :
     polySame (pmul a (pmul p x)) (pmul p (pmul a x)) :=

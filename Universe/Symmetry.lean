@@ -6,6 +6,12 @@ entrambi `c H − i s H²`. L'energia `⟨ψ|H|ψ⟩` è conservata. La differen
 dopo `Φ` sta in `(gC, gN)`, perché `U†HU = U†UH` e `U†U − I` è `δ`.
 Nel punto `c = 3/5`, `s = 4/5`, `⟨0|H|0⟩` vale `0` lungo `e_x` e `1`
 lungo `e_z`, prima e dopo l'evoluzione.
+
+Un `V` con `V†V = I` nell'anello libero porta la legge in `V U V†`:
+`V (U ψ)` e `(V U V†) (V ψ)` hanno gli stessi coefficienti. I pesi di
+Born di `Vψ` nella base `V|k⟩` sono quelli di `ψ`. `V V† = I` rende il
+cambio invertibile. Nel punto `c = 3/5`, `s = 4/5`, `n = e_x` quella
+matrice dà `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩`, con pesi `1` e `0`.
 -/
 import Universe.Composition
 import Universe.Evaluation
@@ -400,5 +406,270 @@ theorem point_energy_z :
   · rw [← applyMat_proj evolution ket0,
       energy_at ket0.a0 ket0.a1 0 0 1 (circle_at_point 0 0 1) sphere_at_z, h00_at]
     ext <;> simp
+
+/-! ### Cambio di base -/
+
+/-- `⟨φ|ξ⟩`. -/
+def braket (φ ξ : Pair) : Poly :=
+  pmul (conjP φ.a0) ξ.a0 ++ pmul (conjP φ.a1) ξ.a1
+
+/-- Colonna `k`, lo stato `M|k⟩`. -/
+def matColumn (M : Mat) : Fin 2 → Pair
+  | 0 => ⟨M.a00, M.a10⟩
+  | 1 => ⟨M.a01, M.a11⟩
+
+theorem braket_dagger (M : Mat) (ξ : Pair) :
+    braket (matColumn M 0) ξ = (applyMat (matDagger M) ξ).a0 ∧
+      braket (matColumn M 1) ξ = (applyMat (matDagger M) ξ).a1 := by
+  constructor <;> rfl
+
+/-- `A (B ψ) = ψ` quando `AB = I` nell'anello libero. -/
+theorem apply_cancel (A B : Mat) (ψ : Pair) (h : matSame (matMul A B) matOne) :
+    pairSame (applyMat A (applyMat B ψ)) ψ := by
+  have hstep : pairSame (applyMat A (applyMat B ψ)) (applyMat (matMul A B) ψ) :=
+    pairSame_symm (apply_assoc A B ψ.a0 ψ.a1)
+  have hunit : pairSame (applyMat (matMul A B) ψ) (applyMat matOne ψ) :=
+    apply_matSame h ψ
+  exact pairSame.trans hstep (pairSame.trans hunit (by
+    rw [applyMat_one]
+    exact pairSame_refl ψ))
+
+/-- `V (U ψ)` e `(V U V†) (V ψ)` hanno gli stessi coefficienti
+quando `V† V = I` nell'anello libero. -/
+theorem conj_evolution (V U : Mat) (ψ : Pair)
+    (h : matSame (matMul (matDagger V) V) matOne) :
+    pairSame (applyMat V (applyMat U ψ))
+      (applyMat (matMul (matMul V U) (matDagger V)) (applyMat V ψ)) := by
+  have hback : pairSame (applyMat (matDagger V) (applyMat V ψ)) ψ :=
+    apply_cancel (matDagger V) V ψ h
+  have hmid : pairSame
+      (applyMat (matMul V U) (applyMat (matDagger V) (applyMat V ψ)))
+      (applyMat (matMul V U) ψ) :=
+    apply_pairSame (matMul V U) hback
+  have houter : pairSame
+      (applyMat (matMul (matMul V U) (matDagger V)) (applyMat V ψ))
+      (applyMat (matMul V U) (applyMat (matDagger V) (applyMat V ψ))) :=
+    apply_assoc (matMul V U) (matDagger V) (applyMat V ψ).a0 (applyMat V ψ).a1
+  have hinner : pairSame (applyMat (matMul V U) ψ) (applyMat V (applyMat U ψ)) :=
+    apply_assoc V U ψ.a0 ψ.a1
+  exact pairSame_symm (pairSame.trans houter (pairSame.trans hmid hinner))
+
+/-- I pesi di Born di `Vψ` nella base `V|k⟩` sono quelli di `ψ`. -/
+theorem conj_born (V : Mat) (ψ : Pair)
+    (h : matSame (matMul (matDagger V) V) matOne) :
+    polySame (columnBorn (braket (matColumn V 0) (applyMat V ψ))) (columnBorn ψ.a0) ∧
+      polySame (columnBorn (braket (matColumn V 1) (applyMat V ψ))) (columnBorn ψ.a1) := by
+  have hstate : pairSame (applyMat (matDagger V) (applyMat V ψ)) ψ :=
+    apply_cancel (matDagger V) V ψ h
+  have hcols := braket_dagger V (applyMat V ψ)
+  refine ⟨?_, ?_⟩
+  · rw [hcols.1]
+    exact polySame_columnBorn hstate.1
+  · rw [hcols.2]
+    exact polySame_columnBorn hstate.2
+
+/-- `V V† = I` nell'anello libero: `V (V† φ) = φ`. -/
+theorem conj_inverse (V : Mat) (φ : Pair)
+    (h : matSame (matMul V (matDagger V)) matOne) :
+    pairSame (applyMat V (applyMat (matDagger V) φ)) φ :=
+  apply_cancel V (matDagger V) φ h
+
+/-! ### Il punto `c = 3/5`, `s = 4/5` come matrice -/
+
+def basisReal : Gauss := ⟨pointC, 0⟩
+
+def basisImag : Gauss := ⟨0, -pointS⟩
+
+/-- `U` nel punto `n = e_x`: `[[3/5, −4/5 i], [−4/5 i, 3/5]]`. -/
+def pointBasis : Mat where
+  a00 := single basisReal Mono.one
+  a01 := single basisImag Mono.one
+  a10 := single basisImag Mono.one
+  a11 := single basisReal Mono.one
+
+theorem basis_conj_real : Gauss.conj basisReal = basisReal := by
+  ext <;> simp [Gauss.conj, basisReal]
+
+theorem basis_diag :
+    basisReal * basisReal + Gauss.conj basisImag * basisImag = 1 := by
+  ext <;> simp [basisReal, basisImag, Gauss.conj, pointC, pointS] <;> grind
+
+theorem basis_off :
+    basisReal * basisImag + Gauss.conj basisImag * basisReal = 0 := by
+  ext <;> simp [basisReal, basisImag, Gauss.conj, pointC, pointS] <;> grind
+
+theorem basis_off_rev :
+    basisReal * Gauss.conj basisImag + basisImag * basisReal = 0 := by
+  ext <;> simp [basisReal, basisImag, Gauss.conj, pointC, pointS] <;> grind
+
+theorem basis_norm :
+    basisReal * basisReal + basisImag * Gauss.conj basisImag = 1 := by
+  rw [Gauss.mul_comm basisImag (Gauss.conj basisImag), basis_diag]
+
+theorem basis_diag_swap :
+    Gauss.conj basisImag * basisImag + basisReal * basisReal = 1 := by
+  rw [Gauss.add_comm, basis_diag]
+
+theorem basis_off_swap :
+    Gauss.conj basisImag * basisReal + basisReal * basisImag = 0 := by
+  rw [Gauss.add_comm, basis_off]
+
+theorem basis_off_rev_swap :
+    basisImag * basisReal + basisReal * Gauss.conj basisImag = 0 := by
+  rw [Gauss.add_comm, basis_off_rev]
+
+theorem basis_norm_swap :
+    basisImag * Gauss.conj basisImag + basisReal * basisReal = 1 := by
+  rw [Gauss.add_comm, basis_norm]
+
+theorem basis_square_0 :
+    basisReal * basisReal + basisImag * basisImag = ⟨-(7 : Rat) / 25, 0⟩ := by
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem basis_square_1 :
+    basisImag * basisReal + basisReal * basisImag = ⟨0, -(24 : Rat) / 25⟩ := by
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem point_dagger_a00 : (matDagger pointBasis).a00 = single basisReal Mono.one := by
+  simp only [matDagger, pointBasis]
+  rw [conjP_single, basis_conj_real]
+
+theorem point_dagger_a01 :
+    (matDagger pointBasis).a01 = single (Gauss.conj basisImag) Mono.one := by
+  simp only [matDagger, pointBasis]
+  rw [conjP_single]
+
+theorem point_dagger_a10 :
+    (matDagger pointBasis).a10 = single (Gauss.conj basisImag) Mono.one := by
+  simp only [matDagger, pointBasis]
+  rw [conjP_single]
+
+theorem point_dagger_a11 : (matDagger pointBasis).a11 = single basisReal Mono.one := by
+  simp only [matDagger, pointBasis]
+  rw [conjP_single, basis_conj_real]
+
+theorem point_basis_unitary : matSame (matMul (matDagger pointBasis) pointBasis) matOne := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [show (matMul (matDagger pointBasis) pointBasis).a00 =
+        pmul (matDagger pointBasis).a00 pointBasis.a00 ++
+          pmul (matDagger pointBasis).a01 pointBasis.a10 from rfl,
+      point_dagger_a00, point_dagger_a01, pointBasis, matOne]
+    exact polySame_const_dot _ _ _ _ _ basis_diag
+  · rw [show (matMul (matDagger pointBasis) pointBasis).a01 =
+        pmul (matDagger pointBasis).a00 pointBasis.a01 ++
+          pmul (matDagger pointBasis).a01 pointBasis.a11 from rfl,
+      point_dagger_a00, point_dagger_a01, pointBasis, matOne]
+    exact polySame_const_dot_zero _ _ _ _ basis_off
+  · rw [show (matMul (matDagger pointBasis) pointBasis).a10 =
+        pmul (matDagger pointBasis).a10 pointBasis.a00 ++
+          pmul (matDagger pointBasis).a11 pointBasis.a10 from rfl,
+      point_dagger_a10, point_dagger_a11, pointBasis, matOne]
+    exact polySame_const_dot_zero _ _ _ _ basis_off_swap
+  · rw [show (matMul (matDagger pointBasis) pointBasis).a11 =
+        pmul (matDagger pointBasis).a10 pointBasis.a01 ++
+          pmul (matDagger pointBasis).a11 pointBasis.a11 from rfl,
+      point_dagger_a10, point_dagger_a11, pointBasis, matOne]
+    exact polySame_const_dot _ _ _ _ _ basis_diag_swap
+
+theorem point_basis_unitary_rev :
+    matSame (matMul pointBasis (matDagger pointBasis)) matOne := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [show (matMul pointBasis (matDagger pointBasis)).a00 =
+        pmul pointBasis.a00 (matDagger pointBasis).a00 ++
+          pmul pointBasis.a01 (matDagger pointBasis).a10 from rfl,
+      point_dagger_a00, point_dagger_a10, pointBasis, matOne]
+    exact polySame_const_dot _ _ _ _ _ basis_norm
+  · rw [show (matMul pointBasis (matDagger pointBasis)).a01 =
+        pmul pointBasis.a00 (matDagger pointBasis).a01 ++
+          pmul pointBasis.a01 (matDagger pointBasis).a11 from rfl,
+      point_dagger_a01, point_dagger_a11, pointBasis, matOne]
+    exact polySame_const_dot_zero _ _ _ _ basis_off_rev
+  · rw [show (matMul pointBasis (matDagger pointBasis)).a10 =
+        pmul pointBasis.a10 (matDagger pointBasis).a00 ++
+          pmul pointBasis.a11 (matDagger pointBasis).a10 from rfl,
+      point_dagger_a00, point_dagger_a10, pointBasis, matOne]
+    exact polySame_const_dot_zero _ _ _ _ basis_off_rev_swap
+  · rw [show (matMul pointBasis (matDagger pointBasis)).a11 =
+        pmul pointBasis.a10 (matDagger pointBasis).a01 ++
+          pmul pointBasis.a11 (matDagger pointBasis).a11 from rfl,
+      point_dagger_a01, point_dagger_a11, pointBasis, matOne]
+    exact polySame_const_dot _ _ _ _ _ basis_norm_swap
+
+theorem eval_apply_a0 (c s nx ny nz : Rat) (M : Mat) (ψ : Pair) :
+    evalAt c s nx ny nz (applyMat M ψ).a0 =
+      evalAt c s nx ny nz M.a00 * evalAt c s nx ny nz ψ.a0 +
+        evalAt c s nx ny nz M.a01 * evalAt c s nx ny nz ψ.a1 := by
+  rw [show (applyMat M ψ).a0 = pmul M.a00 ψ.a0 ++ pmul M.a01 ψ.a1 from rfl, eval_append,
+    eval_pmul, eval_pmul]
+
+theorem eval_apply_a1 (c s nx ny nz : Rat) (M : Mat) (ψ : Pair) :
+    evalAt c s nx ny nz (applyMat M ψ).a1 =
+      evalAt c s nx ny nz M.a10 * evalAt c s nx ny nz ψ.a0 +
+        evalAt c s nx ny nz M.a11 * evalAt c s nx ny nz ψ.a1 := by
+  rw [show (applyMat M ψ).a1 = pmul M.a10 ψ.a0 ++ pmul M.a11 ψ.a1 from rfl, eval_append,
+    eval_pmul, eval_pmul]
+
+theorem eval_evol_ket0_a0 :
+    evalAt pointC pointS 1 0 0 (applyMat evolution ket0).a0 = basisReal := by
+  have hket : (applyMat evolution ket0).a0 = evolution.a00 := by
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  rw [hket, eval_bracket_axis_x]
+  ext <;> rfl
+
+theorem eval_evol_ket0_a1 :
+    evalAt pointC pointS 1 0 0 (applyMat evolution ket0).a1 = basisImag := by
+  have hket : (applyMat evolution ket0).a1 = evolution.a10 := by
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  rw [hket, evolution_a10_bin, eval_append, eval_single, eval_single]
+  simp [basisImag, monoVal, powR, s1, nx1, ny1, Mono.mul, pointC, pointS, Gauss.re_neg,
+    Gauss.im_neg, Gauss.re_i, Gauss.im_i]
+  ext <;> simp <;> grind
+
+theorem point_image_a0 :
+    evalAt pointC pointS 1 0 0 (applyMat pointBasis (applyMat evolution ket0)).a0 =
+      ⟨-(7 : Rat) / 25, 0⟩ := by
+  rw [eval_apply_a0, eval_evol_ket0_a0, eval_evol_ket0_a1, pointBasis, eval_const, eval_const]
+  exact basis_square_0
+
+theorem point_image_a1 :
+    evalAt pointC pointS 1 0 0 (applyMat pointBasis (applyMat evolution ket0)).a1 =
+      ⟨0, -(24 : Rat) / 25⟩ := by
+  rw [eval_apply_a1, eval_evol_ket0_a0, eval_evol_ket0_a1, pointBasis, eval_const, eval_const]
+  exact basis_square_1
+
+/-- Nel punto, `V(U|0⟩)` e `(V U V†)(V|0⟩)` valgono `−7/25` e `−24/25 i`. -/
+theorem point_conj_evolution :
+    evalAt pointC pointS 1 0 0 (applyMat pointBasis (applyMat evolution ket0)).a0 =
+      ⟨-(7 : Rat) / 25, 0⟩ ∧
+      evalAt pointC pointS 1 0 0 (applyMat pointBasis (applyMat evolution ket0)).a1 =
+        ⟨0, -(24 : Rat) / 25⟩ ∧
+      evalAt pointC pointS 1 0 0
+          (applyMat (matMul (matMul pointBasis evolution) (matDagger pointBasis))
+            (applyMat pointBasis ket0)).a0 =
+        ⟨-(7 : Rat) / 25, 0⟩ ∧
+      evalAt pointC pointS 1 0 0
+          (applyMat (matMul (matMul pointBasis evolution) (matDagger pointBasis))
+            (applyMat pointBasis ket0)).a1 =
+        ⟨0, -(24 : Rat) / 25⟩ := by
+  refine ⟨point_image_a0, point_image_a1, ?_, ?_⟩
+  · have h := (conj_evolution pointBasis evolution ket0 point_basis_unitary).1
+    rw [← point_image_a0]
+    exact (eval_polySame h pointC pointS 1 0 0).symm
+  · have h := (conj_evolution pointBasis evolution ket0 point_basis_unitary).2
+    rw [← point_image_a1]
+    exact (eval_polySame h pointC pointS 1 0 0).symm
+
+/-- Nel punto i pesi di `V|0⟩` nella base `V|k⟩` sono `1` e `0`. -/
+theorem point_conj_born :
+    evalAt pointC pointS 1 0 0
+        (columnBorn (braket (matColumn pointBasis 0) (applyMat pointBasis ket0))) = 1 ∧
+      evalAt pointC pointS 1 0 0
+          (columnBorn (braket (matColumn pointBasis 1) (applyMat pointBasis ket0))) = 0 := by
+  obtain ⟨h0, h1⟩ := conj_born pointBasis ket0 point_basis_unitary
+  refine ⟨?_, ?_⟩
+  · rw [eval_polySame h0, show ket0.a0 = single (1 : Gauss) Mono.one from rfl, eval_column_const]
+    rw [show Gauss.conj (1 : Gauss) = 1 by ext <;> rfl, Gauss.mul_one]
+  · rw [eval_polySame h1, show ket0.a1 = [] from rfl, columnBorn_nil]
+    rfl
 
 end Universe.Symmetry

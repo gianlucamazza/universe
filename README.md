@@ -65,7 +65,7 @@ lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 46 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 49 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
 
@@ -112,6 +112,8 @@ The rational point `c = 3/5`, `s = 4/5`, `n = eₓ` turns those polynomials into
 | c = 3/5, s = 4/5, n = eₓ | 9/25   | 16/25 |
 
 **Energy is conserved.** `U = c I − i s H` commutes with `H` already in the free ring, since `UH` and `HU` are both `c H − i s H²` (`evolution_commutes_hamiltonian`). So `U†HU = U†UH`, and `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` lies in `(gC, gN)` for every amplitude (`energy_conserved`). At the rational point `⟨0|H|0⟩` is `0` along x and `1` along z, before and after the evolution.
+
+**A change of basis is the same universe.** For any matrix `V` with `V†V = I`, `V(Uψ)` equals `(VUV†)(Vψ)` (`conj_evolution`), and the Born weights of `Vψ` in the basis `V|k⟩` equal those of `ψ` (`conj_born`): the rotated description evolves and observes exactly like the original, which is the identity principle of the kernel. The hypothesis holds without any rule, so the theorem applies to exact unitaries such as `U` at the rational point (`point_conj_evolution`: `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩`), not to the symbolic `U`, which is unitary only modulo `δ`.
 
 ## Several qubits
 
@@ -178,17 +180,18 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 
 ### Law
 
-| Fact                                                                | Python                                   | Lean                                                                                                       |
-| ------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `exp(−i φ a) = cos φ · 1 + (−i sin φ) · a` when `a² = 1`            | cited                                    | `Universe.Series.expCoeff`                                                                                 |
-| `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                             | `universe.dynamics.pauli`                | `Universe.Qubit.hamiltonian_pauli`                                                                         |
-| `H† = H` in the free ring                                           | certificate                              | `Universe.Qubit.hamiltonian_dagger`                                                                        |
-| `H² = I`, `H³ = H`, `H⁴ = I` in the quotient                        | certificate                              | `Universe.Qubit.hamiltonian_sq`, `Universe.Qubit.hamiltonian_cube`, `Universe.Qubit.hamiltonian_fourth`    |
-| The collapse of the series on `H`                                   | closed form                              | `Universe.Qubit.expCoeff_hamiltonian`                                                                      |
-| `U†U − I`, `UU† − I`, `det U − 1`, cofactors `gC + s² gN`           | certificate                              | `Universe.Qubit.evolution_unitary`, `Universe.Qubit.evolution_unitary_rev`, `Universe.Qubit.evolution_det` |
-| `‖Uψ‖² = ‖ψ‖²` on a generic state                                   | certificate, by `reduce`                 | `Universe.Epistemology.literal_evolution_norm`                                                             |
-| `UH = HU` in the free ring; `⟨Uψ\|H\|Uψ⟩ = ⟨ψ\|H\|ψ⟩` in `(gC, gN)` | certificate                              | `Universe.Symmetry.evolution_commutes_hamiltonian`, `Universe.Symmetry.energy_conserved`                   |
-| `ψ†(U†U)ψ − ‖ψ‖²` in `(gC, gN)`, any amplitudes                     | same coefficients, by `literal_sandwich` | `Universe.Qubit.evolution_norm`                                                                            |
+| Fact                                                                | Python                                   | Lean                                                                                                                                                                               |
+| ------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exp(−i φ a) = cos φ · 1 + (−i sin φ) · a` when `a² = 1`            | cited                                    | `Universe.Series.expCoeff`                                                                                                                                                         |
+| `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                             | `universe.dynamics.pauli`                | `Universe.Qubit.hamiltonian_pauli`                                                                                                                                                 |
+| `H† = H` in the free ring                                           | certificate                              | `Universe.Qubit.hamiltonian_dagger`                                                                                                                                                |
+| `H² = I`, `H³ = H`, `H⁴ = I` in the quotient                        | certificate                              | `Universe.Qubit.hamiltonian_sq`, `Universe.Qubit.hamiltonian_cube`, `Universe.Qubit.hamiltonian_fourth`                                                                            |
+| The collapse of the series on `H`                                   | closed form                              | `Universe.Qubit.expCoeff_hamiltonian`                                                                                                                                              |
+| `U†U − I`, `UU† − I`, `det U − 1`, cofactors `gC + s² gN`           | certificate                              | `Universe.Qubit.evolution_unitary`, `Universe.Qubit.evolution_unitary_rev`, `Universe.Qubit.evolution_det`                                                                         |
+| `‖Uψ‖² = ‖ψ‖²` on a generic state                                   | certificate, by `reduce`                 | `Universe.Epistemology.literal_evolution_norm`                                                                                                                                     |
+| `UH = HU` in the free ring; `⟨Uψ\|H\|Uψ⟩ = ⟨ψ\|H\|ψ⟩` in `(gC, gN)` | certificate                              | `Universe.Symmetry.evolution_commutes_hamiltonian`, `Universe.Symmetry.energy_conserved`                                                                                           |
+| A unitary change of basis commutes with `Φ` and `Obs`               | certificate                              | `Universe.Symmetry.conj_evolution`, `Universe.Symmetry.conj_born`, `Universe.Symmetry.conj_inverse`, `Universe.Symmetry.point_conj_evolution`, `Universe.Symmetry.point_conj_born` |
+| `ψ†(U†U)ψ − ‖ψ‖²` in `(gC, gN)`, any amplitudes                     | same coefficients, by `literal_sandwich` | `Universe.Qubit.evolution_norm`                                                                                                                                                    |
 
 ### Observation
 

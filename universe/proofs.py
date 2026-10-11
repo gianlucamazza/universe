@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 46 righe.
+"""Certificato eseguibile del primo universo. Stampa 49 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -72,6 +72,14 @@ i pesi di Born (`Universe.Composition.condition`,
 ripete l'esito e azzera l'altro (`Universe.Interaction.repeatable`).
 Nel punto `c = 3/5`, `s = 4/5`, `n = e_x` le norme sono `9/25` e `16/25`
 (`Universe.Interaction.point_luders`, `Universe.Interaction.point_repeatable`).
+La matrice di `U` in quel punto, come `V`, ha `V†V = I` e `VV† = I`
+nell'anello libero (`Universe.Symmetry.point_basis_unitary`,
+`Universe.Symmetry.point_basis_unitary_rev`). Allora
+`V (U ψ) = (V U V†) (V ψ)` (`Universe.Symmetry.conj_evolution`) e
+`V (V† φ) = φ` (`Universe.Symmetry.conj_inverse`). I pesi di Born di
+`Vψ` nella base `V|k⟩` sono quelli di `ψ` (`Universe.Symmetry.conj_born`).
+Nel punto `V(U|0⟩)` vale `−7/25` e `−24/25 i`, con pesi `1` e `0`
+(`Universe.Symmetry.point_conj_evolution`, `Universe.Symmetry.point_conj_born`).
 """
 
 from __future__ import annotations
@@ -106,7 +114,7 @@ from universe.observer import (
     reduced,
 )
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
-from universe.ring import ZERO_G, Gauss, Ring, g
+from universe.ring import ZERO_G, Gauss, Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
 
@@ -839,7 +847,125 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         else f"0 → ({again0[0].evaluate(sample)}, {again0[1].evaluate(sample)}); "
         f"1 → ({again1[0].evaluate(sample)}, {again1[1].evaluate(sample)})",
     )
+
+    change = _change_of_basis(world)
+    add(
+        "Simmetria",
+        "V(Uψ) = (V U V†)(Vψ) nell'anello libero",
+        change.evolution,
+        "V†V = I e VV† = I, V = U(3/5, 4/5, e_x)\n"
+        "Universe.Symmetry.conj_evolution, Universe.Symmetry.conj_inverse"
+        if change.evolution
+        else "il cambio di base non coincide",
+    )
+    add(
+        "Simmetria",
+        "i pesi di Born di Vψ nella base V|k⟩ sono quelli di ψ",
+        change.born,
+        "anello libero, stato generico\nUniverse.Symmetry.conj_born"
+        if change.born
+        else "i pesi non coincidono",
+    )
+    drawn = change.image == (
+        g(Fraction(-7, 25)),
+        g(0, Fraction(-24, 25)),
+    ) and change.weights == (g(1), g(0))
+    add(
+        "Simmetria",
+        "nel punto, V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩, pesi 1 e 0",
+        drawn and change.evolution,
+        "c = 3/5, s = 4/5, n = e_x, ψ = |0⟩\n"
+        "Universe.Symmetry.point_conj_evolution, Universe.Symmetry.point_conj_born"
+        if drawn and change.evolution
+        else f"stato {_format_gauss(change.image[0])}, {_format_gauss(change.image[1])}; "
+        f"pesi {_format_gauss(change.weights[0])}, {_format_gauss(change.weights[1])}",
+    )
     return proven
+
+
+@dataclass(frozen=True)
+class _BasisChange:
+    evolution: bool
+    born: bool
+    image: tuple[Gauss, Gauss]
+    weights: tuple[Gauss, Gauss]
+
+
+def _origin_zero(left: Poly, right: Poly) -> bool:
+    return (left - right).origin.is_zero()
+
+
+def _change_of_basis(world: QubitUniverse) -> _BasisChange:
+    """`V` è `U` nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, a entrate costanti.
+
+    L'uguaglianza è sull'origine libera, prima di `reduce`.
+    """
+    ring = world.scalars.ring
+    real = ring.constant(g(Fraction(3, 5)))
+    imag = ring.constant(g(0, Fraction(-4, 5)))
+    basis = Operator.from_rows([[real, imag], [imag, real]])
+    eye = Operator.eye(ring, 2)
+    left_unitary = basis.dagger().matmul(basis)
+    right_unitary = basis.matmul(basis.dagger())
+    unitary = all(
+        _origin_zero(entry, target)
+        for operator in (left_unitary, right_unitary)
+        for row, goal in zip(operator.rows, eye.rows, strict=True)
+        for entry, target in zip(row, goal, strict=True)
+    )
+    state = world.generic()
+    conjugated = basis.matmul(world.U).matmul(basis.dagger())
+    transported = basis.apply(world.U.apply(state))
+    pulled = conjugated.apply(basis.apply(state))
+    evolution_same = unitary and all(
+        _origin_zero(left, right)
+        for left, right in zip(transported.amplitudes, pulled.amplitudes, strict=True)
+    )
+    ket0 = State((ring.one(), ring.zero()))
+    ket1 = State((ring.zero(), ring.one()))
+    image = basis.apply(state)
+
+    def bracket(bra: State, ket: State):
+        total = ring.zero()
+        for left, right in zip(bra.amplitudes, ket.amplitudes, strict=True):
+            total = total + left.conj() * right
+        return total
+
+    weights = tuple(
+        bracket(basis.apply(ket), image).modulus_squared() for ket in (ket0, ket1)
+    )
+    born = all(
+        _origin_zero(weight, amplitude.modulus_squared())
+        for weight, amplitude in zip(weights, state.amplitudes, strict=True)
+    )
+    axis = {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    ground = basis.apply(world.U.apply(world.ground()))
+    conjugated_ground = conjugated.apply(basis.apply(world.ground()))
+    same_point = all(
+        _origin_zero(left, right)
+        for left, right in zip(
+            ground.amplitudes, conjugated_ground.amplitudes, strict=True
+        )
+    )
+    point_image = tuple(amplitude.evaluate(axis) for amplitude in ground.amplitudes)
+    point_weights = tuple(
+        bracket(basis.apply(ket), basis.apply(world.ground()))
+        .modulus_squared()
+        .evaluate(axis)
+        for ket in (ket0, ket1)
+    )
+    return _BasisChange(
+        evolution_same and same_point,
+        born,
+        point_image,
+        point_weights,
+    )
 
 
 def render(theorems: list[Theorem], world: QubitUniverse) -> str:

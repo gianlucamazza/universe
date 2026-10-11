@@ -147,6 +147,9 @@ theorem coeff_single_eq (a : Gauss) (m t : Mono) :
     coeffOf (single a m) t = if m = t then a else 0 := by
   simp [single, coeffOf, Gauss.add_zero]
 
+theorem conjP_single (z : Gauss) (m : Mono) : conjP (single z m) = single (Gauss.conj z) m := by
+  simp [conjP, single]
+
 /-! ### Prodotto: uguaglianze di lista -/
 
 theorem mulMono_append (a : Gauss) (m : Mono) (p q : Poly) :
@@ -1433,5 +1436,37 @@ theorem matScale_rel (p : Poly) {M N : Mat} (h : matRel M N) :
       inIdeal (psub (pmul p a) (pmul p b)) :=
     inIdeal_polySame (polySame.symm (polySame_mul_psub_right p a b)) (inIdeal_mul_left p hab)
   exact ⟨entry _ _ h.1, entry _ _ h.2.1, entry _ _ h.2.2.1, entry _ _ h.2.2.2⟩
+
+/-- Due prodotti di costanti, sommati, sono la costante `a b + c d`. -/
+theorem polySame_const_dot (a b c d z : Gauss) (h : a * b + c * d = z) :
+    polySame
+      (pmul (single a Mono.one) (single b Mono.one) ++
+        pmul (single c Mono.one) (single d Mono.one))
+      (single z Mono.one) := by
+  have hone : Mono.one.mul Mono.one = Mono.one := by ext <;> rfl
+  intro t
+  rw [pmul_single_single, pmul_single_single, hone]
+  rw [coeffOf_append, coeffOf_append, coeffOf_append]
+  simp only [coeffOf, Gauss.add_zero]
+  rw [coeff_single_eq, coeff_single_eq, coeff_single_eq]
+  by_cases ht : Mono.one = t
+  · rw [ite_eq_left ht, ite_eq_left ht, ite_eq_left ht, h]
+  · rw [ite_eq_right ht, ite_eq_right ht, ite_eq_right ht, Gauss.add_zero]
+
+/-- Lo stesso prodotto quando la somma dei coefficienti è zero. -/
+theorem polySame_const_dot_zero (a b c d : Gauss) (h : a * b + c * d = 0) :
+    polySame
+      (pmul (single a Mono.one) (single b Mono.one) ++
+        pmul (single c Mono.one) (single d Mono.one))
+      [] := by
+  intro t
+  have hdot := polySame_const_dot a b c d 0 h t
+  have hnil : coeffOf (single (0 : Gauss) Mono.one) t = 0 := by
+    rw [coeff_single_eq]
+    by_cases ht : Mono.one = t
+    · rw [ite_eq_left ht]
+    · rw [ite_eq_right ht]
+  rw [hnil] at hdot
+  simpa [coeffOf] using hdot
 
 end Universe.Dynamics
