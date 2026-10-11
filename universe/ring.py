@@ -97,6 +97,10 @@ class Ring:
     def var(self, name: str) -> Poly:
         return _from_origin(_mono(self, ONE_G, **{name: 1}))
 
+    def complex_var(self, name: str) -> Poly:
+        """`{name}r + i {name}i`: un numero complesso da due indeterminate reali."""
+        return self.var(f"{name}r") + self.var(f"{name}i") * self.constant(g(0, 1))
+
     def set_square(self, name: str, replacement: Poly) -> None:
         """Dichiara name² = replacement. Il peeling legge questa regola."""
         if replacement.ring is not self:

@@ -135,9 +135,16 @@ LEAN: dict[str, tuple[str, ...]] = {
     "un unitario su un altro qubit non cambia il marginale, n ≤ 4": (
         "Universe.Qubits.no_signalling_at",
     ),
+    "la diagonale dello stato ridotto è il marginale, n ≤ 4": (
+        "Universe.Qubits.reduceAt_diag",
+    ),
+    "su un prodotto lo stato ridotto è ‖resto‖² |ψ⟩⟨ψ|, n ≤ 4": (
+        "Universe.Qubits.reduceAt_product",
+    ),
     "U su un qubit qualsiasi di n conserva la norma, n ≤ 4": (
         "Universe.Qubits.norm_applyAt",
     ),
+    "porte su qubit diversi commutano, n ≤ 4": ("Universe.Qubits.applyAt_comm",),
     "c = 3/5, s = 4/5, n = e_x: U†U = I nei razionali di Gauss": (
         "Universe.Epistemology.point_unitary",
     ),

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 70 righe.
+"""Certificato eseguibile del primo universo. Stampa 73 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -70,6 +70,11 @@ la norma con resto zero; Lean lo prova per ogni `n`
 Un unitario sul qubit `b` lascia il marginale del qubit `a ≠ b` con resto
 zero, per `n = 2, 3, 4` e ogni coppia; Lean lo prova per ogni `n`
 (`Universe.Qubits.no_signalling_at`).
+Due matrici generiche su qubit diversi commutano sullo stato generico,
+per `n = 2, 3, 4`; Lean lo prova per ogni coppia di matrici
+(`Universe.Qubits.applyAt_comm`). La traccia parziale su un qubit ha
+diagonale uguale al marginale (`Universe.Qubits.reduceAt_diag`). Su un
+prodotto è `‖resto‖² |ψ⟩⟨ψ|` (`Universe.Qubits.reduceAt_product`).
 `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
 `(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
@@ -166,7 +171,7 @@ from universe.observer import (
     reduced,
 )
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
-from universe.qubits import generic_state, marginal_at, on_qubit
+from universe.qubits import embed_qubit, generic_state, marginal_at, on_qubit, reduce_at
 from universe.ring import ZERO_G, Gauss, Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
@@ -425,6 +430,17 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         else qubits_reason,
     )
 
+    gates = _gates_commute(4)
+    add(
+        "Composizione",
+        "porte su qubit diversi commutano, n ≤ 4",
+        gates is None,
+        "matrici generiche, stato generico; Lean per ogni n\n"
+        "Universe.Qubits.applyAt_comm"
+        if gates is None
+        else gates,
+    )
+
     # --- Osservatore: CNOT e il primo stato entangled ---
     gate_ring = Ring(())
     gate = cnot(gate_ring)
@@ -438,12 +454,9 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     )
 
     quad_ring = Ring(("a0r", "a0i", "a1r", "a1i", "a2r", "a2i", "a3r", "a3i"))
-    imag = quad_ring.constant(g(0, 1))
-
-    def camp(index: int):
-        return quad_ring.var(f"a{index}r") + quad_ring.var(f"a{index}i") * imag
-
-    generic_quad = State(tuple(camp(index) for index in range(4)))
+    generic_quad = State(
+        tuple(quad_ring.complex_var(f"a{index}") for index in range(4))
+    )
     quad_gate = cnot(quad_ring)
     norm_ok = norm_squared(quad_gate.apply(generic_quad)) == norm_squared(generic_quad)
     add(
@@ -782,6 +795,25 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "stato generico, n = 2, 3, 4; Lean per ogni n\nUniverse.Qubits.no_signalling_at"
         if qubits_signal is None
         else qubits_signal,
+    )
+
+    diagonal = _reduced_diagonal(4)
+    add(
+        "Osservatore",
+        "la diagonale dello stato ridotto è il marginale, n ≤ 4",
+        diagonal is None,
+        "stato generico, n ≤ 4; Lean per ogni n\nUniverse.Qubits.reduceAt_diag"
+        if diagonal is None
+        else diagonal,
+    )
+    on_product = _reduced_on_product(4)
+    add(
+        "Osservatore",
+        "su un prodotto lo stato ridotto è ‖resto‖² |ψ⟩⟨ψ|, n ≤ 4",
+        on_product is None,
+        "ψ e resto generici, n ≤ 4; Lean per ogni n\nUniverse.Qubits.reduceAt_product"
+        if on_product is None
+        else on_product,
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---
@@ -1412,6 +1444,83 @@ class _TimeLaw:
     circle: bool
     angle: tuple[Gauss, Gauss]
     image: tuple[Gauss, Gauss]
+
+
+def _gate_names() -> tuple[str, ...]:
+    """Otto reali per ciascuna di due matrici `2×2`."""
+    return tuple(
+        f"{prefix}{row}{col}{part}"
+        for prefix in ("u", "v")
+        for row in range(2)
+        for col in range(2)
+        for part in ("r", "i")
+    )
+
+
+def _matrix(ring: Ring, prefix: str) -> Operator:
+    """Matrice `2×2` con entrate `prefix{r}{c}r + i prefix{r}{c}i`."""
+    return Operator.from_rows(
+        [
+            [ring.complex_var(f"{prefix}{row}{col}") for col in range(2)]
+            for row in range(2)
+        ]
+    )
+
+
+def _gates_commute(max_n: int) -> str | None:
+    """Due matrici su qubit diversi, nei due ordini, danno lo stesso stato."""
+    for n in range(2, max_n + 1):
+        law, state = generic_state(n, _gate_names())
+        left, right = _matrix(law.ring, "u"), _matrix(law.ring, "v")
+        for source in range(n):
+            for target in range(n):
+                if source == target:
+                    continue
+                forward = on_qubit(left, source, n).apply(
+                    on_qubit(right, target, n).apply(state)
+                )
+                backward = on_qubit(right, target, n).apply(
+                    on_qubit(left, source, n).apply(state)
+                )
+                if forward.amplitudes != backward.amplitudes:
+                    return f"n = {n}, a = {source}, b = {target}"
+    return None
+
+
+def _reduced_diagonal(max_n: int) -> str | None:
+    """La diagonale di `reduce_at` è `marginal_at`."""
+    for n in range(1, max_n + 1):
+        _, state = generic_state(n)
+        for qubit in range(n):
+            rho = reduce_at(state, qubit)
+            p0, p1 = marginal_at(state, qubit)
+            if rho.rows[0][0] != p0 or rho.rows[1][1] != p1:
+                return f"n = {n}, qubit {qubit}"
+    return None
+
+
+def _reduced_on_product(max_n: int) -> str | None:
+    """`reduce_at` di `|ψ⟩` sul qubit `k` è `‖resto‖² |ψ⟩⟨ψ|`."""
+    for n in range(1, max_n + 1):
+        rest_dim = 1 << (n - 1)
+        names = tuple(f"p{bit}{part}" for bit in range(2) for part in ("r", "i"))
+        names += tuple(f"b{k}{part}" for k in range(rest_dim) for part in ("r", "i"))
+        ring = Ring(names)
+        psi = State(tuple(ring.complex_var(f"p{bit}") for bit in range(2)))
+        rest = tuple(ring.complex_var(f"b{k}") for k in range(rest_dim))
+        weight = norm_squared(State(rest))
+        alpha, beta = psi.amplitudes
+        pure = Operator.from_rows(
+            [
+                [alpha.modulus_squared(), alpha * beta.conj()],
+                [beta * alpha.conj(), beta.modulus_squared()],
+            ]
+        ).scale(weight)
+        for qubit in range(n):
+            rho = reduce_at(embed_qubit(psi, rest, qubit), qubit)
+            if rho.rows != pure.rows:
+                return f"n = {n}, qubit {qubit}"
+    return None
 
 
 def _marginal_on_other_qubits(max_n: int) -> str | None:

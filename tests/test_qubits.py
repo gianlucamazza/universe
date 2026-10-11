@@ -1,9 +1,11 @@
 import pytest
 
 from universe.dynamics import evolution, hamiltonian
-from universe.epistemology import marginal
-from universe.ontology import Operator
-from universe.qubits import generic_state, marginal_at, on_qubit
+from universe.epistemology import marginal, norm_squared
+from universe.observer import reduced
+from universe.ontology import Operator, State
+from universe.qubits import embed_qubit, generic_state, marginal_at, on_qubit, reduce_at
+from universe.ring import g
 
 
 def test_generic_state_has_free_amplitudes():
@@ -54,3 +56,93 @@ def test_marginal_at_rejects_a_missing_qubit():
     _, state = generic_state(2)
     with pytest.raises(ValueError):
         marginal_at(state, 2)
+
+
+def test_reduce_at_matches_the_bipartition():
+    _, pair = generic_state(2)
+    assert reduce_at(pair, 0).rows == reduced(pair, 0, 2, 2).rows
+    assert reduce_at(pair, 1).rows == reduced(pair, 1, 2, 2).rows
+    _, triple = generic_state(3)
+    assert reduce_at(triple, 0).rows == reduced(triple, 0, 2, 4).rows
+    assert reduce_at(triple, 2).rows == reduced(triple, 1, 4, 2).rows
+
+
+def test_reduce_at_diagonal_is_the_marginal():
+    _, triple = generic_state(3)
+    rho = reduce_at(triple, 1)
+    p0, p1 = marginal_at(triple, 1)
+    assert rho.rows[0][0] == p0
+    assert rho.rows[1][1] == p1
+
+
+def test_reduce_at_rejects_a_missing_qubit():
+    _, state = generic_state(2)
+    with pytest.raises(ValueError):
+        reduce_at(state, 2)
+
+
+def test_embed_qubit_puts_psi_on_the_chosen_bit():
+    law, psi = generic_state(1)
+    imag = law.ring.constant(g(0, 1))
+    rest = (
+        law.ring.var("a0r") + law.ring.var("a0i") * imag,
+        law.ring.var("a1r") + law.ring.var("a1i") * imag,
+    )
+    high = embed_qubit(psi, rest, 0)
+    assert high.amplitudes[0] == psi.amplitudes[0] * rest[0]
+    assert high.amplitudes[1] == psi.amplitudes[0] * rest[1]
+    assert high.amplitudes[2] == psi.amplitudes[1] * rest[0]
+    low = embed_qubit(psi, rest, 1)
+    assert low.amplitudes[0] == psi.amplitudes[0] * rest[0]
+    assert low.amplitudes[1] == psi.amplitudes[1] * rest[0]
+    assert low.amplitudes[2] == psi.amplitudes[0] * rest[1]
+
+
+def test_product_reduced_state_is_the_scaled_projector():
+    law, psi = generic_state(1, ("b0r", "b0i", "b1r", "b1i"))
+    imag = law.ring.constant(g(0, 1))
+    rest = tuple(
+        law.ring.var(f"b{k}r") + law.ring.var(f"b{k}i") * imag for k in range(2)
+    )
+    weight = norm_squared(State(rest))
+    alpha, beta = psi.amplitudes
+    pure = Operator.from_rows(
+        [
+            [alpha.modulus_squared(), alpha * beta.conj()],
+            [beta * alpha.conj(), beta.modulus_squared()],
+        ]
+    ).scale(weight)
+    for qubit in range(2):
+        rho = reduce_at(embed_qubit(psi, rest, qubit), qubit)
+        assert rho.rows == pure.rows
+
+
+def test_gates_on_different_qubits_commute():
+    law, state = generic_state(
+        2,
+        tuple(
+            f"{prefix}{row}{col}{part}"
+            for prefix in ("u", "v")
+            for row in range(2)
+            for col in range(2)
+            for part in ("r", "i")
+        ),
+    )
+    imag = law.ring.constant(g(0, 1))
+
+    def gate(prefix: str) -> Operator:
+        rows = []
+        for row in range(2):
+            rows.append(
+                [
+                    law.ring.var(f"{prefix}{row}{col}r")
+                    + law.ring.var(f"{prefix}{row}{col}i") * imag
+                    for col in range(2)
+                ]
+            )
+        return Operator.from_rows(rows)
+
+    left, right = gate("u"), gate("v")
+    forward = on_qubit(left, 0, 2).apply(on_qubit(right, 1, 2).apply(state))
+    backward = on_qubit(right, 1, 2).apply(on_qubit(left, 0, 2).apply(state))
+    assert forward.amplitudes == backward.amplitudes

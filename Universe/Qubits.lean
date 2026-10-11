@@ -21,15 +21,22 @@ dice che `applyAt b evolution` lascia quella coppia in `(gC, gN)`
 quando `a ≠ b`. Se `b` sta nei figli, il bit alto si muove di
 `norm_applyNat`. Se `b` è il bit alto, `mixRoot` accoppia foglie con
 lo stesso valore di `a`, e la differenza è `zip_ideal`.
+
+`applyAt_comm` dice che due matrici su qubit diversi commutano, foglia
+per foglia, a coefficienti. `reduceAt` è la traccia parziale su un
+qubit: la diagonale è `marginalAt`. Su `|ψ⟩` al qubit `k` e un resto
+sugli altri, è `‖resto‖² |ψ⟩⟨ψ|`.
 -/
 import Universe.Composition
 import Universe.Epistemology
+import Universe.Observer
 
 namespace Universe.Qubits
 
 open Universe.Composition
 open Universe.Dynamics
 open Universe.Epistemology
+open Universe.Observer
 open Universe.Qubit
 open Universe.Quotient hiding mul
 
@@ -323,5 +330,219 @@ theorem no_signalling_at {n : Nat} (a b : Fin n) (h : a ≠ b) (v : QState n) :
     inIdeal (psub (marginalAt a (applyAt b evolution v)).a0 (marginalAt a v).a0) ∧
       inIdeal (psub (marginalAt a (applyAt b evolution v)).a1 (marginalAt a v).a1) :=
   no_signalling_nat a.val b.val (Fin.val_ne_of_ne h) a.isLt b.isLt v
+
+/-! ### Porte su qubit diversi -/
+
+/-- Due alberi hanno le stesse foglie, a coefficienti. -/
+def qstateSame : {n : Nat} → QState n → QState n → Prop
+  | _, .leaf z, .leaf w => polySame z w
+  | _, .node l r, .node l' r' => qstateSame l l' ∧ qstateSame r r'
+
+theorem qstateSame_symm : {n : Nat} → (v w : QState n) → qstateSame v w → qstateSame w v
+  | _, .leaf _, .leaf _, h => polySame.symm h
+  | _, .node _ _, .node _ _, h => ⟨qstateSame_symm _ _ h.1, qstateSame_symm _ _ h.2⟩
+
+/-- `(p · c) + (q · c)` ha i coefficienti di `(p + q) · c`. -/
+theorem polySame_sum_right (p q c : Poly) :
+    polySame (pmul p c ++ pmul q c) (pmul (p ++ q) c) :=
+  polySame.symm fun t => by rw [pmul_append_left]
+
+/-- Le due associazioni di due matrici su due qubit hanno gli stessi coefficienti.
+
+`u` agisce sul bit alto, `v` sul bit basso. I quattro `x` sono le foglie. -/
+theorem polySame_commute_entries (u0 u1 v0 v1 x00 x01 x10 x11 : Poly) :
+    polySame
+      (pmul u0 (pmul v0 x00 ++ pmul v1 x01) ++ pmul u1 (pmul v0 x10 ++ pmul v1 x11))
+      (pmul v0 (pmul u0 x00 ++ pmul u1 x10) ++ pmul v1 (pmul u0 x01 ++ pmul u1 x11)) := by
+  have hL :=
+    polySame_append (polySame_mul_append_right u0 (pmul v0 x00) (pmul v1 x01))
+      (polySame_mul_append_right u1 (pmul v0 x10) (pmul v1 x11))
+  have hR :=
+    polySame_append (polySame_mul_append_right v0 (pmul u0 x00) (pmul u1 x10))
+      (polySame_mul_append_right v1 (pmul u0 x01) (pmul u1 x11))
+  exact polySame.trans hL
+    (polySame.trans
+      (polySame_append
+        (polySame_append (slide_right u0 v0 x00) (slide_right u0 v1 x01))
+        (polySame_append (slide_right u1 v0 x10) (slide_right u1 v1 x11)))
+      (polySame.trans
+        (polySame_append4_mid (pmul v0 (pmul u0 x00)) (pmul v1 (pmul u0 x01))
+          (pmul v0 (pmul u1 x10)) (pmul v1 (pmul u1 x11)))
+        hR.symm))
+
+/-- `mixRoot` di due matrici commuta sulle quattro uscite, foglia per foglia.
+
+Il passo è lo stesso crocevia su ciascuno dei due figli. -/
+theorem mix_mix (U V : Mat) : {n : Nat} → (a b c d : QState n) →
+    qstateSame (mixRoot U (mixRoot V a b).lo (mixRoot V c d).lo).lo
+        (mixRoot V (mixRoot U a c).lo (mixRoot U b d).lo).lo ∧
+      qstateSame (mixRoot U (mixRoot V a b).hi (mixRoot V c d).hi).lo
+          (mixRoot V (mixRoot U a c).lo (mixRoot U b d).lo).hi ∧
+        qstateSame (mixRoot U (mixRoot V a b).lo (mixRoot V c d).lo).hi
+            (mixRoot V (mixRoot U a c).hi (mixRoot U b d).hi).lo ∧
+          qstateSame (mixRoot U (mixRoot V a b).hi (mixRoot V c d).hi).hi
+            (mixRoot V (mixRoot U a c).hi (mixRoot U b d).hi).hi
+  | _, .leaf α, .leaf β, .leaf γ, .leaf δ => by
+    simp only [mixRoot, qstateSame]
+    exact ⟨polySame_commute_entries U.a00 U.a01 V.a00 V.a01 α β γ δ,
+      polySame_commute_entries U.a00 U.a01 V.a10 V.a11 α β γ δ,
+      polySame_commute_entries U.a10 U.a11 V.a00 V.a01 α β γ δ,
+      polySame_commute_entries U.a10 U.a11 V.a10 V.a11 α β γ δ⟩
+  | _, .node a0 a1, .node b0 b1, .node c0 c1, .node d0 d1 => by
+    have h0 := mix_mix U V a0 b0 c0 d0
+    have h1 := mix_mix U V a1 b1 c1 d1
+    simp only [mixRoot, qstateSame]
+    exact ⟨⟨h0.1, h1.1⟩, ⟨h0.2.1, h1.2.1⟩, ⟨h0.2.2.1, h1.2.2.1⟩, ⟨h0.2.2.2, h1.2.2.2⟩⟩
+
+/-- Una matrice sul bit alto commuta con una matrice dentro i due alberi. -/
+theorem mix_applyNat (j : Nat) (U V : Mat) : {n : Nat} → (l r : QState n) →
+    qstateSame (mixRoot U (applyNat j V l) (applyNat j V r)).lo
+        (applyNat j V (mixRoot U l r).lo) ∧
+      qstateSame (mixRoot U (applyNat j V l) (applyNat j V r)).hi
+        (applyNat j V (mixRoot U l r).hi)
+  | _, .leaf _, .leaf _ => by
+    simp only [applyNat, mixRoot, qstateSame]
+    exact ⟨polySame_refl _, polySame_refl _⟩
+  | _, .node a b, .node c d =>
+    match j with
+    | 0 => by
+      have h := mix_mix U V a b c d
+      simp only [applyNat, mixRoot, qstateSame]
+      exact ⟨⟨h.1, h.2.1⟩, ⟨h.2.2.1, h.2.2.2⟩⟩
+    | i + 1 => by
+      have hac := mix_applyNat i U V a c
+      have hbd := mix_applyNat i U V b d
+      simp only [applyNat, mixRoot, qstateSame]
+      exact ⟨⟨hac.1, hbd.1⟩, ⟨hac.2, hbd.2⟩⟩
+
+/-- `applyNat a` e `applyNat b` commutano quando `a ≠ b`. -/
+theorem applyNat_comm (a b : Nat) (h : a ≠ b) (U V : Mat) :
+    {n : Nat} → a < n → b < n → (v : QState n) →
+      qstateSame (applyNat a U (applyNat b V v)) (applyNat b V (applyNat a U v))
+  | 0, ha, _, _ => absurd ha (Nat.not_lt_zero _)
+  | _ + 1, ha, hb, .node l r =>
+    match a, b with
+    | 0, 0 => absurd rfl h
+    | 0, j + 1 => by
+      simp only [applyNat, qstateSame]
+      exact mix_applyNat j U V l r
+    | i + 1, 0 => by
+      simp only [applyNat, qstateSame]
+      exact ⟨qstateSame_symm _ _ (mix_applyNat i V U l r).1,
+        qstateSame_symm _ _ (mix_applyNat i V U l r).2⟩
+    | i + 1, j + 1 => by
+      simp only [applyNat, qstateSame]
+      exact ⟨applyNat_comm i j (fun eq => h (congrArg Nat.succ eq)) U V
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb) l,
+        applyNat_comm i j (fun eq => h (congrArg Nat.succ eq)) U V
+          (Nat.lt_of_succ_lt_succ ha) (Nat.lt_of_succ_lt_succ hb) r⟩
+
+/-- Due matrici su qubit diversi commutano, foglia per foglia.
+
+L'uguaglianza è `polySame` su ogni foglia: il prodotto dei polinomi
+non è commutativo come lista. -/
+theorem applyAt_comm {n : Nat} (a b : Fin n) (h : a ≠ b) (U V : Mat) (v : QState n) :
+    qstateSame (applyAt a U (applyAt b V v)) (applyAt b V (applyAt a U v)) :=
+  applyNat_comm a.val b.val (Fin.val_ne_of_ne h) U V a.isLt b.isLt v
+
+/-! ### Lo stato di un qubit -/
+
+/-- Prodotto di ogni foglia per lo stesso polinomio. -/
+def scaleQ (μ : Poly) : {n : Nat} → QState n → QState n
+  | _, .leaf z => .leaf (pmul μ z)
+  | _, .node l r => .node (scaleQ μ l) (scaleQ μ r)
+
+/-- Somma `α · conj(β)` sulle foglie corrispondenti di due alberi. -/
+def zipCoh : {n : Nat} → QState n → QState n → Poly
+  | _, .leaf α, .leaf β => pmul α (conjP β)
+  | _, .node a b, .node c d => zipCoh a c ++ zipCoh b d
+
+/-- `‖scale μ v‖²` ha i coefficienti di `‖v‖² · |μ|²`. -/
+theorem norm_scale (μ : Poly) : {n : Nat} → (v : QState n) →
+    polySame (normQ (scaleQ μ v)) (pmul (normQ v) (columnBorn μ))
+  | _, .leaf z => columnBorn_pmul μ z
+  | _, .node l r =>
+    polySame.trans (polySame_append (norm_scale μ l) (norm_scale μ r))
+      (polySame_sum_right (normQ l) (normQ r) (columnBorn μ))
+
+/-- La coerenza di due copie scalate è `‖v‖² · p conj(y)`. -/
+theorem coh_scale (p y : Poly) : {n : Nat} → (v : QState n) →
+    polySame (zipCoh (scaleQ p v) (scaleQ y v)) (pmul (normQ v) (pmul p (conjP y)))
+  | _, .leaf z => coherence_scale p y z
+  | _, .node l r =>
+    polySame.trans (polySame_append (coh_scale p y l) (coh_scale p y r))
+      (polySame_sum_right (normQ l) (normQ r) (pmul p (conjP y)))
+
+/-- Traccia parziale sul qubit `k`. `k = 0` è il bit alto.
+
+Su una foglia non c'è un qubit: la matrice è zero. Su `node l r`,
+`k = 0` accoppia le due branche con `zipCoh`. `k + 1` somma le matrici
+dei due figli, perché il bit alto si traccia. -/
+def reduceNat (k : Nat) : {n : Nat} → QState n → Mat
+  | _, .leaf _ => matZero
+  | _, .node l r =>
+    match k with
+    | 0 => ⟨normQ l, zipCoh l r, zipCoh r l, normQ r⟩
+    | j + 1 => matAdd (reduceNat j l) (reduceNat j r)
+
+/-- Traccia parziale sul qubit `k`. -/
+def reduceAt {n : Nat} (k : Fin n) (v : QState n) : Mat :=
+  reduceNat k.val v
+
+/-- La diagonale della traccia parziale è la coppia di Born. -/
+theorem reduceNat_diag (k : Nat) : {n : Nat} → (v : QState n) →
+    (reduceNat k v).a00 = (marginalNat k v).a0 ∧
+      (reduceNat k v).a11 = (marginalNat k v).a1
+  | _, .leaf _ => by
+    unfold reduceNat marginalNat matZero
+    constructor <;> rfl
+  | _, .node l r =>
+    match k with
+    | 0 => ⟨rfl, rfl⟩
+    | j + 1 => by
+      have hl := reduceNat_diag j l
+      have hr := reduceNat_diag j r
+      simp only [reduceNat, marginalNat, matAdd]
+      exact ⟨by rw [hl.1, hr.1], by rw [hl.2, hr.2]⟩
+
+/-- La diagonale di `reduceAt k` è `marginalAt k`. -/
+theorem reduceAt_diag {n : Nat} (k : Fin n) (v : QState n) :
+    ⟨(reduceAt k v).a00, (reduceAt k v).a11⟩ = marginalAt k v := by
+  have h := reduceNat_diag k.val v
+  simp only [reduceAt, marginalAt]
+  exact Pair.ext h.1 h.2
+
+/-- `|ψ⟩` sul qubit `k`, `rest` sugli altri, nell'ordine dei bit.
+
+`k = 0` scala le due copie di `rest`. `k + 1` lascia il bit alto al
+resto e scende nei due figli. -/
+def embedAt (ψ : Pair) : {n : Nat} → Fin (n + 1) → QState n → QState (n + 1)
+  | _, ⟨0, _⟩, v => .node (scaleQ ψ.a0 v) (scaleQ ψ.a1 v)
+  | 0, ⟨j + 1, h⟩, _ => False.elim (Nat.not_lt_zero j (Nat.lt_of_succ_lt_succ h))
+  | _ + 1, ⟨j + 1, h⟩, .node l r =>
+    .node (embedAt ψ ⟨j, Nat.lt_of_succ_lt_succ h⟩ l)
+      (embedAt ψ ⟨j, Nat.lt_of_succ_lt_succ h⟩ r)
+
+/-- Su un prodotto, la traccia parziale è `‖resto‖² |ψ⟩⟨ψ|`. -/
+theorem reduceAt_product (ψ : Pair) : {n : Nat} → (k : Fin (n + 1)) → (rest : QState n) →
+    matSame (reduceAt k (embedAt ψ k rest)) (matScale (normQ rest) (outer ψ))
+  | _, ⟨0, _⟩, rest => by
+    simp only [embedAt, reduceAt, reduceNat, matScale, outer]
+    exact ⟨norm_scale ψ.a0 rest, coh_scale ψ.a0 ψ.a1 rest, coh_scale ψ.a1 ψ.a0 rest,
+      norm_scale ψ.a1 rest⟩
+  | 0, ⟨j + 1, h⟩, _ => False.elim (Nat.not_lt_zero j (Nat.lt_of_succ_lt_succ h))
+  | _ + 1, ⟨j + 1, h⟩, .node l r => by
+    simp only [embedAt, reduceAt, reduceNat, matAdd, matScale, normQ]
+    have hl := reduceAt_product ψ ⟨j, Nat.lt_of_succ_lt_succ h⟩ l
+    have hr := reduceAt_product ψ ⟨j, Nat.lt_of_succ_lt_succ h⟩ r
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · exact polySame.trans (polySame_append hl.1 hr.1)
+        (polySame_sum_right (normQ l) (normQ r) (outer ψ).a00)
+    · exact polySame.trans (polySame_append hl.2.1 hr.2.1)
+        (polySame_sum_right (normQ l) (normQ r) (outer ψ).a01)
+    · exact polySame.trans (polySame_append hl.2.2.1 hr.2.2.1)
+        (polySame_sum_right (normQ l) (normQ r) (outer ψ).a10)
+    · exact polySame.trans (polySame_append hl.2.2.2 hr.2.2.2)
+        (polySame_sum_right (normQ l) (normQ r) (outer ψ).a11)
 
 end Universe.Qubits
