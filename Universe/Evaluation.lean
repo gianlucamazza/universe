@@ -7,6 +7,8 @@ stesso valore. `eval_pmul` e `eval_conj` portano prodotto e coniugio sui
 valori di Gauss. `eval_scale` porta la scala, `eval_const` una costante.
 `evalAt2` sostituisce anche `c2` e `s2`. `evalAt2_pmul` è il prodotto.
 Su un polinomio senza quegli esponenti, `evalAt2_agrees` coincide con `evalAt`.
+`evalAt3` sostituisce anche `mx`, `my`, `mz`. `evalAt3_pmul` è il prodotto.
+Su un polinomio senza quegli esponenti, `evalAt3_agrees` coincide con `evalAt2`.
 `listEval` somma i coefficienti lungo un supporto senza ripetizioni;
 `eval_cover` lo identifica con `evalAt`. Lungo `n = e_x`, `eval_gN_axis_x`
 azzera `gN` e `eval_bracket_axis_x` legge `⟨0|U|0⟩ = c`. Se `(c, s)` sta
@@ -437,5 +439,199 @@ theorem evalAt2_gN (c s c2 s2 : Rat) :
       (silent_append (silent_single _ _ ⟨rfl, rfl⟩) (silent_single _ _ ⟨rfl, rfl⟩))
       (silent_single _ _ ⟨rfl, rfl⟩))
     (silent_single _ _ ⟨rfl, rfl⟩)
+
+/-! ### Sostituzione di `mx`, `my`, `mz` -/
+
+/-- Valore di un monomio, con anche `mx`, `my`, `mz`. -/
+def monoVal3 (c s nx ny nz c2 s2 mx my mz : Rat) (m : Mono) : Rat :=
+  monoVal2 c s nx ny nz c2 s2 m * powR mx m.mx * powR my m.my * powR mz m.mz
+
+/-- Immagine di un coefficiente sotto `c, s, n, c2, s2, m`. -/
+def monoImage3 (c s nx ny nz c2 s2 mx my mz : Rat) (z : Gauss) (m : Mono) : Gauss :=
+  ⟨z.re * monoVal3 c s nx ny nz c2 s2 mx my mz m,
+    z.im * monoVal3 c s nx ny nz c2 s2 mx my mz m⟩
+
+/-- Valuta un polinomio sostituendo anche `mx`, `my`, `mz`. `evalAt2` li ignora. -/
+def evalAt3 (c s nx ny nz c2 s2 mx my mz : Rat) : Poly → Gauss
+  | [] => 0
+  | (a, m) :: rest =>
+      monoImage3 c s nx ny nz c2 s2 mx my mz a m +
+        evalAt3 c s nx ny nz c2 s2 mx my mz rest
+
+theorem monoVal3_mul (c s nx ny nz c2 s2 mx my mz : Rat) (m n : Mono) :
+    monoVal3 c s nx ny nz c2 s2 mx my mz (m.mul n) =
+      monoVal3 c s nx ny nz c2 s2 mx my mz m *
+        monoVal3 c s nx ny nz c2 s2 mx my mz n := by
+  simp only [monoVal3]
+  rw [monoVal2_mul]
+  simp only [Mono.mul, powR_add]
+  grind
+
+theorem monoVal3_silent (c s nx ny nz c2 s2 mx my mz : Rat) (m : Mono)
+    (h : m.mx = 0 ∧ m.my = 0 ∧ m.mz = 0) :
+    monoVal3 c s nx ny nz c2 s2 mx my mz m = monoVal2 c s nx ny nz c2 s2 m := by
+  simp [monoVal3, h.1, h.2.1, h.2.2, powR]
+
+theorem monoImage3_mul (c s nx ny nz c2 s2 mx my mz : Rat) (a b : Gauss) (m n : Mono) :
+    monoImage3 c s nx ny nz c2 s2 mx my mz (a * b) (m.mul n) =
+      monoImage3 c s nx ny nz c2 s2 mx my mz a m *
+        monoImage3 c s nx ny nz c2 s2 mx my mz b n := by
+  simp only [monoImage3, monoVal3_mul, Gauss.re_mul, Gauss.im_mul]
+  ext <;> simp <;> grind
+
+theorem evalAt3_append (c s nx ny nz c2 s2 mx my mz : Rat) (p q : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (p ++ q) =
+      evalAt3 c s nx ny nz c2 s2 mx my mz p +
+        evalAt3 c s nx ny nz c2 s2 mx my mz q := by
+  induction p with
+  | nil => simp [evalAt3, Gauss.zero_add]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [List.cons_append, evalAt3, ih]
+      rw [← Gauss.add_assoc]
+
+theorem evalAt3_single (c s nx ny nz c2 s2 mx my mz : Rat) (a : Gauss) (m : Mono) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (single a m) =
+      monoImage3 c s nx ny nz c2 s2 mx my mz a m := by
+  simp [evalAt3, single, monoImage3, Gauss.add_zero]
+
+theorem evalAt3_mulMono (c s nx ny nz c2 s2 mx my mz : Rat) (a : Gauss) (m : Mono)
+    (q : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (mulMono a m q) =
+      monoImage3 c s nx ny nz c2 s2 mx my mz a m *
+        evalAt3 c s nx ny nz c2 s2 mx my mz q := by
+  induction q with
+  | nil => simp [mulMono, evalAt3, Gauss.mul_zero]
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      simp only [mulMono, evalAt3, ih, monoImage3, monoVal3_mul, Gauss.mul_add, Gauss.re_mul,
+        Gauss.im_mul]
+      ext <;> simp <;> grind
+
+/-- `evalAt3` rispetta il prodotto. -/
+theorem evalAt3_pmul (c s nx ny nz c2 s2 mx my mz : Rat) (p q : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (pmul p q) =
+      evalAt3 c s nx ny nz c2 s2 mx my mz p *
+        evalAt3 c s nx ny nz c2 s2 mx my mz q := by
+  induction p with
+  | nil => simp [pmul, Universe.Quotient.mul, evalAt3, Gauss.zero_mul]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pmul ((a, m) :: rest) q = mulMono a m q ++ pmul rest q from rfl,
+        evalAt3_append, evalAt3_mulMono, ih]
+      rw [show evalAt3 c s nx ny nz c2 s2 mx my mz ((a, m) :: rest) =
+        monoImage3 c s nx ny nz c2 s2 mx my mz a m +
+          evalAt3 c s nx ny nz c2 s2 mx my mz rest from rfl, Gauss.add_mul]
+
+theorem evalAt3_pneg (c s nx ny nz c2 s2 mx my mz : Rat) (p : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (pneg p) =
+      -evalAt3 c s nx ny nz c2 s2 mx my mz p := by
+  induction p with
+  | nil =>
+    simp [pneg, evalAt3]
+    ext <;> simp
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pneg ((a, m) :: rest) = (-a, m) :: pneg rest from rfl, evalAt3, ih]
+      rw [show evalAt3 c s nx ny nz c2 s2 mx my mz ((a, m) :: rest) =
+        monoImage3 c s nx ny nz c2 s2 mx my mz a m +
+          evalAt3 c s nx ny nz c2 s2 mx my mz rest from rfl]
+      ext <;> simp [monoImage3, Gauss.re_neg, Gauss.im_neg] <;> grind
+
+theorem evalAt3_psub (c s nx ny nz c2 s2 mx my mz : Rat) (p q : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (psub p q) =
+      evalAt3 c s nx ny nz c2 s2 mx my mz p +
+        -evalAt3 c s nx ny nz c2 s2 mx my mz q := by
+  rw [psub, evalAt3_append, evalAt3_pneg]
+
+/-- `evalAt3` porta la scala di Gauss sul valore. -/
+theorem evalAt3_scale (c s nx ny nz c2 s2 mx my mz : Rat) (z : Gauss) (p : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (scale z p) =
+      z * evalAt3 c s nx ny nz c2 s2 mx my mz p := by
+  induction p with
+  | nil =>
+    simp [scale, evalAt3]
+    rw [Gauss.mul_zero]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show scale z ((a, m) :: rest) = (z * a, m) :: scale z rest from rfl]
+      rw [show evalAt3 c s nx ny nz c2 s2 mx my mz ((z * a, m) :: scale z rest) =
+        monoImage3 c s nx ny nz c2 s2 mx my mz (z * a) m +
+          evalAt3 c s nx ny nz c2 s2 mx my mz (scale z rest) from rfl, ih]
+      rw [show evalAt3 c s nx ny nz c2 s2 mx my mz ((a, m) :: rest) =
+        monoImage3 c s nx ny nz c2 s2 mx my mz a m +
+          evalAt3 c s nx ny nz c2 s2 mx my mz rest from rfl, Gauss.mul_add]
+      have hterm :
+          monoImage3 c s nx ny nz c2 s2 mx my mz (z * a) m =
+            z * monoImage3 c s nx ny nz c2 s2 mx my mz a m := by
+        ext <;> simp [monoImage3, Gauss.re_mul, Gauss.im_mul] <;> grind
+      rw [hterm]
+
+theorem conj_monoImage3 (c s nx ny nz c2 s2 mx my mz : Rat) (a : Gauss) (m : Mono) :
+    Gauss.conj (monoImage3 c s nx ny nz c2 s2 mx my mz a m) =
+      monoImage3 c s nx ny nz c2 s2 mx my mz (Gauss.conj a) m := by
+  simp only [monoImage3, Gauss.conj]
+  ext <;> simp <;> grind
+
+theorem evalAt3_conj (c s nx ny nz c2 s2 mx my mz : Rat) (p : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (conjP p) =
+      Gauss.conj (evalAt3 c s nx ny nz c2 s2 mx my mz p) := by
+  induction p with
+  | nil => simp [conjP, evalAt3, conj_zero]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show conjP ((a, m) :: rest) = (Gauss.conj a, m) :: conjP rest from rfl]
+      rw [show evalAt3 c s nx ny nz c2 s2 mx my mz ((Gauss.conj a, m) :: conjP rest) =
+            monoImage3 c s nx ny nz c2 s2 mx my mz (Gauss.conj a) m +
+              evalAt3 c s nx ny nz c2 s2 mx my mz (conjP rest) from rfl, ih,
+        ← conj_monoImage3,
+        show evalAt3 c s nx ny nz c2 s2 mx my mz ((a, m) :: rest) =
+            monoImage3 c s nx ny nz c2 s2 mx my mz a m +
+              evalAt3 c s nx ny nz c2 s2 mx my mz rest from rfl, conj_add]
+
+/-- `|z|²` valutato con `evalAt3` è il modulo del valore. -/
+theorem evalAt3_columnBorn (c s nx ny nz c2 s2 mx my mz : Rat) (p : Poly) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz (columnBorn p) =
+      evalAt3 c s nx ny nz c2 s2 mx my mz p *
+        Gauss.conj (evalAt3 c s nx ny nz c2 s2 mx my mz p) := by
+  rw [columnBorn, evalAt3_pmul, evalAt3_conj]
+
+theorem axisSilent_single (a : Gauss) (m : Mono) (h : m.mx = 0 ∧ m.my = 0 ∧ m.mz = 0) :
+    ∀ x ∈ single a m, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  intro x hx
+  simp only [single, List.mem_cons, List.mem_nil_iff, or_false] at hx
+  rw [hx]
+  exact h
+
+theorem axisSilent_append {p q : Poly}
+    (hp : ∀ x ∈ p, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0)
+    (hq : ∀ x ∈ q, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0) :
+    ∀ x ∈ p ++ q, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  intro x hx
+  rw [List.mem_append] at hx
+  cases hx with
+  | inl hmem => exact hp x hmem
+  | inr hmem => exact hq x hmem
+
+/-- Senza esponenti `mx`, `my`, `mz`, le due valutazioni coincidono. -/
+theorem evalAt3_agrees (c s nx ny nz c2 s2 mx my mz : Rat) (p : Poly)
+    (h : ∀ x ∈ p, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0) :
+    evalAt3 c s nx ny nz c2 s2 mx my mz p = evalAt2 c s nx ny nz c2 s2 p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      have hm := h (a, m) List.mem_cons_self
+      have hrest : ∀ x ∈ rest, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 :=
+        fun x hx => h x (List.mem_cons_of_mem _ hx)
+      rw [evalAt3, evalAt2, ih hrest, monoImage3, monoImage2,
+        monoVal3_silent c s nx ny nz c2 s2 mx my mz m hm]
 
 end Universe.Evaluation

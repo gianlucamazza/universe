@@ -181,6 +181,13 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Symmetry.axes_norm_free",
         "Universe.Symmetry.compose_axes_norm",
     ),
+    "nel punto, a = 9/25, b = (12/25, −16/25, 12/25) e "
+    "UₙUₘ|0⟩ = (9/25 − 12/25 i)|0⟩ + (−16/25 − 12/25 i)|1⟩": (
+        "Universe.Symmetry.point_axes",
+    ),
+    "UₙUₘ|0⟩ e UₘUₙ|0⟩ differiscono su |1⟩, con pesi 9/25 e 16/25": (
+        "Universe.Symmetry.rotations_noncommute",
+    ),
     "se le due coppie stanno sul cerchio, ci sta (c, s)": (
         "Universe.Symmetry.compose_circle",
     ),

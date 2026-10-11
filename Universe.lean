@@ -73,6 +73,10 @@ libero, e `compose_axes_same` ritrova la legge sullo stesso asse, modulo
 `gN`. `axes_norm_free` è `a² + |b|² = (c₁² + s₁² |n|²)(c₂² + s₂² |m|²)`
 nell'anello libero, e `compose_axes_norm` mette `a² + |b|² − 1` in
 `(gC, gN, gC2, gM)`. `gM = mx² + my² + mz² − 1` resta fuori da `reduce`.
+`evalAt3` legge `mx my mz` e coincide con `evalAt2` senza quegli esponenti.
+Nel punto `n = e_x`, `m = e_z`, `point_axes` valuta `a`, `b` e `Uₙ Uₘ |0⟩`.
+`rotations_noncommute` dice che `Uₘ Uₙ |0⟩` differisce sull'ampiezza di
+`|1⟩`, con gli stessi pesi di Born.
 `compose_circle` mette
 `c² + s² − 1` in `(gC, gC2)`, e `gC2` resta fuori da `reduce`.
 `conj_evolution_rel` e `conj_born_rel` portano il cambio di base

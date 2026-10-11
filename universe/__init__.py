@@ -62,7 +62,11 @@ portano il cambio di base su `V = U`, modulo `(gC, gN)`.
 `Universe.Symmetry.evolution_compose_axes` è il prodotto su due assi,
 `a I − i (b·σ)`, nell'anello libero. `a² + |b|² − 1` sta in
 `(gC, gN, gC2, gM)` (`Universe.Symmetry.compose_axes_norm`); `gM` resta
-fuori da `reduce`.
+fuori da `reduce`. Nel punto `n = e_x`, `m = e_z`,
+`Universe.Symmetry.point_axes` valuta `a`, `b` e `Uₙ Uₘ |0⟩`.
+`Universe.Symmetry.rotations_noncommute` dice che l'altro ordine differisce
+sull'ampiezza di `|1⟩`, con gli stessi pesi di Born. `evalAt3` legge
+`mx my mz`.
 
 `G = |1⟩⟨1| ⊗ H` soddisfa `G³ = G`
 (`Universe.Interaction.generator_cube`), con i coefficienti di

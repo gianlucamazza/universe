@@ -28,7 +28,10 @@ Se le due coppie stanno sul cerchio, ci sta anche il composto, nell'ideale
 Se `V†V − I` sta in `(gC, gN)`, `V (U ψ)` e `(V U V†) (V ψ)` differiscono
 per un elemento di quell'ideale, e così i pesi di Born. Con `V = U` sono
 `conj_evolution_law` e `conj_born_law`. `point_compose` legge l'angolo
-composto con `evalAt2`.
+composto con `evalAt2`. `evalAt3` legge anche `mx my mz` e coincide con
+`evalAt2` dove quegli esponenti sono nulli. Nel punto `n = e_x`, `m = e_z`,
+`point_axes` valuta `a`, `b` e `Uₙ Uₘ |0⟩`. `rotations_noncommute` dice che
+`Uₘ Uₙ |0⟩` differisce sull'ampiezza di `|1⟩`, con gli stessi pesi di Born.
 -/
 import Universe.Composition
 import Universe.Evaluation
@@ -2774,5 +2777,295 @@ theorem compose_axes_norm :
   refine polySame.trans hback ?_
   refine polySame.trans (polySame_append hsplit hBexp) ?_
   exact regroup4 _ _ _ _
+
+/-! ### Il punto su due assi -/
+
+section AxesPoint
+
+local notation "axesAt" => evalAt3 pointC pointS 1 0 0 pointC pointS 0 0 1
+
+theorem axesAt_single (a : Gauss) (m : Mono) :
+    axesAt (single a m) = monoImage3 pointC pointS 1 0 0 pointC pointS 0 0 1 a m :=
+  evalAt3_single _ _ _ _ _ _ _ _ _ _ a m
+
+theorem axesAt_var (m : Mono) :
+    axesAt (single (1 : Gauss) m) = ⟨monoVal3 pointC pointS 1 0 0 pointC pointS 0 0 1 m, 0⟩ := by
+  rw [axesAt_single]
+  ext <;> simp [monoImage3]
+
+theorem axesAt_cP : axesAt cP = ⟨pointC, 0⟩ := by
+  rw [cP, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, c1, pointC, pointS] <;> grind
+
+theorem axesAt_c2P : axesAt c2P = ⟨pointC, 0⟩ := by
+  rw [c2P, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, c2One, pointC, pointS] <;> grind
+
+theorem axesAt_s1 : axesAt (single (1 : Gauss) s1) = ⟨pointS, 0⟩ := by
+  rw [axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, s1, pointC, pointS] <;> grind
+
+theorem axesAt_s2 : axesAt s2P = ⟨pointS, 0⟩ := by
+  rw [s2P, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, s2One, pointC, pointS] <;> grind
+
+theorem axesAt_nx : axesAt nAxis.x = 1 := by
+  rw [nAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, nx1, pointC, pointS] <;> grind
+
+theorem axesAt_ny : axesAt nAxis.y = 0 := by
+  rw [nAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, ny1, pointC, pointS] <;> grind
+
+theorem axesAt_nz : axesAt nAxis.z = 0 := by
+  rw [nAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, nz1, pointC, pointS] <;> grind
+
+theorem axesAt_mx : axesAt mAxis.x = 0 := by
+  rw [mAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, mx1, pointC, pointS] <;> grind
+
+theorem axesAt_my : axesAt mAxis.y = 0 := by
+  rw [mAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, my1, pointC, pointS] <;> grind
+
+theorem axesAt_mz : axesAt mAxis.z = 1 := by
+  rw [mAxis, axesAt_var]
+  ext <;> simp [monoVal3, monoVal2, monoVal, powR, mz1, pointC, pointS] <;> grind
+
+theorem axesAt_s1c2 : axesAt s1c2P = ⟨pointS * pointC, 0⟩ := by
+  rw [s1c2P, evalAt3_pmul, axesAt_s1, axesAt_c2P]
+  ext <;> simp [pointC, pointS] <;> grind
+
+theorem axesAt_c1s2 : axesAt c1s2P = ⟨pointC * pointS, 0⟩ := by
+  rw [c1s2P, evalAt3_pmul, axesAt_cP, axesAt_s2]
+  ext <;> simp [pointC, pointS] <;> grind
+
+theorem axesAt_s1s2 : axesAt s1s2P = ⟨pointS * pointS, 0⟩ := by
+  rw [s1s2P, evalAt3_pmul, axesAt_s1, axesAt_s2]
+  ext <;> simp [pointS] <;> grind
+
+theorem axesAt_dot : axesAt (dot nAxis mAxis) = 0 := by
+  rw [dot, evalAt3_append, evalAt3_append, evalAt3_pmul, evalAt3_pmul, evalAt3_pmul,
+    axesAt_nx, axesAt_mx, axesAt_ny, axesAt_my, axesAt_nz, axesAt_mz]
+  ext <;> simp <;> grind
+
+theorem axesAt_cross_x : axesAt (cross nAxis mAxis).x = 0 := by
+  rw [cross, evalAt3_psub, evalAt3_pmul, evalAt3_pmul, axesAt_ny, axesAt_mz, axesAt_nz, axesAt_my]
+  ext <;> simp <;> grind
+
+theorem axesAt_cross_y : axesAt (cross nAxis mAxis).y = -1 := by
+  rw [cross, evalAt3_psub, evalAt3_pmul, evalAt3_pmul, axesAt_nz, axesAt_mx, axesAt_nx, axesAt_mz]
+  ext <;> simp <;> grind
+
+theorem axesAt_cross_z : axesAt (cross nAxis mAxis).z = 0 := by
+  rw [cross, evalAt3_psub, evalAt3_pmul, evalAt3_pmul, axesAt_nx, axesAt_my, axesAt_ny, axesAt_mx]
+  ext <;> simp <;> grind
+
+theorem axesAt_gamma2 : axesAt gamma2 = ⟨0, -pointS⟩ := by
+  rw [gamma2, axesAt_single]
+  ext <;> simp [monoImage3, monoVal3, monoVal2, monoVal, powR, s2One, pointC, pointS,
+    Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+
+theorem evolution_silent_a00 :
+    ∀ x ∈ evolution.a00, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  rw [evolution_a00_bin]
+  exact axisSilent_append (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+    (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+
+theorem evolution_silent_a01 :
+    ∀ x ∈ evolution.a01, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  rw [evolution_a01_bin]
+  exact axisSilent_append (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+    (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+
+theorem evolution_silent_a10 :
+    ∀ x ∈ evolution.a10, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  rw [evolution_a10_bin]
+  exact axisSilent_append (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+    (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+
+theorem evolution_silent_a11 :
+    ∀ x ∈ evolution.a11, x.2.mx = 0 ∧ x.2.my = 0 ∧ x.2.mz = 0 := by
+  rw [evolution_a11_bin]
+  exact axisSilent_append (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+    (axisSilent_single _ _ ⟨rfl, rfl, rfl⟩)
+
+theorem axesAt_u00 : axesAt evolution.a00 = basisReal := by
+  rw [evalAt3_agrees pointC pointS 1 0 0 pointC pointS 0 0 1 evolution.a00 evolution_silent_a00]
+  exact point_u_row0.1
+
+theorem axesAt_u01 : axesAt evolution.a01 = basisImag := by
+  rw [evalAt3_agrees pointC pointS 1 0 0 pointC pointS 0 0 1 evolution.a01 evolution_silent_a01]
+  exact point_u_row0.2
+
+theorem axesAt_u10 : axesAt evolution.a10 = basisImag := by
+  rw [evalAt3_agrees pointC pointS 1 0 0 pointC pointS 0 0 1 evolution.a10 evolution_silent_a10]
+  exact point_u_row1.1
+
+theorem axesAt_u11 : axesAt evolution.a11 = basisReal := by
+  rw [evalAt3_agrees pointC pointS 1 0 0 pointC pointS 0 0 1 evolution.a11 evolution_silent_a11]
+  exact point_u_row1.2
+
+theorem axesAt_m00 : axesAt evolutionM.a00 = ⟨pointC, -pointS⟩ := by
+  have hlin : evolutionM.a00 = c2P ++ pmul gamma2 mAxis.z := by
+    unfold evolutionM
+    rw [lin_a00, axisMat_a00]
+    rfl
+  rw [hlin, evalAt3_append, evalAt3_pmul, axesAt_c2P, axesAt_gamma2, axesAt_mz]
+  ext <;> simp [pointC, pointS] <;> grind
+
+theorem axesAt_m10 : axesAt evolutionM.a10 = 0 := by
+  have hlin : evolutionM.a10 = pmul gamma2 (mAxis.x ++ scale Gauss.i mAxis.y) := by
+    unfold evolutionM
+    rw [show (lin c2P gamma2 (axisMat (single 1 mx1) (single 1 my1) (single 1 mz1))).a10 =
+      pmul gamma2 (axisMat (single 1 mx1) (single 1 my1) (single 1 mz1)).a10 from rfl,
+      axisMat_a10]
+    rfl
+  rw [hlin, evalAt3_pmul, evalAt3_append, evalAt3_scale, axesAt_gamma2, axesAt_mx, axesAt_my]
+  ext <;> simp [pointS, Gauss.re_i, Gauss.im_i] <;> grind
+
+theorem axesAt_m01 : axesAt evolutionM.a01 = 0 := by
+  have hlin : evolutionM.a01 = pmul gamma2 (mAxis.x ++ scale (-Gauss.i) mAxis.y) := by
+    unfold evolutionM
+    rw [show (lin c2P gamma2 (axisMat (single 1 mx1) (single 1 my1) (single 1 mz1))).a01 =
+      pmul gamma2 (axisMat (single 1 mx1) (single 1 my1) (single 1 mz1)).a01 from rfl,
+      axisMat_a01]
+    rfl
+  rw [hlin, evalAt3_pmul, evalAt3_append, evalAt3_scale, axesAt_gamma2, axesAt_mx, axesAt_my]
+  ext <;> simp [pointS, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+
+theorem axesAt_m11 : axesAt evolutionM.a11 = ⟨pointC, pointS⟩ := by
+  have hlin : evolutionM.a11 = c2P ++ pmul gamma2 (pneg mAxis.z) := by
+    unfold evolutionM
+    rw [lin_a11, axisMat_a11]
+    rfl
+  rw [hlin, evalAt3_append, evalAt3_pmul, evalAt3_pneg, axesAt_c2P, axesAt_gamma2, axesAt_mz]
+  ext <;> simp [pointC, pointS] <;> grind
+
+theorem axes_ket_nm_0 :
+    (applyMat (matMul evolution evolutionM) ket0).a0 =
+      pmul evolution.a00 evolutionM.a00 ++ pmul evolution.a01 evolutionM.a10 := by
+  rw [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+
+theorem axes_ket_nm_1 :
+    (applyMat (matMul evolution evolutionM) ket0).a1 =
+      pmul evolution.a10 evolutionM.a00 ++ pmul evolution.a11 evolutionM.a10 := by
+  simp [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+
+theorem axes_ket_mn_0 :
+    (applyMat (matMul evolutionM evolution) ket0).a0 =
+      pmul evolutionM.a00 evolution.a00 ++ pmul evolutionM.a01 evolution.a10 := by
+  rw [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+
+theorem axes_ket_mn_1 :
+    (applyMat (matMul evolutionM evolution) ket0).a1 =
+      pmul evolutionM.a10 evolution.a00 ++ pmul evolutionM.a11 evolution.a10 := by
+  simp [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+
+theorem axesAt_forward_0 :
+    axesAt (applyMat (matMul evolution evolutionM) ket0).a0 =
+      ⟨(9 : Rat) / 25, -(12 : Rat) / 25⟩ := by
+  rw [axes_ket_nm_0, evalAt3_append, evalAt3_pmul, evalAt3_pmul, axesAt_u00, axesAt_m00,
+    axesAt_u01, axesAt_m10]
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem axesAt_forward_1 :
+    axesAt (applyMat (matMul evolution evolutionM) ket0).a1 =
+      ⟨-(16 : Rat) / 25, -(12 : Rat) / 25⟩ := by
+  rw [axes_ket_nm_1, evalAt3_append, evalAt3_pmul, evalAt3_pmul, axesAt_u10, axesAt_m00,
+    axesAt_u11, axesAt_m10]
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem axesAt_backward_0 :
+    axesAt (applyMat (matMul evolutionM evolution) ket0).a0 =
+      ⟨(9 : Rat) / 25, -(12 : Rat) / 25⟩ := by
+  rw [axes_ket_mn_0, evalAt3_append, evalAt3_pmul, evalAt3_pmul, axesAt_m00, axesAt_u00,
+    axesAt_m01, axesAt_u10]
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem axesAt_backward_1 :
+    axesAt (applyMat (matMul evolutionM evolution) ket0).a1 =
+      ⟨(16 : Rat) / 25, -(12 : Rat) / 25⟩ := by
+  rw [axes_ket_mn_1, evalAt3_append, evalAt3_pmul, evalAt3_pmul, axesAt_m10, axesAt_u00,
+    axesAt_m11, axesAt_u10]
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem axesAt_born (p : Poly) :
+    axesAt (columnBorn p) = axesAt p * Gauss.conj (axesAt p) := by
+  rw [evalAt3_columnBorn]
+
+/-- Nel punto `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x`, `m = e_z`:
+`a = 9/25`, `b = (12/25, −16/25, 12/25)` e
+`Uₙ Uₘ |0⟩ = (9/25 − 12/25 i)|0⟩ + (−16/25 − 12/25 i)|1⟩`. -/
+theorem point_axes :
+    axesAt axesA = ⟨(9 : Rat) / 25, 0⟩ ∧
+      axesAt axesB.x = ⟨(12 : Rat) / 25, 0⟩ ∧
+        axesAt axesB.y = ⟨-(16 : Rat) / 25, 0⟩ ∧
+          axesAt axesB.z = ⟨(12 : Rat) / 25, 0⟩ ∧
+            axesAt (applyMat (matMul evolution evolutionM) ket0).a0 =
+              ⟨(9 : Rat) / 25, -(12 : Rat) / 25⟩ ∧
+              axesAt (applyMat (matMul evolution evolutionM) ket0).a1 =
+                ⟨-(16 : Rat) / 25, -(12 : Rat) / 25⟩ := by
+  refine ⟨?_, ?_, ?_, ?_, axesAt_forward_0, axesAt_forward_1⟩
+  · rw [axesA, evalAt3_psub, evalAt3_pmul, evalAt3_pmul, axesAt_cP, axesAt_c2P, axesAt_s1s2,
+      axesAt_dot]
+    ext <;> simp [pointC, pointS] <;> grind
+  · rw [show axesB.x =
+        pmul s1c2P nAxis.x ++ pmul c1s2P mAxis.x ++ pmul s1s2P (cross nAxis mAxis).x from rfl,
+      evalAt3_append, evalAt3_append, evalAt3_pmul, evalAt3_pmul, evalAt3_pmul, axesAt_s1c2,
+      axesAt_nx, axesAt_c1s2, axesAt_mx, axesAt_s1s2, axesAt_cross_x]
+    ext <;> simp [pointC, pointS] <;> grind
+  · rw [show axesB.y =
+        pmul s1c2P nAxis.y ++ pmul c1s2P mAxis.y ++ pmul s1s2P (cross nAxis mAxis).y from rfl,
+      evalAt3_append, evalAt3_append, evalAt3_pmul, evalAt3_pmul, evalAt3_pmul, axesAt_s1c2,
+      axesAt_ny, axesAt_c1s2, axesAt_my, axesAt_s1s2, axesAt_cross_y]
+    ext <;> simp [pointC, pointS] <;> grind
+  · rw [show axesB.z =
+        pmul s1c2P nAxis.z ++ pmul c1s2P mAxis.z ++ pmul s1s2P (cross nAxis mAxis).z from rfl,
+      evalAt3_append, evalAt3_append, evalAt3_pmul, evalAt3_pmul, evalAt3_pmul, axesAt_s1c2,
+      axesAt_nz, axesAt_c1s2, axesAt_mz, axesAt_s1s2, axesAt_cross_z]
+    ext <;> simp [pointC, pointS] <;> grind
+
+/-- Nel punto, `Uₙ Uₘ |0⟩` e `Uₘ Uₙ |0⟩` differiscono sull'ampiezza di `|1⟩`.
+I pesi di Born sono `9/25` e `16/25` in entrambi gli ordini. `Uₘ Uₙ |0⟩` vale
+`(9/25 − 12/25 i)|0⟩ + (16/25 − 12/25 i)|1⟩`. -/
+theorem rotations_noncommute :
+    axesAt (applyMat (matMul evolutionM evolution) ket0).a0 =
+      ⟨(9 : Rat) / 25, -(12 : Rat) / 25⟩ ∧
+      axesAt (applyMat (matMul evolutionM evolution) ket0).a1 =
+        ⟨(16 : Rat) / 25, -(12 : Rat) / 25⟩ ∧
+      axesAt (applyMat (matMul evolution evolutionM) ket0).a1 ≠
+        axesAt (applyMat (matMul evolutionM evolution) ket0).a1 ∧
+      axesAt (columnBorn (applyMat (matMul evolution evolutionM) ket0).a0) =
+        ⟨(9 : Rat) / 25, 0⟩ ∧
+      axesAt (columnBorn (applyMat (matMul evolution evolutionM) ket0).a1) =
+        ⟨(16 : Rat) / 25, 0⟩ ∧
+      axesAt (columnBorn (applyMat (matMul evolutionM evolution) ket0).a0) =
+        ⟨(9 : Rat) / 25, 0⟩ ∧
+      axesAt (columnBorn (applyMat (matMul evolutionM evolution) ket0).a1) =
+        ⟨(16 : Rat) / 25, 0⟩ := by
+  refine ⟨axesAt_backward_0, axesAt_backward_1, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [axesAt_forward_1, axesAt_backward_1]
+    intro h
+    have hr : (-(16 : Rat)) / 25 = (16 : Rat) / 25 := by
+      simpa using congrArg Gauss.re h
+    have h25 : (25 : Rat) ≠ 0 := fun h0 =>
+      absurd (Rat.natCast_inj.mp h0) (by decide)
+    have h16 : (-16 : Int) = 16 := by
+      have hmul := congrArg (fun q : Rat => q * 25) hr
+      rw [Rat.div_mul_cancel h25, Rat.div_mul_cancel h25] at hmul
+      exact Rat.intCast_inj.mp hmul
+    exact absurd h16 (by decide)
+  · rw [axesAt_born, axesAt_forward_0]
+    ext <;> simp [Gauss.conj] <;> grind
+  · rw [axesAt_born, axesAt_forward_1]
+    ext <;> simp [Gauss.conj] <;> grind
+  · rw [axesAt_born, axesAt_backward_0]
+    ext <;> simp [Gauss.conj] <;> grind
+  · rw [axesAt_born, axesAt_backward_1]
+    ext <;> simp [Gauss.conj] <;> grind
+
+end AxesPoint
 
 end Universe.Symmetry

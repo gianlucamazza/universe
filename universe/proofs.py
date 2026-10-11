@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 57 righe.
+"""Certificato eseguibile del primo universo. Stampa 59 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -97,6 +97,11 @@ con `c1² = 1 − s1²` e la regola extra `c2² = 1 − s2²`
 Nel punto `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x` l'angolo composto è
 `−7/25`, `24/25` e `U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`. `evalAt` non legge
 `c2` e `s2`. `evalAt2` li legge: `Universe.Symmetry.point_compose`.
+Con `m = e_z` lo stesso punto dà `a = 9/25` e
+`b = (12/25, −16/25, 12/25)`. `UₙUₘ|0⟩` e `UₘUₙ|0⟩` differiscono
+sull'ampiezza di `|1⟩`; i pesi di Born sono `9/25` e `16/25` in entrambi
+gli ordini. `evalAt3` legge anche `mx my mz`
+(`Universe.Symmetry.point_axes`, `Universe.Symmetry.rotations_noncommute`).
 Con `V = U` il resto di `V(Uψ) − (V U V†)(Vψ)` e dei pesi di Born è zero
 (`Universe.Symmetry.conj_evolution_law`, `Universe.Symmetry.conj_born_law`).
 """
@@ -964,6 +969,65 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if axes_norm
         else "la norma del prodotto non sta in (gC, gN, gC2, gM)",
     )
+    axes_drawn = _axes_point()
+    forward_image = (
+        g(Fraction(9, 25), Fraction(-12, 25)),
+        g(Fraction(-16, 25), Fraction(-12, 25)),
+    )
+    backward_image = (
+        g(Fraction(9, 25), Fraction(-12, 25)),
+        g(Fraction(16, 25), Fraction(-12, 25)),
+    )
+    axes_weights = (g(Fraction(9, 25)), g(Fraction(16, 25)))
+    point_axes_ok = (
+        axes_drawn.amplitude == g(Fraction(9, 25))
+        and axes_drawn.vector
+        == (
+            g(Fraction(12, 25)),
+            g(Fraction(-16, 25)),
+            g(Fraction(12, 25)),
+        )
+        and axes_drawn.forward == forward_image
+    )
+    add(
+        "Simmetria",
+        "nel punto, a = 9/25, b = (12/25, −16/25, 12/25) e "
+        "UₙUₘ|0⟩ = (9/25 − 12/25 i)|0⟩ + (−16/25 − 12/25 i)|1⟩",
+        point_axes_ok,
+        "c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = e_x, m = e_z; "
+        "evalAt3 legge anche mx my mz\n"
+        "Universe.Symmetry.point_axes"
+        if point_axes_ok
+        else "a {}, b {}; stato {}, {}".format(
+            _format_gauss(axes_drawn.amplitude),
+            ", ".join(_format_gauss(part) for part in axes_drawn.vector),
+            _format_gauss(axes_drawn.forward[0]),
+            _format_gauss(axes_drawn.forward[1]),
+        ),
+    )
+    orders_ok = (
+        axes_drawn.backward == backward_image
+        and axes_drawn.forward[1] != axes_drawn.backward[1]
+        and axes_drawn.forward_weights == axes_weights
+        and axes_drawn.backward_weights == axes_weights
+    )
+    add(
+        "Simmetria",
+        "UₙUₘ|0⟩ e UₘUₙ|0⟩ differiscono su |1⟩, con pesi 9/25 e 16/25",
+        orders_ok,
+        "lo stesso punto: |1⟩ vale −16/25 − 12/25 i e 16/25 − 12/25 i\n"
+        "Universe.Symmetry.rotations_noncommute"
+        if orders_ok
+        else "ordini {}, {} e {}, {}; pesi {}, {} e {}, {}".format(
+            *map(
+                _format_gauss,
+                axes_drawn.forward
+                + axes_drawn.backward
+                + axes_drawn.forward_weights
+                + axes_drawn.backward_weights,
+            )
+        ),
+    )
     add(
         "Simmetria",
         "se le due coppie stanno sul cerchio, ci sta (c, s)",
@@ -1199,16 +1263,79 @@ def _axes_pair(ring: Ring) -> tuple[Poly, Poly, Poly, Poly]:
     )
 
 
-def _axes_composition(ring: Ring) -> Operator:
-    """`U(c₁, s₁, n) U(c₂, s₂, m) − (a I − i (b·σ))`, su `_LAW` più `mx my mz`."""
+def _axes_factors(ring: Ring) -> tuple[Operator, Operator]:
+    """`U(c₁, s₁, n)` e `U(c₂, s₂, m)`, gli stessi fattori di `_axes_composition`."""
     c1, s1, c2, s2, nx, ny, nz, mx, my, mz = (
         ring.var(name) for name in (*_LAW, "mx", "my", "mz")
     )
     first = _evolution_cs(c1, s1, _axis_hamiltonian(ring, nx, ny, nz))
     second = _evolution_cs(c2, s2, _axis_hamiltonian(ring, mx, my, mz))
+    return first, second
+
+
+def _axes_composition(ring: Ring) -> Operator:
+    """`U(c₁, s₁, n) U(c₂, s₂, m) − (a I − i (b·σ))`, su `_LAW` più `mx my mz`."""
+    first, second = _axes_factors(ring)
     amplitude, bx, by, bz = _axes_pair(ring)
     closed = _evolution_cs(amplitude, ring.one(), _axis_hamiltonian(ring, bx, by, bz))
     return first.matmul(second) - closed
+
+
+@dataclass(frozen=True)
+class _AxesPoint:
+    amplitude: Gauss
+    vector: tuple[Gauss, Gauss, Gauss]
+    forward: tuple[Gauss, Gauss]
+    backward: tuple[Gauss, Gauss]
+    forward_weights: tuple[Gauss, Gauss]
+    backward_weights: tuple[Gauss, Gauss]
+
+
+def _axes_point() -> _AxesPoint:
+    """Il punto `n = e_x`, `m = e_z`, `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`.
+
+    `a` e `b` vengono da `_axes_pair`. I due ordini sono i fattori di
+    `_axes_composition`, applicati a `|0⟩`.
+    """
+    ring = Ring((*_LAW, "mx", "my", "mz"))
+    amplitude, bx, by, bz = _axes_pair(ring)
+    first, second = _axes_factors(ring)
+    ket = State((ring.one(), ring.zero()))
+    forward = first.matmul(second).apply(ket)
+    backward = second.matmul(first).apply(ket)
+    point = {
+        "c1": g(Fraction(3, 5)),
+        "s1": g(Fraction(4, 5)),
+        "c2": g(Fraction(3, 5)),
+        "s2": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+        "mx": g(0),
+        "my": g(0),
+        "mz": g(1),
+    }
+
+    def image(state: State) -> tuple[Gauss, Gauss]:
+        return (
+            state.amplitudes[0].evaluate(point),
+            state.amplitudes[1].evaluate(point),
+        )
+
+    def weights(state: State) -> tuple[Gauss, Gauss]:
+        return (
+            state.amplitudes[0].modulus_squared().evaluate(point),
+            state.amplitudes[1].modulus_squared().evaluate(point),
+        )
+
+    return _AxesPoint(
+        amplitude.evaluate(point),
+        (bx.evaluate(point), by.evaluate(point), bz.evaluate(point)),
+        image(forward),
+        image(backward),
+        weights(forward),
+        weights(backward),
+    )
 
 
 def _axes_norm() -> bool:
