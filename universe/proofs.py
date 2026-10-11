@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 39 righe.
+"""Certificato eseguibile del primo universo. Stampa 42 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -57,6 +57,15 @@ La forma chiusa è l'evoluzione controllata
 (`Universe.Interaction.controlled_from_hamiltonian`). Nel punto
 `c = 0`, `s = 1`, `n = e_x` lo stato `|ψ⟩ ⊗ |0⟩` diventa `α|00⟩ − i β|11⟩`
 (`Universe.Interaction.cnot_point`, `Universe.Interaction.cnot_point_born`).
+Con l'apparato in `|0⟩` la coerenza del sistema ridotto è
+`α β̄ · conj(⟨0|U|0⟩)`, con `⟨0|U|0⟩ = c − i s nz`
+(`Universe.Interaction.partial_coherence`). La diagonale è il peso di
+Born, modulo `(gC, gN)` (`Universe.Interaction.partial_diagonal`).
+`ψ` valutato in `3/5`, `−4/5 i` e il coupling lungo `e_x` danno i tre
+punti `(1, 0)`, `(3/5, 4/5)` e `(0, 1)`
+(`Universe.Interaction.point_partial_idle`,
+`Universe.Interaction.point_partial_mid`,
+`Universe.Interaction.point_partial_flip`).
 """
 
 from __future__ import annotations
@@ -71,7 +80,14 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
-from universe.interaction import closed_generator, controlled, generator, projector_one
+from universe.interaction import (
+    closed_generator,
+    coherence_factor,
+    controlled,
+    generator,
+    partial_reduced,
+    projector_one,
+)
 from universe.observer import (
     cnot,
     cnot01,
@@ -655,6 +671,80 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Interaction.cnot_point, Universe.Interaction.cnot_point_born"
         if point_ok
         else f"stato {phased}; pesi {weights}",
+    )
+
+    system = world.generic()
+    reduced_system = partial_reduced(world.U, system)
+    bracket = world.U.rows[0][0]
+    bracket_form = scalars.c + ring.constant(g(0, -1)) * scalars.s * scalars.nz
+    alpha, beta = system.amplitudes
+    factor_ok = (
+        reduced_system.rows[0][1] == coherence_factor(world.U, system)
+        and reduced_system.rows[1][0] == beta * alpha.conj() * bracket
+        and bracket == bracket_form
+    )
+    add(
+        "Interazione",
+        "la coerenza parziale è α β̄ · conj(⟨0|U|0⟩)",
+        factor_ok,
+        "⟨0|U|0⟩ = c − i s nz, anello libero\nUniverse.Interaction.partial_coherence"
+        if factor_ok
+        else f"⟨0|U|0⟩ = {bracket}",
+    )
+    born_weights = born(system)
+    gap_zero = (reduced_system.rows[0][0] - born_weights[0]).certification()
+    gap_one = (reduced_system.rows[1][1] - born_weights[1]).certification()
+    diagonal_ok = gap_zero is None and gap_one is None
+    add(
+        "Interazione",
+        "la diagonale parziale è il peso di Born",
+        diagonal_ok,
+        "modulo (gC, gN), norma di colonna di U\nUniverse.Interaction.partial_diagonal"
+        if diagonal_ok
+        else (gap_zero or gap_one or ""),
+    )
+    probe = State(
+        (
+            ring.constant(g(Fraction(3, 5))),
+            ring.constant(g(0, Fraction(-4, 5))),
+        )
+    )
+    probe_rho = partial_reduced(world.U, probe)
+    probe_pure = purity(probe_rho)
+    axis_x = {"nx": g(1), "ny": g(0), "nz": g(0)}
+    expected_points = (
+        (Fraction(1), Fraction(0), g(0, Fraction(12, 25)), g(1)),
+        (
+            Fraction(3, 5),
+            Fraction(4, 5),
+            g(0, Fraction(36, 125)),
+            g(Fraction(11017, 15625)),
+        ),
+        (Fraction(0), Fraction(1), g(0), g(Fraction(337, 625))),
+    )
+    point_rows: list[str] = []
+    points_hold = True
+    for coupling_c, coupling_s, coherence, pure in expected_points:
+        sample = {**axis_x, "c": g(coupling_c), "s": g(coupling_s)}
+        got_coherence = probe_rho.rows[0][1].evaluate(sample)
+        got_purity = probe_pure.evaluate(sample)
+        points_hold = points_hold and got_coherence == coherence and got_purity == pure
+        point_rows.append(
+            f"({coupling_c}, {coupling_s}): {got_coherence}, purezza {got_purity}"
+        )
+    add(
+        "Interazione",
+        "tre punti della misura parziale, lungo e_x",
+        points_hold,
+        "α = 3/5, β = −4/5 i\n"
+        "(1, 0): 12/25 i, purezza 1\n"
+        "(3/5, 4/5): 36/125 i, purezza 11017/15625\n"
+        "(0, 1): 0, purezza 337/625\n"
+        "Universe.Interaction.point_partial_idle, "
+        "Universe.Interaction.point_partial_mid,\n"
+        "Universe.Interaction.point_partial_flip"
+        if points_hold
+        else "\n".join(point_rows),
     )
     return proven
 

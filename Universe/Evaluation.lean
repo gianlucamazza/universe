@@ -4,8 +4,11 @@ Valutazione nel punto.
 `evalAt` è un omomorfismo: rispetta `polySame`, il prodotto e il coniugio.
 `eval_polySame` dice che due polinomi con gli stessi coefficienti hanno lo
 stesso valore. `eval_pmul` e `eval_conj` portano prodotto e coniugio sui
-valori di Gauss. `listEval` somma i coefficienti lungo un supporto senza
-ripetizioni; `eval_cover` lo identifica con `evalAt`.
+valori di Gauss. `eval_scale` porta la scala, `eval_const` una costante.
+`listEval` somma i coefficienti lungo un supporto senza ripetizioni;
+`eval_cover` lo identifica con `evalAt`. Lungo `n = e_x`, `eval_gN_axis_x`
+azzera `gN` e `eval_bracket_axis_x` legge `⟨0|U|0⟩ = c`. Se `(c, s)` sta
+sul cerchio, `eval_gC_on_circle` azzera `gC`.
 -/
 import Universe.Epistemology
 
@@ -245,5 +248,76 @@ theorem spec_scale (keep : Mono → Option Mono) (z : Gauss) (p : Poly) :
       cases keep m with
       | none => exact ih
       | some k => simp only [scale, ih]
+
+/-- Il monomio `1` vale `1` per ogni sostituzione. -/
+theorem monoVal_one (c s nx ny nz : Rat) : monoVal c s nx ny nz Mono.one = 1 := by
+  simp [monoVal, powR]
+
+/-- Una costante non dipende da `c, s, n`. -/
+theorem eval_const (c s nx ny nz : Rat) (a : Gauss) :
+    evalAt c s nx ny nz (single a Mono.one) = a := by
+  rw [eval_single, monoVal_one]
+  ext <;> simp
+
+/-- `eval` porta la scala di Gauss sul valore. -/
+theorem eval_scale (c s nx ny nz : Rat) (z : Gauss) (p : Poly) :
+    evalAt c s nx ny nz (scale z p) = z * evalAt c s nx ny nz p := by
+  induction p with
+  | nil =>
+    simp [scale, evalAt]
+    rw [Gauss.mul_zero]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show scale z ((a, m) :: rest) = (z * a, m) :: scale z rest from rfl]
+      rw [show evalAt c s nx ny nz ((z * a, m) :: scale z rest) =
+        ⟨(z * a).re * monoVal c s nx ny nz m, (z * a).im * monoVal c s nx ny nz m⟩ +
+          evalAt c s nx ny nz (scale z rest) from rfl, ih]
+      rw [show evalAt c s nx ny nz ((a, m) :: rest) =
+        ⟨a.re * monoVal c s nx ny nz m, a.im * monoVal c s nx ny nz m⟩ +
+          evalAt c s nx ny nz rest from rfl, Gauss.mul_add]
+      have hterm :
+          ⟨(z * a).re * monoVal c s nx ny nz m, (z * a).im * monoVal c s nx ny nz m⟩ =
+            z * ⟨a.re * monoVal c s nx ny nz m, a.im * monoVal c s nx ny nz m⟩ := by
+        ext <;> simp [Gauss.re_mul, Gauss.im_mul] <;> grind
+      rw [hterm]
+
+/-- `|z|²` di una costante è la costante `z · conj(z)`. -/
+theorem columnBorn_const (z : Gauss) :
+    columnBorn (single z Mono.one) = single (z * Gauss.conj z) Mono.one ++ [] := by
+  rw [columnBorn, show conjP (single z Mono.one) = single (Gauss.conj z) Mono.one from rfl,
+    pmul_single_single]
+  rw [show Mono.one.mul Mono.one = Mono.one by ext <;> rfl]
+
+/-- Valore di `|z|²` quando `z` è una costante. -/
+theorem eval_column_const (c s nx ny nz : Rat) (z : Gauss) :
+    evalAt c s nx ny nz (columnBorn (single z Mono.one)) = z * Gauss.conj z := by
+  rw [columnBorn_const, eval_append, eval_const]
+  simp [evalAt, Gauss.add_zero]
+
+/-- Lungo `e_x` i coefficienti di `gN` valgono zero, per ogni `c, s`. -/
+theorem eval_gN_axis_x (c s : Rat) : evalAt c s 1 0 0 gN = 0 := by
+  rw [gN, eval_append, eval_append, eval_append, eval_single, eval_single, eval_single,
+    eval_single]
+  simp [monoVal, powR, nxSq, nySq, nzSq]
+  ext <;> simp <;> grind
+
+/-- Sul cerchio, lungo qualunque asse, `gC` vale zero. -/
+theorem eval_gC_on_circle (c s : Rat) (h : c * c + s * s = 1) :
+    evalAt c s 1 0 0 gC = 0 := by
+  rw [gC, eval_append, eval_append, eval_single, eval_single, eval_single]
+  simp [monoVal, powR, cSq, sSq]
+  ext <;> simp <;> grind
+
+section
+open Universe.Qubit
+
+/-- Lungo `e_x`, `⟨0|U|0⟩` vale `c`: il termine `s nz` si annulla. -/
+theorem eval_bracket_axis_x (c s : Rat) : evalAt c s 1 0 0 evolution.a00 = ⟨c, 0⟩ := by
+  rw [evolution_a00_bin, eval_append, eval_single, eval_single]
+  simp [monoVal, powR, c1, s1, nz1, Mono.mul, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i]
+  ext <;> simp <;> grind
+
+end
 
 end Universe.Evaluation

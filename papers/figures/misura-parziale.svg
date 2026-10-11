@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 490" role="img">
+  <title>Partial measurement: the coupling comes from a Hamiltonian, and its angle sets how much the system decoheres</title>
+  <desc>Left: the controlled evolution exp(−iφ G), with G = |1⟩⟨1| ⊗ (n·σ), is |0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U. Right: for ψ = Φ|0⟩ at (3/5, 4/5) and coupling (c, s) along n = eₓ, the coherence of the system is 12/25, 36/125 and 0, and its purity 1, 11017/15625 and 337/625, at (1, 0), (3/5, 4/5) and (0, 1). The last point is CNOT up to a local phase.</desc>
+  <rect width="920" height="490" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .wire { stroke: #1a1814; stroke-width: 1.6; fill: none; }
+    .gate { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.6; }
+    .bar { fill: #1a1814; }
+    .acc { fill: #8c3a2f; }
+    .base { stroke: #1a1814; stroke-width: 1.4; }
+    .guide { stroke: #b8b0a2; stroke-width: 1; stroke-dasharray: 4 4; }
+    .head { font-size: 18px; }
+    .big { font-size: 21px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+  </style>
+
+  <!-- circuit -->
+  <text class="head" x="36" y="44">the coupling is a dynamics</text>
+  <text class="big end" x="112" y="127">Φ|0⟩</text>
+  <text class="tiny muted end" x="112" y="146">system</text>
+  <text class="big end" x="112" y="217">|0⟩</text>
+  <text class="tiny muted end" x="112" y="236">apparatus</text>
+  <line class="wire" x1="124" y1="120" x2="330" y2="120"/>
+  <line class="wire" x1="124" y1="210" x2="200" y2="210"/>
+  <line class="wire" x1="252" y1="210" x2="330" y2="210"/>
+  <line class="wire" x1="226" y1="120" x2="226" y2="184"/>
+  <circle cx="226" cy="120" r="6.5" fill="#1a1814"/>
+  <rect class="gate" x="200" y="184" width="52" height="52"/>
+  <text class="big mid" x="226" y="218">U</text>
+  <text class="small" x="36" y="292">exp(−iφ G),  G = |1⟩⟨1| ⊗ (n·σ)</text>
+  <text class="small" x="36" y="316">G³ = G, so the series closes:</text>
+  <text class="small" x="36" y="340">|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U</text>
+  <text class="tiny muted" x="36" y="368">at c = 0, s = 1, n = eₓ: U = −i X,</text>
+  <text class="tiny muted" x="36" y="386">CNOT up to a local phase</text>
+  <text class="tiny" x="36" y="404" style="fill:#8c3a2f;font-family:'DejaVu Sans Mono',Menlo,monospace">controlled_from_hamiltonian</text>
+
+  <!-- coherence -->
+  <text class="head mid" x="510" y="44">coherence of the system</text>
+  <text class="tiny muted mid" x="510" y="64">|off-diagonal|, scale 12/25</text>
+  <line class="base" x1="400" y1="300" x2="620" y2="300"/>
+  <line class="guide" x1="400" y1="80" x2="620" y2="80"/>
+  <rect class="bar" x="420" y="80" width="44" height="220"/>
+  <rect class="bar" x="488" y="168" width="44" height="132"/>
+  <text class="tiny" x="470" y="94">12/25</text>
+  <text class="tiny mid" x="510" y="160">36/125</text>
+  <text class="tiny mid" x="578" y="292">0</text>
+
+  <!-- purity -->
+  <text class="head mid" x="770" y="44">purity of the system</text>
+  <text class="tiny muted mid" x="770" y="64">scale from 1/2 to 1</text>
+  <line class="base" x1="660" y1="300" x2="880" y2="300"/>
+  <line class="guide" x1="660" y1="80" x2="880" y2="80"/>
+  <rect class="acc" x="680" y="80" width="44" height="220"/>
+  <rect class="acc" x="748" y="209.8" width="44" height="90.2"/>
+  <rect class="acc" x="816" y="282.8" width="44" height="17.2"/>
+  <text class="tiny" x="730" y="94">1</text>
+  <text class="tiny mid" x="770" y="201">11017/15625</text>
+  <text class="tiny mid" x="838" y="274">337/625</text>
+
+  <g class="small mid">
+    <text x="442" y="324">(1, 0)</text><text x="510" y="324">(3/5, 4/5)</text><text x="578" y="324">(0, 1)</text>
+    <text x="702" y="324">(1, 0)</text><text x="770" y="324">(3/5, 4/5)</text><text x="838" y="324">(0, 1)</text>
+  </g>
+  <g class="tiny muted mid">
+    <text x="442" y="342">no coupling</text><text x="510" y="342">partial</text><text x="578" y="342">full</text>
+    <text x="702" y="342">no coupling</text><text x="770" y="342">partial</text><text x="838" y="342">full</text>
+  </g>
+  <text class="tiny muted mid" x="640" y="370">coupling angle (c, s), axis n = eₓ · purity = 337/625 + (288/625) c²</text>
+  <text class="tiny mid" x="640" y="390" style="fill:#8c3a2f;font-family:'DejaVu Sans Mono',Menlo,monospace">partial_coherence, partial_reading</text>
+
+  <line x1="36" y1="420" x2="884" y2="420" stroke="#b8b0a2" stroke-width="1"/>
+  <text class="small" x="36" y="448">Coherence shrinks by the factor ⟨0|U|0⟩ = c − i s nz: measurement comes in degrees, and a perfect one is a single point.</text>
+  <text class="tiny muted" x="36" y="470">ψ = Φ|0⟩ at c = 3/5, s = 4/5, n = eₓ: α = 3/5, β = −4/5 i · the Born weights 9/25 and 16/25 never change</text>
+</svg>

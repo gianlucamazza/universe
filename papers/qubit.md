@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 39 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 42 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -177,6 +177,10 @@ L'interazione non è scritta a mano. `Universe.Interaction` prende il generatore
 `purity` è `Tr(ρ²)`. `purity_before` dà `‖ψ‖⁴` su `|ψ⟩⟨ψ|`. `purity_after` dà `|α|⁴ + |β|⁴` dopo `CNOT`. `purity_sphere` mette `1 − purezza − 2|α|²|β|²` nell'ideale `(gC, gN, gA)`, sullo stato generico, con il solo cofattore di `gA`. `point_purity` vale `337/625` nel punto, minore di `1`: lo stato ridotto è misto. Le valutazioni passano per `Universe.Evaluation`, dove `eval_polySame`, `eval_pmul` ed `eval_conj` fanno di `evalAt` un omomorfismo.
 
 ![Lo stato ridotto prima e dopo CNOT](figures/decoerenza.svg)
+
+Con l'evoluzione controllata come accoppiamento, lo stato è `α|0⟩|0⟩ + β|1⟩ U|0⟩`. `partial_coherence` dice che la coerenza del sistema è `α β̄ · conj(⟨0|U|0⟩)` nel libero, con `⟨0|U|0⟩ = c − i s nz`; `partial_diagonal` che la diagonale resta la coppia di Born modulo `(gC, gN)`. Lungo x, per `ψ = Φ|0⟩` nel punto, `partial_reading` dà coerenza `(12/25 i)·c` e purezza `337/625 + (288/625)·c²`: `1`, `11017/15625` e `337/625` in `c = 1`, `3/5`, `0`. La misura ha gradi; quella perfetta è un punto.
+
+![Misura parziale: l'accoppiamento viene da un'Hamiltoniana](figures/misura-parziale.svg)
 
 Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto al bit basso. `two_pointers` dà `α|000⟩ + β|111⟩` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`. `observers_agree` dice che i pesi delle celle 1–6, dove i due puntatori differiscono, sono il polinomio zero. `order_irrelevant` scambia l'ordine dei due `CNOT`. Le versioni `_right` passano per `tensor_assoc`.
 

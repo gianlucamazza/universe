@@ -11,7 +11,7 @@ il sistema resta puro, a meno di `‖φ‖²`. Dopo `CNOT` la coerenza è il
 polinomio zero e la diagonale è `bornPair`. `pointer_born` legge quegli
 stessi pesi sull'apparato: `Obs` è quel teorema. La purezza scende a
 `|α|⁴ + |β|⁴`. Sulla sfera il difetto ha cofattore `gA`. Nel punto vale
-`337/625`.
+`337/625`. `eval_purity` porta `Tr(ρ²)` sulle quattro entrate.
 
 Due apparati. `cnot01` e `cnot02` agiscono sul bit medio e sul bit basso.
 Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` entrambi gli ordini danno `α|000⟩ + β|111⟩`. I pesi
@@ -305,6 +305,16 @@ def matTrace (M : Mat) : Poly := M.a00 ++ M.a11
 
 /-- `Tr(ρ²)`. -/
 def purity (ρ : Mat) : Poly := matTrace (matMul ρ ρ)
+
+/-- `eval` porta `Tr(ρ²)` sul quadrato delle quattro entrate. -/
+theorem eval_purity (c s nx ny nz : Rat) (ρ : Mat) :
+    evalAt c s nx ny nz (purity ρ) =
+      (evalAt c s nx ny nz ρ.a00 * evalAt c s nx ny nz ρ.a00 +
+          evalAt c s nx ny nz ρ.a01 * evalAt c s nx ny nz ρ.a10) +
+        (evalAt c s nx ny nz ρ.a10 * evalAt c s nx ny nz ρ.a01 +
+          evalAt c s nx ny nz ρ.a11 * evalAt c s nx ny nz ρ.a11) := by
+  simp only [purity, matTrace, matMul]
+  rw [eval_append, eval_append, eval_append, eval_pmul, eval_pmul, eval_pmul, eval_pmul]
 
 /-- I due prodotti `α conj(β) · β conj(α)` e `|α|² |β|²` hanno gli stessi coefficienti. -/
 theorem cross_born (α β : Poly) :

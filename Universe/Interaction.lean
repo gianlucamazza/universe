@@ -11,6 +11,13 @@ Nel punto `c = 0`, `s = 1`, `n = e_x` si ha `U = −i X`: l'evoluzione
 controllata è `CNOT` seguito dalla fase `−i` sul `|1⟩` del controllo.
 Su `|ψ⟩ ⊗ |0⟩` lo stato è `α|00⟩ − i β|11⟩`. La fase ha modulo uno, quindi
 esce da ogni peso di Born: `decoherence` e `pointer_born` restano gli stessi.
+
+Con l'apparato in `|0⟩` lo stato è `α|00⟩ + β|1⟩⊗(U|0⟩)`.
+`partial_coherence` dice che l'antidiagonale del sistema ridotto è
+`α β̄ · conj(⟨0|U|0⟩)`, con `⟨0|U|0⟩ = c − i s nz`, nell'anello libero.
+`partial_diagonal` mette la diagonale su `bornPair`, modulo `(gC, gN)`:
+è la norma di colonna di `U`. `ψ` valutato in `3/5`, `−4/5 i` e il
+coupling lungo `e_x` danno i tre punti `(1, 0)`, `(3/5, 4/5)` e `(0, 1)`.
 -/
 import Universe.Observer
 import Universe.Series
@@ -487,5 +494,204 @@ theorem cnot_point_born (ψ : Pair) :
   · simp only [reduceRight, bornPair, pairSame, columnBorn_nil, conjP, pmul_nil, pmul_nil_left,
       List.append_nil, List.nil_append, hborn]
     exact ⟨polySame_refl _, polySame_refl _, polySame_refl _, polySame_refl _⟩
+
+/-! ### Misura parziale -/
+
+/-- Evoluzione controllata su `|ψ⟩ ⊗ |0⟩`: `α|00⟩ + β|1⟩⊗(U|0⟩)`. -/
+def partialState (ψ : Pair) : Quad :=
+  applyCtrl evolution (tensorPair ψ ket0)
+
+/-- Le quattro celle: `α`, `0`, `β ⟨0|U|0⟩`, `β ⟨1|U|0⟩`. -/
+theorem partial_state_cells (ψ : Pair) :
+    partialState ψ =
+      ⟨ψ.a0, [], pmul evolution.a00 ψ.a1, pmul evolution.a10 ψ.a1⟩ := by
+  rw [partialState, tensor_idle_right]
+  simp only [applyCtrl, pmul_nil, List.append_nil]
+
+/-- L'antidiagonale del sistema ridotto è `α β̄ · conj(⟨0|U|0⟩)`.
+
+`⟨0|U|0⟩ = c − i s nz`. L'identità sta nell'anello libero. L'altra
+entrata è `β ᾱ · ⟨0|U|0⟩`. -/
+theorem partial_coherence (ψ : Pair) :
+    polySame (reduceLeft (partialState ψ)).a01
+      (pmul (pmul ψ.a0 (conjP ψ.a1)) (conjP evolution.a00)) ∧
+    polySame (reduceLeft (partialState ψ)).a10
+      (pmul (pmul ψ.a1 (conjP ψ.a0)) evolution.a00) ∧
+    evolution.a00 = single (1 : Gauss) c1 ++ single (-Gauss.i) (s1.mul nz1) := by
+  refine ⟨?_, ?_, evolution_a00_bin⟩
+  · rw [partial_state_cells]
+    simp only [reduceLeft, pmul_nil_left, List.append_nil]
+    rw [conj_pmul]
+    exact polySame.trans (slide_right ψ.a0 (conjP evolution.a00) (conjP ψ.a1))
+      (polySame_mul_comm (conjP evolution.a00) (pmul ψ.a0 (conjP ψ.a1)))
+  · rw [partial_state_cells]
+    simp only [reduceLeft]
+    rw [show conjP ([] : Poly) = [] from rfl, pmul_nil, List.append_nil]
+    exact polySame.trans
+      (polySame_mul_comm (pmul evolution.a00 ψ.a1) (conjP ψ.a0))
+      (polySame.trans (slide_right (conjP ψ.a0) evolution.a00 ψ.a1)
+        (polySame.trans (polySame_mul_comm evolution.a00 (pmul (conjP ψ.a0) ψ.a1))
+          (polySame_pmul_left (polySame_mul_comm (conjP ψ.a0) ψ.a1) evolution.a00)))
+
+/-- La diagonale è `bornPair`, modulo `(gC, gN)`.
+
+`|α|²` sta nell'anello libero. `|β|²` usa la norma della prima colonna
+di `U`: `(U†U)₀₀ − 1` è `δ`. -/
+theorem partial_diagonal (ψ : Pair) :
+    inIdeal (psub (reduceLeft (partialState ψ)).a00 (columnBorn ψ.a0)) ∧
+      inIdeal (psub (reduceLeft (partialState ψ)).a11 (columnBorn ψ.a1)) := by
+  refine ⟨?_, ?_⟩
+  · have h00 : polySame (reduceLeft (partialState ψ)).a00 (columnBorn ψ.a0) := by
+      rw [partial_state_cells]
+      simp only [reduceLeft, columnBorn_nil, List.append_nil]
+      exact polySame_refl _
+    exact inIdeal_of_polySame h00
+  · have hcells : polySame (reduceLeft (partialState ψ)).a11
+        (pmul (columnBorn ψ.a1) ((matMul (matDagger evolution) evolution).a00)) := by
+      rw [partial_state_cells]
+      simp only [reduceLeft]
+      exact polySame.trans (marginal_scale_col ψ.a1 evolution.a00 evolution.a10)
+        (polySame_pmul_right ground_born_sum (columnBorn ψ.a1))
+    have hdist : polySame
+        (psub (pmul (columnBorn ψ.a1) ((matMul (matDagger evolution) evolution).a00))
+          (columnBorn ψ.a1))
+        (pmul (columnBorn ψ.a1) unitaryDefect) := by
+      have hone : pmul (columnBorn ψ.a1) (single (1 : Gauss) Mono.one) = columnBorn ψ.a1 :=
+        pmul_one _
+      have hsub : polySame
+          (psub (pmul (columnBorn ψ.a1) ((matMul (matDagger evolution) evolution).a00))
+            (pmul (columnBorn ψ.a1) (single (1 : Gauss) Mono.one)))
+          (pmul (columnBorn ψ.a1)
+            (psub ((matMul (matDagger evolution) evolution).a00) (single (1 : Gauss) Mono.one))) :=
+        polySame.symm (polySame_mul_psub_right (columnBorn ψ.a1) _ _)
+      have hdefect : polySame
+          (pmul (columnBorn ψ.a1)
+            (psub ((matMul (matDagger evolution) evolution).a00) (single (1 : Gauss) Mono.one)))
+          (pmul (columnBorn ψ.a1) unitaryDefect) :=
+        polySame_pmul_right evolution_unitary_00 _
+      have hborn : polySame (columnBorn ψ.a1)
+          (pmul (columnBorn ψ.a1) (single (1 : Gauss) Mono.one)) :=
+        fun _ => by rw [hone]
+      exact polySame.trans (polySame_psub (polySame_refl _) hborn) (polySame.trans hsub hdefect)
+    exact inIdeal_polySame
+      (polySame.trans (polySame_psub hcells (polySame_refl _)) hdist)
+      (inIdeal_mul_left (columnBorn ψ.a1) unitary_ideal)
+
+/-! ### Punti: `ψ` già valutato, coupling lungo `e_x` -/
+
+/-- `Φ|0⟩` nel punto `c = 3/5`, `s = 4/5`: `α = 3/5`, `β = −4/5 i`.
+
+Il coupling tiene i propri `c, s`. Un solo monomio non porta entrambi. -/
+def probePair : Pair := ⟨single pointAlpha Mono.one, single pointBeta Mono.one⟩
+
+theorem probe_coherence_factor :
+    pointAlpha * Gauss.conj pointBeta = ⟨0, (12 : Rat) / 25⟩ := by
+  simp only [pointAlpha, pointBeta, pointC, pointS, Gauss.conj]
+  ext <;> simp <;> grind
+
+/-- Sul probe, l'antidiagonale è `(12/25 i) · conj(⟨0|U|0⟩)`. -/
+theorem probe_coh01 :
+    polySame (reduceLeft (partialState probePair)).a01
+      (scale ⟨0, (12 : Rat) / 25⟩ (conjP evolution.a00)) := by
+  have h := (partial_coherence probePair).1
+  unfold probePair at h
+  have hinner : pmul (single pointAlpha Mono.one) (conjP (single pointBeta Mono.one)) =
+      single ⟨0, (12 : Rat) / 25⟩ Mono.one := by
+    rw [show conjP (single pointBeta Mono.one) = single (Gauss.conj pointBeta) Mono.one from rfl]
+    rw [pmul_single_single, mono_one_mul, List.append_nil, probe_coherence_factor]
+  rw [hinner, pmul_unit_scale] at h
+  exact h
+
+/-- L'altra entrata è `−(12/25 i) · ⟨0|U|0⟩`. -/
+theorem probe_coh10 :
+    polySame (reduceLeft (partialState probePair)).a10
+      (scale ⟨0, -((12 : Rat) / 25)⟩ evolution.a00) := by
+  have h := (partial_coherence probePair).2.1
+  unfold probePair at h
+  have hconj : Gauss.conj pointAlpha = pointAlpha := by
+    simp [pointAlpha, Gauss.conj]
+  have hinner : pmul (single pointBeta Mono.one) (conjP (single pointAlpha Mono.one)) =
+      single ⟨0, -((12 : Rat) / 25)⟩ Mono.one := by
+    rw [show conjP (single pointAlpha Mono.one) = single (Gauss.conj pointAlpha) Mono.one from rfl,
+      hconj, pmul_single_single, mono_one_mul, List.append_nil, Gauss.mul_comm, point_amp_mul]
+  rw [hinner, pmul_unit_scale] at h
+  exact h
+
+/-- Sul cerchio e lungo `e_x`, un polinomio dell'ideale ha lo stesso valore del suo resto. -/
+theorem eval_matches_born (c s : Rat) (hc : c * c + s * s = 1) (p q : Poly)
+    (h : inIdeal (psub p q)) :
+    evalAt c s 1 0 0 p = evalAt c s 1 0 0 q := by
+  have hzero := eval_inIdeal h c s 1 0 0 (eval_gC_on_circle c s hc) (eval_gN_axis_x c s)
+  rw [eval_psub] at hzero
+  exact gauss_of_sub _ _ hzero
+
+/-- Coerenza e purezza del probe, coupling `(c, s)` sul cerchio, `n = e_x`.
+
+La coerenza è `(12/25 i) · c`. La purezza è `337/625 + (288/625) c²`. -/
+theorem partial_reading (c s : Rat) (hc : c * c + s * s = 1) :
+    evalAt c s 1 0 0 (reduceLeft (partialState probePair)).a01 =
+      ⟨0, ((12 : Rat) / 25) * c⟩ ∧
+    evalAt c s 1 0 0 (purity (reduceLeft (partialState probePair))) =
+      ⟨(337 : Rat) / 625 + ((288 : Rat) / 625) * (c * c), 0⟩ := by
+  let ρ := reduceLeft (partialState probePair)
+  have he00 : evalAt c s 1 0 0 ρ.a00 = ⟨(9 : Rat) / 25, 0⟩ := by
+    have hsame := eval_matches_born c s hc _ _ (partial_diagonal probePair).1
+    rw [hsame, probePair, eval_column_const]
+    simp [pointAlpha, pointC, Gauss.conj]
+    ext <;> simp <;> grind
+  have he11 : evalAt c s 1 0 0 ρ.a11 = ⟨(16 : Rat) / 25, 0⟩ := by
+    have hsame := eval_matches_born c s hc _ _ (partial_diagonal probePair).2
+    rw [hsame, probePair, eval_column_const]
+    simp [pointBeta, pointS, Gauss.conj]
+    ext <;> simp <;> grind
+  have he01 : evalAt c s 1 0 0 ρ.a01 = ⟨0, ((12 : Rat) / 25) * c⟩ := by
+    rw [eval_polySame probe_coh01, eval_scale, eval_conj, eval_bracket_axis_x]
+    simp [Gauss.conj]
+    ext <;> simp <;> grind
+  have he10 : evalAt c s 1 0 0 ρ.a10 = ⟨0, -(((12 : Rat) / 25) * c)⟩ := by
+    rw [eval_polySame probe_coh10, eval_scale, eval_bracket_axis_x]
+    ext <;> simp <;> grind
+  refine ⟨he01, ?_⟩
+  rw [eval_purity, he00, he01, he10, he11]
+  ext <;> simp <;> grind
+
+/-- Coupling `(1, 0)`: coerenza `12/25 i`, purezza `1`. -/
+theorem point_partial_idle :
+    evalAt 1 0 1 0 0 (reduceLeft (partialState probePair)).a01 = ⟨0, (12 : Rat) / 25⟩ ∧
+      evalAt 1 0 1 0 0 (purity (reduceLeft (partialState probePair))) = ⟨1, 0⟩ := by
+  have h := partial_reading 1 0 (by grind)
+  refine ⟨?_, ?_⟩
+  · rw [h.1]
+    ext <;> simp <;> grind
+  · rw [h.2]
+    ext <;> simp <;> grind
+
+/-- Coupling `(3/5, 4/5)`: coerenza `36/125 i`, purezza `11017/15625`. -/
+theorem point_partial_mid :
+    evalAt pointC pointS 1 0 0 (reduceLeft (partialState probePair)).a01 =
+      ⟨0, (36 : Rat) / 125⟩ ∧
+      evalAt pointC pointS 1 0 0 (purity (reduceLeft (partialState probePair))) =
+        ⟨(11017 : Rat) / 15625, 0⟩ := by
+  have hc : pointC * pointC + pointS * pointS = 1 := by
+    simp [pointC, pointS]
+    grind
+  have h := partial_reading pointC pointS hc
+  refine ⟨?_, ?_⟩
+  · rw [h.1]
+    ext <;> simp [pointC] <;> grind
+  · rw [h.2]
+    ext <;> simp [pointC] <;> grind
+
+/-- Coupling `(0, 1)`: coerenza `0`, purezza `337/625`. -/
+theorem point_partial_flip :
+    evalAt 0 1 1 0 0 (reduceLeft (partialState probePair)).a01 = 0 ∧
+      evalAt 0 1 1 0 0 (purity (reduceLeft (partialState probePair))) =
+        ⟨(337 : Rat) / 625, 0⟩ := by
+  have h := partial_reading 0 1 (by grind)
+  refine ⟨?_, ?_⟩
+  · rw [h.1]
+    ext <;> simp <;> grind
+  · rw [h.2]
+    ext <;> simp <;> grind
 
 end Universe.Interaction

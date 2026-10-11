@@ -63,7 +63,13 @@ dopo `Φ` (`Universe.Symmetry.point_energy_x`,
 controllata `Universe.Interaction.controlled_from_hamiltonian`.
 Nel punto `c = 0`, `s = 1`, `n = e_x` è `CNOT` seguito dalla fase `−i`
 (`Universe.Interaction.cnot_point`); la fase esce dai pesi di Born
-(`Universe.Interaction.cnot_point_born`).
+(`Universe.Interaction.cnot_point_born`). Con l'apparato in `|0⟩` la
+coerenza del sistema ridotto è `α β̄ · conj(⟨0|U|0⟩)`
+(`Universe.Interaction.partial_coherence`) e la diagonale è il peso di
+Born modulo `(gC, gN)` (`Universe.Interaction.partial_diagonal`). I tre
+punti lungo `e_x` sono `Universe.Interaction.point_partial_idle`,
+`Universe.Interaction.point_partial_mid` e
+`Universe.Interaction.point_partial_flip`.
 
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """

@@ -70,7 +70,11 @@ ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 `G³ = G`. `controlled_from_hamiltonian` è l'evoluzione controllata, e
 `cnot_point` la legge nel punto `c = 0`, `s = 1`, `n = e_x` come `CNOT`
 seguito dalla fase `−i`. `cnot_point_born` dice che quella fase esce dai
-pesi di Born.
+pesi di Born. Con l'apparato in `|0⟩`, `partial_coherence` dà
+l'antidiagonale `α β̄ · conj(⟨0|U|0⟩)` nell'anello libero, con
+`⟨0|U|0⟩ = c − i s nz`, e `partial_diagonal` mette la diagonale su
+`bornPair` modulo `(gC, gN)`. I tre punti lungo `e_x` sono
+`point_partial_idle`, `point_partial_mid` e `point_partial_flip`.
 -/
 import Universe.Composition
 import Universe.Dynamics
