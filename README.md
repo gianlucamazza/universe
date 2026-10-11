@@ -73,7 +73,7 @@ lake build                # the Lean proofs
 
 `python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 54 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
-`./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines, and `tests/test_lean_map.py` fails unless every certificate line is mapped, in `universe/lean_map.py`, to Lean theorems that exist. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
+`./check.sh` runs every gate of CI locally: ruff (pinned 0.17.0, recommended rule set), prettier on the Markdown, the unit tests in `tests/`, the certificate, and `lake build --wfail` (warnings fail the build; `autoImplicit` is off). Three tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines, and `tests/test_lean_map.py` fails unless every certificate line is mapped, in `universe/lean_map.py`, to Lean theorems that exist. GitHub Actions runs the same gates on every push, with actions pinned by commit SHA and kept current by Dependabot.
 
 ## Repository layout
 
@@ -82,6 +82,7 @@ lake build                # the Lean proofs
 | `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `interaction.py`, `proofs.py`         |
 | `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`, `Symmetry`, `Interaction` |
 | `tests/`          | unit tests of the Python side and the documentation guards                                                                                                                    |
+| `.github/`        | the CI workflow and the Dependabot configuration                                                                                                                              |
 | `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                                          |
 | `papers/figures/` | the figures, hand-written SVG                                                                                                                                                 |
 | `researches/`     | arguments behind single results                                                                                                                                               |
