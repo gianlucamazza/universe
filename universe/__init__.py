@@ -57,6 +57,14 @@ lo stato `|0⟩` ha energia `0` lungo `e_x` e `1` lungo `e_z`, prima e
 dopo `Φ` (`Universe.Symmetry.point_energy_x`,
 `Universe.Symmetry.point_energy_z`).
 
+`G = |1⟩⟨1| ⊗ H` soddisfa `G³ = G`
+(`Universe.Interaction.generator_cube`), con i coefficienti di
+`Universe.Series.expCoeff_idem`. La forma chiusa è l'evoluzione
+controllata `Universe.Interaction.controlled_from_hamiltonian`.
+Nel punto `c = 0`, `s = 1`, `n = e_x` è `CNOT` seguito dalla fase `−i`
+(`Universe.Interaction.cnot_point`); la fase esce dai pesi di Born
+(`Universe.Interaction.cnot_point_born`).
+
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """
 

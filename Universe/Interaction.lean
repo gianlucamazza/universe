@@ -1,0 +1,491 @@
+/-
+Interazione da un'Hamiltoniana.
+
+`G = |1⟩⟨1| ⊗ (n·σ)` sulle celle `2i + k`. Non è un'involuzione:
+`G² = |1⟩⟨1| ⊗ I` modulo `gN` e `G³ = G`. Se `a³ = a`, i coefficienti di
+`exp(−i φ a)` sono quelli di `(1 − a²) + cos φ · a² − i sin φ · a`
+(`Universe.Series.expCoeff_idem`). Su `G` quella forma è
+`|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U`.
+
+Nel punto `c = 0`, `s = 1`, `n = e_x` si ha `U = −i X`: l'evoluzione
+controllata è `CNOT` seguito dalla fase `−i` sul `|1⟩` del controllo.
+Su `|ψ⟩ ⊗ |0⟩` lo stato è `α|00⟩ − i β|11⟩`. La fase ha modulo uno, quindi
+esce da ogni peso di Born: `decoherence` e `pointer_born` restano gli stessi.
+-/
+import Universe.Observer
+import Universe.Series
+
+namespace Universe.Interaction
+
+open Universe.Ring
+open Universe.Series
+open Universe.Quotient hiding mul
+open Universe.Dynamics
+open Universe.Qubit
+open Universe.Epistemology
+open Universe.Evaluation
+open Universe.Composition
+open Universe.Observer
+
+/-! ### Operatori a blocchi: idle sul controllo `|0⟩`, matrice sul `|1⟩` -/
+
+@[ext]
+structure Gate where
+  idle : Poly
+  hot : Mat
+
+def gateMul (G H : Gate) : Gate := ⟨pmul G.idle H.idle, matMul G.hot H.hot⟩
+
+def gateAdd (G H : Gate) : Gate := ⟨G.idle ++ H.idle, matAdd G.hot H.hot⟩
+
+def gateSmul (z : Gauss) (G : Gate) : Gate := ⟨scale z G.idle, matSmul z G.hot⟩
+
+def gateScale (p : Poly) (G : Gate) : Gate := ⟨pmul p G.idle, matScale p G.hot⟩
+
+def gateNeg (G : Gate) : Gate := ⟨pneg G.idle, matNeg G.hot⟩
+
+def gateOne : Gate := ⟨single 1 Mono.one, matOne⟩
+
+def gateZero : Gate := ⟨[], matZero⟩
+
+/-- `G = |1⟩⟨1| ⊗ H`. Il blocco `|0⟩` è zero. -/
+def generator : Gate := ⟨[], hamiltonian⟩
+
+def gateRel (G H : Gate) : Prop := polySame G.idle H.idle ∧ matRel G.hot H.hot
+
+theorem gateRel_refl (G : Gate) : gateRel G G := ⟨polySame_refl _, matRel_refl _⟩
+
+theorem gateRel_symm {G H : Gate} (h : gateRel G H) : gateRel H G :=
+  ⟨h.1.symm, matRel_symm h.2⟩
+
+theorem gateRel_trans {G H K : Gate} (hGH : gateRel G H) (hHK : gateRel H K) :
+    gateRel G K :=
+  ⟨hGH.1.trans hHK.1, matRel_trans hGH.2 hHK.2⟩
+
+instance gateSetoid : Setoid Gate where
+  r := gateRel
+  iseqv := ⟨gateRel_refl, fun h => gateRel_symm h, fun h1 h2 => gateRel_trans h1 h2⟩
+
+abbrev QGate := Quotient gateSetoid
+
+theorem gateMul_right_rel (G : Gate) {H H' : Gate} (h : gateRel H H') :
+    gateRel (gateMul G H) (gateMul G H') :=
+  ⟨polySame_pmul_right h.1 G.idle, matMul_right_rel G.hot h.2⟩
+
+theorem gateMul_left_rel {G G' : Gate} (h : gateRel G G') (H : Gate) :
+    gateRel (gateMul G H) (gateMul G' H) :=
+  ⟨polySame_pmul_left h.1 H.idle, matMul_left_rel h.2 H.hot⟩
+
+theorem gateAdd_rel {G G' H H' : Gate} (hG : gateRel G G') (hH : gateRel H H') :
+    gateRel (gateAdd G H) (gateAdd G' H') :=
+  ⟨polySame_append hG.1 hH.1, matAdd_rel hG.2 hH.2⟩
+
+theorem gateSmul_rel (z : Gauss) {G H : Gate} (h : gateRel G H) :
+    gateRel (gateSmul z G) (gateSmul z H) :=
+  ⟨polySame_scale z h.1, matSmul_rel z h.2⟩
+
+noncomputable def qgmul (x y : QGate) : QGate :=
+  Quot.lift
+    (fun G : Gate =>
+      Quot.lift (fun H : Gate => Quotient.mk gateSetoid (gateMul G H))
+        (fun _ _ h => Quotient.sound (gateMul_right_rel G h)) y)
+    (fun G G' h => by
+      induction y using Quotient.ind with
+      | _ H =>
+        apply Quotient.sound
+        exact gateMul_left_rel h H)
+    x
+
+noncomputable def qgadd (x y : QGate) : QGate :=
+  Quotient.lift₂ (fun G H => Quotient.mk gateSetoid (gateAdd G H))
+    (fun _ _ _ _ hG hH => Quotient.sound (gateAdd_rel hG hH)) x y
+
+noncomputable def qgsmul (z : Gauss) (x : QGate) : QGate :=
+  Quotient.lift (fun G => Quotient.mk gateSetoid (gateSmul z G))
+    (fun _ _ h => Quotient.sound (gateSmul_rel z h)) x
+
+theorem qgmul_mk (G H : Gate) :
+    qgmul (Quotient.mk gateSetoid G) (Quotient.mk gateSetoid H) =
+      Quotient.mk gateSetoid (gateMul G H) :=
+  rfl
+
+theorem qgadd_mk (G H : Gate) :
+    qgadd (Quotient.mk gateSetoid G) (Quotient.mk gateSetoid H) =
+      Quotient.mk gateSetoid (gateAdd G H) :=
+  rfl
+
+theorem qgsmul_mk (z : Gauss) (G : Gate) :
+    qgsmul z (Quotient.mk gateSetoid G) = Quotient.mk gateSetoid (gateSmul z G) :=
+  rfl
+
+theorem gateMul_one_left (G : Gate) : gateMul gateOne G = G := by
+  apply Gate.ext
+  · exact one_pmul G.idle
+  · exact matMul_one_left G.hot
+
+theorem gateMul_one_right (G : Gate) : gateMul G gateOne = G := by
+  apply Gate.ext
+  · exact pmul_one G.idle
+  · exact matMul_one_right G.hot
+
+theorem gateAdd_zero (G : Gate) : gateAdd G gateZero = G := by
+  apply Gate.ext
+  · exact List.append_nil G.idle
+  · exact matAdd_zero G.hot
+
+theorem gateZero_add (G : Gate) : gateAdd gateZero G = G := by
+  apply Gate.ext
+  · rfl
+  · exact matZero_add G.hot
+
+theorem gateSmul_one (G : Gate) : gateSmul 1 G = G := by
+  apply Gate.ext
+  · exact scale_one G.idle
+  · exact matSmul_one G.hot
+
+theorem gateSmul_mul (z w : Gauss) (G : Gate) :
+    gateSmul (z * w) G = gateSmul z (gateSmul w G) := by
+  apply Gate.ext
+  · exact scale_mul_gauss z w G.idle
+  · exact matSmul_mul_gauss z w G.hot
+
+theorem gateSmul_add (z : Gauss) (G H : Gate) :
+    gateSmul z (gateAdd G H) = gateAdd (gateSmul z G) (gateSmul z H) := by
+  apply Gate.ext
+  · exact scale_append z G.idle H.idle
+  · exact matSmul_add z G.hot H.hot
+
+theorem gateMul_assoc_rel (G H K : Gate) :
+    gateRel (gateMul (gateMul G H) K) (gateMul G (gateMul H K)) :=
+  ⟨polySame_pmul_assoc _ _ _, matRel_of_matSame (matMul_assoc _ _ _)⟩
+
+noncomputable def gateDyn : Dyn QGate where
+  mul := qgmul
+  add := qgadd
+  one := Quotient.mk gateSetoid gateOne
+  zero := Quotient.mk gateSetoid gateZero
+  smul := qgsmul
+  mul_assoc := by
+    intro x y z
+    refine Quotient.inductionOn₃ x y z ?_
+    intro G H K
+    rw [qgmul_mk, qgmul_mk, qgmul_mk, qgmul_mk]
+    exact Quotient.sound (gateMul_assoc_rel G H K)
+  one_mul := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgmul_mk, gateMul_one_left]
+  mul_one := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgmul_mk, gateMul_one_right]
+  add_zero := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgadd_mk, gateAdd_zero]
+  zero_add := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgadd_mk, gateZero_add]
+  smul_one := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgsmul_mk, gateSmul_one]
+  zero_smul := by
+    intro x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgsmul_mk]
+    exact Quotient.sound ⟨polySame_scale_zero G.idle, matZero_smul_rel G.hot⟩
+  smul_mul := by
+    intro z w x
+    refine Quotient.inductionOn x ?_
+    intro G
+    rw [qgsmul_mk, qgsmul_mk, qgsmul_mk, gateSmul_mul]
+  smul_add := by
+    intro z x y
+    refine Quotient.inductionOn₂ x y ?_
+    intro G H
+    rw [qgadd_mk, qgsmul_mk, qgsmul_mk, qgsmul_mk, qgadd_mk, gateSmul_add]
+
+def GQ : QGate := Quotient.mk gateSetoid generator
+
+/-- `G² = |1⟩⟨1| ⊗ I` modulo `gN`. Il blocco `|0⟩` è zero dai due lati. -/
+theorem generator_sq : gateRel (gateMul generator generator) ⟨[], matOne⟩ :=
+  ⟨polySame_refl _, hamiltonian_sq⟩
+
+theorem generator_square : gateDyn.mul GQ GQ = Quotient.mk gateSetoid ⟨[], matOne⟩ := by
+  have hmul : gateDyn.mul = qgmul := by unfold gateDyn; rfl
+  rw [hmul, GQ, qgmul_mk]
+  exact Quotient.sound generator_sq
+
+theorem generator_mul_projector : gateMul ⟨[], matOne⟩ generator = generator := by
+  apply Gate.ext
+  · rfl
+  · exact matMul_one_left hamiltonian
+
+/-- `G³ = G`, per moltiplicazione da `G² = |1⟩⟨1| ⊗ I`. -/
+theorem generator_cube : gateDyn.mul (gateDyn.mul GQ GQ) GQ = GQ := by
+  rw [generator_square]
+  have hmul : gateDyn.mul = qgmul := by unfold gateDyn; rfl
+  rw [hmul, GQ, qgmul_mk, generator_mul_projector]
+
+/-- Istanza di `expCoeff_idem` su `G`. -/
+theorem expCoeff_generator (n : Nat) :
+    expSeries gateDyn GQ n = closedIdem gateDyn GQ n :=
+  expCoeff_idem gateDyn GQ generator_cube n
+
+/-- `(1 − G²) + c G² − i s G`. A grado zero `(1 − G²) + G²` vale `1`. -/
+def closedGenerator : Gate :=
+  gateAdd
+    (gateAdd
+      (gateAdd gateOne (gateNeg (gateMul generator generator)))
+      (gateScale cP (gateMul generator generator)))
+    (gateScale gamma generator)
+
+/-- `|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U`. -/
+def controlledEvolution : Gate := ⟨single 1 Mono.one, evolution⟩
+
+theorem polySame_unit_cancel :
+    polySame (single (1 : Gauss) Mono.one ++ pneg (single (1 : Gauss) Mono.one)) [] := by
+  intro t
+  rw [show pneg (single (1 : Gauss) Mono.one) = single (-1) Mono.one from rfl]
+  rw [coeffOf_append, coeff_single_eq, coeff_single_eq, coeffOf_nil]
+  by_cases ht : Mono.one = t
+  · rw [ite_eq_left ht, ite_eq_left ht]
+    exact Gauss.add_neg_cancel (1 : Gauss)
+  · rw [ite_eq_right ht, ite_eq_right ht, Gauss.zero_add]
+
+theorem matOne_sub_one : matSame (matAdd matOne (matNeg matOne)) matZero := by
+  refine ⟨?_, polySame_refl _, polySame_refl _, ?_⟩
+  · simpa only [matAdd, matNeg, matOne, matZero] using polySame_unit_cancel
+  · simpa only [matAdd, matNeg, matOne, matZero] using polySame_unit_cancel
+
+theorem closedGenerator_idle : polySame closedGenerator.idle (single (1 : Gauss) Mono.one) := by
+  have hmul : (gateMul generator generator).idle = [] := rfl
+  rw [show closedGenerator.idle =
+      (((gateOne.idle ++ (gateNeg (gateMul generator generator)).idle) ++
+          (gateScale cP (gateMul generator generator)).idle) ++
+        (gateScale gamma generator).idle) from rfl]
+  rw [show gateOne.idle = single (1 : Gauss) Mono.one from rfl]
+  rw [show (gateNeg (gateMul generator generator)).idle =
+      pneg (gateMul generator generator).idle from rfl, hmul]
+  rw [show pneg ([] : Poly) = [] from rfl]
+  rw [show (gateScale cP (gateMul generator generator)).idle =
+      pmul cP (gateMul generator generator).idle from rfl, hmul, pmul_nil]
+  rw [show (gateScale gamma generator).idle = pmul gamma generator.idle from rfl]
+  rw [show generator.idle = [] from rfl, pmul_nil]
+  exact polySame.trans (polySame_append_nil _)
+    (polySame.trans (polySame_append_nil _) (polySame_append_nil _))
+
+theorem hot_matches_evolution :
+    matAdd (matScale cP matOne) (matScale gamma hamiltonian) = evolution := by
+  apply Mat.ext
+  · rfl
+  · rw [show (matAdd (matScale cP matOne) (matScale gamma hamiltonian)).a01 =
+        pmul cP [] ++ pmul gamma hamiltonian.a01 from rfl, pmul_nil]
+    rfl
+  · rw [show (matAdd (matScale cP matOne) (matScale gamma hamiltonian)).a10 =
+        pmul cP [] ++ pmul gamma hamiltonian.a10 from rfl, pmul_nil]
+    rfl
+  · rfl
+
+theorem closedGenerator_hot :
+    closedGenerator.hot =
+      matAdd
+        (matAdd (matAdd matOne (matNeg (matMul hamiltonian hamiltonian)))
+          (matScale cP (matMul hamiltonian hamiltonian)))
+        (matScale gamma hamiltonian) :=
+  rfl
+
+/-- `exp(−i φ G)` ha i coefficienti di `closedIdem` (`expCoeff_generator`).
+Quella forma, letta con `c` e `s`, è l'evoluzione controllata. -/
+theorem controlled_from_hamiltonian : gateRel closedGenerator controlledEvolution := by
+  refine ⟨closedGenerator_idle, ?_⟩
+  rw [closedGenerator_hot]
+  let H2 := matMul hamiltonian hamiltonian
+  have hH2 : matRel H2 matOne := hamiltonian_sq
+  have hNeg : matRel (matNeg H2) (matNeg matOne) := matNeg_rel hH2
+  have hSub : matRel (matAdd matOne (matNeg H2)) (matAdd matOne (matNeg matOne)) :=
+    matAdd_rel (matRel_refl _) hNeg
+  have hSub0 : matRel (matAdd matOne (matNeg matOne)) matZero :=
+    matRel_of_matSame matOne_sub_one
+  have hScale : matRel (matScale cP H2) (matScale cP matOne) := matScale_rel cP hH2
+  have hLeft : matRel (matAdd (matAdd matOne (matNeg H2)) (matScale cP H2))
+      (matAdd matZero (matScale cP matOne)) :=
+    matRel_trans (matAdd_rel hSub hScale) (matAdd_rel hSub0 (matRel_refl _))
+  have hZero : matAdd matZero (matScale cP matOne) = matScale cP matOne := matZero_add _
+  have hHot : matRel
+      (matAdd (matAdd (matAdd matOne (matNeg H2)) (matScale cP H2))
+        (matScale gamma hamiltonian))
+      (matAdd (matScale cP matOne) (matScale gamma hamiltonian)) :=
+    matRel_trans (matAdd_rel hLeft (matRel_refl _)) (by rw [hZero]; exact matRel_refl _)
+  exact matRel_trans hHot (by rw [hot_matches_evolution]; exact matRel_refl _)
+
+/-! ### Azione sullo stato e punto `CNOT` -/
+
+/-- `G` agisce come `H` sul blocco del controllo `|1⟩` e come zero sull'altro. -/
+def applyGen (H : Mat) (v : Quad) : Quad where
+  a0 := []
+  a1 := []
+  a2 := pmul H.a00 v.a2 ++ pmul H.a01 v.a3
+  a3 := pmul H.a10 v.a2 ++ pmul H.a11 v.a3
+
+/-- `|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U`. -/
+def applyCtrl (U : Mat) (v : Quad) : Quad where
+  a0 := v.a0
+  a1 := v.a1
+  a2 := pmul U.a00 v.a2 ++ pmul U.a01 v.a3
+  a3 := pmul U.a10 v.a2 ++ pmul U.a11 v.a3
+
+def applyGate (G : Gate) (v : Quad) : Quad where
+  a0 := pmul G.idle v.a0
+  a1 := pmul G.idle v.a1
+  a2 := pmul G.hot.a00 v.a2 ++ pmul G.hot.a01 v.a3
+  a3 := pmul G.hot.a10 v.a2 ++ pmul G.hot.a11 v.a3
+
+/-- Fase sul `|1⟩` del controllo: scala le celle `|10⟩` e `|11⟩`. -/
+def phaseControl (z : Gauss) (v : Quad) : Quad where
+  a0 := v.a0
+  a1 := v.a1
+  a2 := scale z v.a2
+  a3 := scale z v.a3
+
+theorem applyGate_generator (v : Quad) : applyGate generator v = applyGen hamiltonian v := by
+  simp [applyGate, applyGen, generator, pmul_nil_left]
+
+theorem applyGate_controlled (v : Quad) :
+    applyGate controlledEvolution v = applyCtrl evolution v := by
+  simp [applyGate, applyCtrl, controlledEvolution, one_pmul]
+
+/-- `c = 0`, `s = 1`, `n = e_x`. Si tengono `s` e `nx`, azzerandone l'esponente. -/
+def keepFlip (m : Mono) : Option Mono :=
+  if m.c = 0 ∧ m.ny = 0 ∧ m.nz = 0 then some {m with s := 0, nx := 0} else none
+
+theorem keepFlip_mul (m n : Mono) : keepFlip (m.mul n) = optionMul (keepFlip m) (keepFlip n) := by
+  unfold keepFlip optionMul
+  by_cases hmc : m.c = 0 <;> by_cases hmy : m.ny = 0 <;> by_cases hmz : m.nz = 0 <;>
+      by_cases hnc : n.c = 0 <;> by_cases hny : n.ny = 0 <;> by_cases hnz : n.nz = 0 <;>
+      simp [Mono.mul, hmc, hmy, hmz, hnc, hny, hnz, Nat.add_eq_zero_iff] <;>
+      (try (congr 1; ext <;> rfl))
+
+def specQuad (keep : Mono → Option Mono) (v : Quad) : Quad where
+  a0 := specPoly keep v.a0
+  a1 := specPoly keep v.a1
+  a2 := specPoly keep v.a2
+  a3 := specPoly keep v.a3
+
+theorem keepFlip_c1 : keepFlip c1 = none := by
+  simp [keepFlip, c1]
+
+theorem keepFlip_s_nx : keepFlip (s1.mul nx1) = some Mono.one := by
+  simp [keepFlip, Mono.mul, s1, nx1, Mono.one]
+
+theorem keepFlip_s_ny : keepFlip (s1.mul ny1) = none := by
+  simp [keepFlip, Mono.mul, s1, ny1]
+
+theorem keepFlip_s_nz : keepFlip (s1.mul nz1) = none := by
+  simp [keepFlip, Mono.mul, s1, nz1]
+
+theorem mulMono_single (a b : Gauss) (m n : Mono) :
+    mulMono a m (single b n) = single (a * b) (m.mul n) :=
+  rfl
+
+theorem specFlip_single_none (a : Gauss) (m : Mono) (hm : keepFlip m = none) :
+    specPoly keepFlip (single a m) = [] := by
+  simp [specPoly, single, hm]
+
+theorem specFlip_single_some (a : Gauss) (m k : Mono) (hm : keepFlip m = some k) :
+    specPoly keepFlip (single a m) = single a k := by
+  simp [specPoly, single, hm]
+
+theorem specFlip_a00 : specPoly keepFlip evolution.a00 = [] := by
+  rw [show evolution.a00 = pmul cP (single 1 Mono.one) ++ pmul gamma h00 from rfl]
+  rw [pmul_one, gamma, h00, pmul_single_list, mulMono_single, List.append_nil, cP]
+  rw [spec_append, specFlip_single_none _ _ keepFlip_c1, specFlip_single_none _ _ keepFlip_s_nz]
+  rfl
+
+theorem specFlip_a11 : specPoly keepFlip evolution.a11 = [] := by
+  rw [show evolution.a11 = pmul cP (single 1 Mono.one) ++ pmul gamma h11 from rfl]
+  rw [pmul_one, gamma, h11, pmul_single_list, mulMono_single, List.append_nil, cP]
+  rw [spec_append, specFlip_single_none _ _ keepFlip_c1, specFlip_single_none _ _ keepFlip_s_nz]
+  rfl
+
+theorem specFlip_a01 : specPoly keepFlip evolution.a01 = single (-Gauss.i) Mono.one := by
+  rw [show evolution.a01 = pmul gamma h01 from rfl, gamma, h01, pmul_single_list, mulMono_append,
+    mulMono_single, mulMono_single, List.append_nil]
+  rw [spec_append, specFlip_single_some _ _ _ keepFlip_s_nx, specFlip_single_none _ _ keepFlip_s_ny,
+    Gauss.mul_one, List.append_nil]
+
+theorem specFlip_a10 : specPoly keepFlip evolution.a10 = single (-Gauss.i) Mono.one := by
+  rw [show evolution.a10 = pmul gamma h10 from rfl, gamma, h10, pmul_single_list, mulMono_append,
+    mulMono_single, mulMono_single, List.append_nil]
+  rw [spec_append, specFlip_single_some _ _ _ keepFlip_s_nx, specFlip_single_none _ _ keepFlip_s_ny,
+    Gauss.mul_one, List.append_nil]
+
+/-- `CNOT` e poi la fase `−i` sul controllo: `α|00⟩ − i β|11⟩`. -/
+theorem phase_cnot (ψ : Pair) :
+    phaseControl (-Gauss.i) (applyCNOT (tensorPair ψ ket0)) =
+      ⟨ψ.a0, [], [], scale (-Gauss.i) ψ.a1⟩ := by
+  rw [cnot_ket0]
+  rfl
+
+/-- Nel punto `c = 0`, `s = 1`, `n = e_x` l'evoluzione controllata è `CNOT`
+seguito dalla fase `−i` sul `|1⟩` del controllo. Su `|ψ⟩ ⊗ |0⟩` i due stati,
+dopo `keepFlip`, hanno gli stessi coefficienti. -/
+theorem cnot_point (ψ : Pair) :
+    quadSame (specQuad keepFlip (applyCtrl evolution (tensorPair ψ ket0)))
+      (specQuad keepFlip (phaseControl (-Gauss.i) (applyCNOT (tensorPair ψ ket0)))) := by
+  rw [cnot_ket0, tensor_idle_right]
+  simp only [applyCtrl, phaseControl, specQuad, quadSame, pmul_nil]
+  refine And.intro (polySame_refl _) (And.intro (polySame_refl _) (And.intro ?_ ?_))
+  · rw [spec_append]
+    refine polySame.trans
+      (polySame_append (spec_pmul keepFlip_mul evolution.a00 ψ.a1) (polySame_refl _)) ?_
+    rw [specFlip_a00]
+    simp only [specPoly, pmul_nil_left]
+    exact polySame_refl _
+  · rw [spec_append, spec_scale]
+    refine polySame.trans
+      (polySame_append (spec_pmul keepFlip_mul evolution.a10 ψ.a1) (polySame_refl _)) ?_
+    rw [specFlip_a10, pmul_unit_scale]
+    simp only [specPoly]
+    exact polySame_append_nil _
+
+/-- `CNOT` seguito dalla fase `−i`, su `|ψ⟩ ⊗ |0⟩`. -/
+def phasedPoint (ψ : Pair) : Quad :=
+  phaseControl (-Gauss.i) (applyCNOT (tensorPair ψ ket0))
+
+/-- La fase `−i` ha modulo uno, quindi esce da ogni peso di Born.
+
+`decoherence` e `pointer_born` restano gli stessi: l'antidiagonale dello stato
+ridotto è il polinomio zero e la diagonale è `bornPair`, nell'anello libero,
+sia per il sistema sia per l'apparato. -/
+theorem cnot_point_born (ψ : Pair) :
+    (polySame (reduceLeft (phasedPoint ψ)).a01 [] ∧
+        polySame (reduceLeft (phasedPoint ψ)).a10 [] ∧
+          pairSame ⟨(reduceLeft (phasedPoint ψ)).a00, (reduceLeft (phasedPoint ψ)).a11⟩
+            (bornPair ψ)) ∧
+      (polySame (reduceRight (phasedPoint ψ)).a01 [] ∧
+        polySame (reduceRight (phasedPoint ψ)).a10 [] ∧
+          pairSame ⟨(reduceRight (phasedPoint ψ)).a00, (reduceRight (phasedPoint ψ)).a11⟩
+            (bornPair ψ)) := by
+  unfold phasedPoint
+  rw [phase_cnot]
+  have hz : (-Gauss.i) * Gauss.conj (-Gauss.i) = 1 := by rw [conj_neg_i, minus_i_mul_i]
+  have hborn : columnBorn (scale (-Gauss.i) ψ.a1) = columnBorn ψ.a1 :=
+    columnBorn_unit_phase _ _ hz
+  refine ⟨?_, ?_⟩
+  · simp only [reduceLeft, bornPair, pairSame, columnBorn_nil, conjP, pmul_nil, pmul_nil_left,
+      List.append_nil, List.nil_append, hborn]
+    exact ⟨polySame_refl _, polySame_refl _, polySame_refl _, polySame_refl _⟩
+  · simp only [reduceRight, bornPair, pairSame, columnBorn_nil, conjP, pmul_nil, pmul_nil_left,
+      List.append_nil, List.nil_append, hborn]
+    exact ⟨polySame_refl _, polySame_refl _, polySame_refl _, polySame_refl _⟩
+
+end Universe.Interaction

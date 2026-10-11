@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 36 righe.
+"""Certificato eseguibile del primo universo. Stampa 39 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -51,6 +51,12 @@ generico. Lean lo prova per ogni `Quad`,
 (`Universe.Symmetry.energy_conserved`). Nel punto `c = 3/5`, `s = 4/5`,
 `ψ = |0⟩` l'energia vale `0` lungo `e_x` e `1` lungo `e_z`, prima e dopo
 `Φ` (`Universe.Symmetry.point_energy_x`, `Universe.Symmetry.point_energy_z`).
+`G = |1⟩⟨1| ⊗ H` ha `G³ = G` e `G² = |1⟩⟨1| ⊗ I`
+(`Universe.Interaction.generator_cube`, `Universe.Series.expCoeff_idem`).
+La forma chiusa è l'evoluzione controllata
+(`Universe.Interaction.controlled_from_hamiltonian`). Nel punto
+`c = 0`, `s = 1`, `n = e_x` lo stato `|ψ⟩ ⊗ |0⟩` diventa `α|00⟩ − i β|11⟩`
+(`Universe.Interaction.cnot_point`, `Universe.Interaction.cnot_point_born`).
 """
 
 from __future__ import annotations
@@ -65,6 +71,7 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
+from universe.interaction import closed_generator, controlled, generator, projector_one
 from universe.observer import (
     cnot,
     cnot01,
@@ -565,6 +572,90 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if energy_point_ok
         else f"x {before_x} → {after_x}; z {before_z} → {after_z}",
     )
+
+    generated = generator(scalars)
+    cube = _power(generated, 3) - generated
+    square = generated.matmul(generated) - projector_one(scalars)
+    cube_reason = _first_certificate(cube)
+    square_reason = _first_certificate(square)
+    powers_ok = cube_reason is None and square_reason is None
+    add(
+        "Interazione",
+        "G³ = G e G² = |1⟩⟨1| ⊗ I",
+        powers_ok,
+        "Universe.Interaction.generator_cube, Universe.Series.expCoeff_idem"
+        if powers_ok
+        else (cube_reason or square_reason or ""),
+    )
+    gap = closed_generator(scalars, generated) - controlled(world.U)
+    gap_reason = _first_certificate(gap)
+    add(
+        "Interazione",
+        "(1 − G²) + c G² − i s G = |0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U",
+        gap_reason is None,
+        "Universe.Interaction.controlled_from_hamiltonian"
+        if gap_reason is None
+        else gap_reason,
+    )
+    law = {
+        "c": g(0),
+        "s": g(1),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    minus_i = ring.constant(g(0, -1))
+    alpha = scalars.ar + scalars.ai * ring.constant(g(0, 1))
+    beta = scalars.br + scalars.bi * ring.constant(g(0, 1))
+    idle = tensor_state(world.generic(), world.ground())
+    phased = tuple(
+        amplitude.substitute(law)
+        for amplitude in controlled(world.U).apply(idle).amplitudes
+    )
+    expected = (
+        alpha.substitute(law),
+        ring.zero(),
+        ring.zero(),
+        (minus_i * beta).substitute(law),
+    )
+    flipped = cnot(ring).apply(idle)
+    born_ok = all(
+        left.modulus_squared() == right.substitute(law).modulus_squared()
+        for left, right in zip(phased, flipped.amplitudes, strict=True)
+    )
+    sample = {
+        **law,
+        "ar": g(Fraction(3, 5)),
+        "ai": g(0),
+        "br": g(0),
+        "bi": g(Fraction(-4, 5)),
+    }
+    drawn = [amplitude.evaluate(sample) for amplitude in phased]
+    weights = [
+        _real_fraction(amplitude.modulus_squared().evaluate(sample))
+        for amplitude in phased
+    ]
+    drawn_ok = drawn == [
+        g(Fraction(3, 5)),
+        g(0),
+        g(0),
+        g(Fraction(-4, 5)),
+    ] and weights == [
+        Fraction(9, 25),
+        Fraction(0),
+        Fraction(0),
+        Fraction(16, 25),
+    ]
+    point_ok = phased == expected and born_ok and drawn_ok
+    add(
+        "Interazione",
+        "nel punto c = 0, s = 1, n = e_x: α|00⟩ − i β|11⟩",
+        point_ok,
+        "α = 3/5, β = −4/5 i → 3/5|00⟩ − 4/5|11⟩, pesi 9/25 e 16/25\n"
+        "Universe.Interaction.cnot_point, Universe.Interaction.cnot_point_born"
+        if point_ok
+        else f"stato {phased}; pesi {weights}",
+    )
     return proven
 
 
@@ -596,6 +687,10 @@ def render(theorems: list[Theorem], world: QubitUniverse) -> str:
     lines.append("")
     lines.append("Collasso della serie, teorema Universe.Qubit.expCoeff_hamiltonian")
     lines.append(f"  {ANALYTIC_PREMISE}")
+    lines.append(
+        "Se a³ = a, i coefficienti sono quelli di (1 − a²) + cos φ · a² − i sin φ · a"
+    )
+    lines.append("  (Universe.Series.expCoeff_idem).")
     return "\n".join(lines)
 
 

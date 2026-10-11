@@ -222,4 +222,28 @@ theorem eval_inIdeal {p : Poly} (hp : inIdeal p) (c s nx ny nz : Rat)
     _ = evalAt c s nx ny nz fc * 0 + evalAt c s nx ny nz fn * 0 := by rw [hc, hn]
     _ = 0 := by rw [Gauss.mul_zero, Gauss.mul_zero, Gauss.add_zero]
 
+/-- `|z γ|² = |z|² |γ|²`. -/
+theorem columnBorn_phase (z : Gauss) (p : Poly) :
+    columnBorn (scale z p) = scale (z * Gauss.conj z) (columnBorn p) := by
+  rw [columnBorn, conj_scale, ← scale_pmul_left]
+  rw [scale_pmul_right (Gauss.conj z) p (conjP p), ← scale_mul_gauss]
+  rfl
+
+/-- Se `|z|² = 1`, la fase esce da ogni peso di Born. -/
+theorem columnBorn_unit_phase (z : Gauss) (p : Poly) (hz : z * Gauss.conj z = 1) :
+    columnBorn (scale z p) = columnBorn p := by
+  rw [columnBorn_phase, hz, scale_one]
+
+theorem spec_scale (keep : Mono → Option Mono) (z : Gauss) (p : Poly) :
+    specPoly keep (scale z p) = scale z (specPoly keep p) := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [scale, specPoly]
+      cases keep m with
+      | none => exact ih
+      | some k => simp only [scale, ih]
+
 end Universe.Evaluation

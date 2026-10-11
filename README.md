@@ -65,21 +65,21 @@ lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 36 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 39 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
 
 ## Repository layout
 
-| Path              | Content                                                                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `proofs.py`            |
-| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`, `Symmetry` |
-| `tests/`          | unit tests of the Python side and the documentation guards                                                                                                     |
-| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                           |
-| `papers/figures/` | the figures, hand-written SVG                                                                                                                                  |
-| `researches/`     | arguments behind single results                                                                                                                                |
-| `plans/`          | executed work plans                                                                                                                                            |
+| Path              | Content                                                                                                                                                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `interaction.py`, `proofs.py`         |
+| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`, `Symmetry`, `Interaction` |
+| `tests/`          | unit tests of the Python side and the documentation guards                                                                                                                    |
+| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                                          |
+| `papers/figures/` | the figures, hand-written SVG                                                                                                                                                 |
+| `researches/`     | arguments behind single results                                                                                                                                               |
+| `plans/`          | executed work plans                                                                                                                                                           |
 
 The README is in English. The notes in `papers/` and `researches/`, the docstrings and the certificate output are in Italian.
 
@@ -144,6 +144,8 @@ Three copies of evolved `|0⟩` at the rational point fill the eight cells: each
 
 ![CNOT couples the system to an apparatus: before it the amplitude grid is a product, after it the state is entangled](papers/figures/cnot.svg)
 
+**The interaction is a dynamics.** `CNOT` is not posited: it comes from the interaction Hamiltonian `G = |1⟩⟨1| ⊗ (n·σ)`. `G` is not an involution, but `G³ = G` (`generator_cube`), and `expCoeff_idem` collapses `exp(−iφ a)` for any such `a` to `(1 − a²) + cos φ · a² − i sin φ · a`. On `G` that is the controlled evolution `|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U` (`controlled_from_hamiltonian`). At the rational point `c = 0`, `s = 1`, `n = eₓ`, `U = −i X`, and the controlled evolution is `CNOT` up to a local phase (`cnot_point`); the phase drops out of every Born weight, so everything below holds unchanged (`cnot_point_born`).
+
 **Decoherence and the pointer.** `reduceLeft` is the partial trace over the apparatus. Before `CNOT` the system keeps the coherence `α β̄`. After `CNOT` both off-diagonals are the zero polynomial and the diagonal is the Born pair (`decoherence`). `pointer_born` reads the same weights on the apparatus, for evolved `Φ|ψ⟩`: the observation is now that theorem, not an axiom. The system's purity drops from 1 to `337/625` at the rational point.
 
 ![Decoherence: the system before and after CNOT, and the apparatus reading the Born weights](papers/figures/decoerenza.svg)
@@ -206,16 +208,17 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 
 ### Observer
 
-| Fact                                                                                                      | Python                               | Lean                                                                                                                                                               |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CNOT² = I`, `‖CNOT v‖² = ‖v‖²`                                                                           | certificate                          | `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`                                                                                                 |
-| A product has determinant zero; `CNOT(Φ\|0⟩ ⊗ \|0⟩)` has `−12/25 i`                                       | certificate                          | `Universe.Observer.product_det`, `Universe.Observer.point_entangled`, `Universe.Observer.point_not_product`                                                        |
-| After `CNOT` the reduced system is diagonal with the Born pair                                            | certificate                          | `Universe.Observer.decoherence`, `Universe.Observer.coherence_before`                                                                                              |
-| The apparatus reads `P(Φ\|ψ⟩)`                                                                            | certificate                          | `Universe.Observer.pointer_born`                                                                                                                                   |
-| Purity `337/625` at the rational point                                                                    | certificate                          | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                                                 |
-| Reduced diagonal = marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; `1 − purity − 2\|α\|²\|β\|²` in `(gA)` | Lean only                            | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere`                      |
-| Two apparatuses never disagree, in either order                                                           | certificate                          | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`                                                        |
-| Evolving the apparatus leaves the system's weights unchanged, any two-qubit state                         | certificate, generic two-qubit state | `Universe.Observer.no_signalling_any_0`, `Universe.Observer.no_signalling_any_1`, `Universe.Observer.no_signalling_gen_0`, `Universe.Observer.no_signalling_gen_1` |
+| Fact                                                                                                      | Python                               | Lean                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `G³ = G`; `exp(−iφ G)` is the controlled evolution; at `c = 0, s = 1, n = eₓ` it is `CNOT` up to a phase  | certificate                          | `Universe.Series.expCoeff_idem`, `Universe.Interaction.generator_cube`, `Universe.Interaction.controlled_from_hamiltonian`, `Universe.Interaction.cnot_point`, `Universe.Interaction.cnot_point_born` |
+| `CNOT² = I`, `‖CNOT v‖² = ‖v‖²`                                                                           | certificate                          | `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`                                                                                                                                    |
+| A product has determinant zero; `CNOT(Φ\|0⟩ ⊗ \|0⟩)` has `−12/25 i`                                       | certificate                          | `Universe.Observer.product_det`, `Universe.Observer.point_entangled`, `Universe.Observer.point_not_product`                                                                                           |
+| After `CNOT` the reduced system is diagonal with the Born pair                                            | certificate                          | `Universe.Observer.decoherence`, `Universe.Observer.coherence_before`                                                                                                                                 |
+| The apparatus reads `P(Φ\|ψ⟩)`                                                                            | certificate                          | `Universe.Observer.pointer_born`                                                                                                                                                                      |
+| Purity `337/625` at the rational point                                                                    | certificate                          | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                                                                                    |
+| Reduced diagonal = marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; `1 − purity − 2\|α\|²\|β\|²` in `(gA)` | Lean only                            | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere`                                                         |
+| Two apparatuses never disagree, in either order                                                           | certificate                          | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`                                                                                           |
+| Evolving the apparatus leaves the system's weights unchanged, any two-qubit state                         | certificate, generic two-qubit state | `Universe.Observer.no_signalling_any_0`, `Universe.Observer.no_signalling_any_1`, `Universe.Observer.no_signalling_gen_0`, `Universe.Observer.no_signalling_gen_1`                                    |
 
 ## Further reading
 

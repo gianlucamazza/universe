@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 36 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 39 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -167,6 +167,8 @@ CNOT(|ψ⟩ ⊗ |0⟩) = α|00⟩ + β|11⟩.
 `quadDet` è `a₀a₃ − a₁a₂`. `product_det` lo annulla su ogni prodotto: è la commutatività e l'associatività di `pmul` nei coefficienti. `entangled_det` dà `α β` dopo `CNOT`. Nel punto `c = 3/5`, `s = 4/5`, `n = eₓ`, `point_bell` valuta le quattro celle in `3/5`, `0`, `0`, `−4/5 i`, `point_entangled` dà `−12/25 i`, e `point_not_product` dice che nessuna coppia di vettori di `ℚ(i)` ha quel tensore.
 
 ![CNOT e la griglia delle ampiezze](figures/cnot.svg)
+
+L'interazione non è scritta a mano. `Universe.Interaction` prende il generatore `G = |1⟩⟨1| ⊗ (n·σ)`: `G² = |1⟩⟨1| ⊗ I` modulo `gN` e `G³ = G` (`generator_cube`). `Universe.Series.expCoeff_idem` è il secondo collasso della serie: se `a³ = a`, i coefficienti di `exp(−iφ a)` sono quelli di `(1 − a²) + cos φ · a² − i sin φ · a`. Su `G` quella forma è `|0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ U` (`controlled_from_hamiltonian`). Nel punto `c = 0`, `s = 1`, `n = eₓ` vale `U = −i X`, e `cnot_point` identifica l'evoluzione controllata con `CNOT` seguito dalla fase `−i` sul `|1⟩` del controllo. `cnot_point_born` mostra che la fase esce da ogni peso di Born: i teoremi che seguono valgono per l'interazione dinamica.
 
 `reduceLeft` è la traccia parziale sull'apparato, `reduceRight` sul sistema. `reduceLeft_diag` dice che la diagonale è `marginalLeft`, per definizione. `reduce_product` dà `‖φ‖² |ψ⟩⟨ψ|` su un prodotto: senza interazione il sistema resta puro. `coherence_before` dà `α β̄` fuori diagonale prima di `CNOT`. `decoherence` dice che dopo `CNOT` i due termini fuori diagonale sono il polinomio zero e la diagonale è `bornPair ψ`. `pointer_born` è lo stesso fatto letto sull'apparato, per `Φ|ψ⟩`: la diagonale dello stato ridotto dell'apparato è `bornPair (Φ|ψ⟩)`. È l'enunciato che prende il posto dell'assioma.
 

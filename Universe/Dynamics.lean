@@ -1363,4 +1363,75 @@ theorem matMul_assoc (A B C : Mat) :
   · simpa only [matMul] using
       polySame_assoc_col A.a10 A.a11 B.a00 B.a01 B.a10 B.a11 C.a01 C.a11
 
+/-! ### Scala a destra, fase e quoziente -/
+
+theorem conj_scale (z : Gauss) (p : Poly) :
+    conjP (scale z p) = scale (Gauss.conj z) (conjP p) := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m => simp [scale, conjP, ih, conj_mul]
+
+theorem mulMono_scale (z a : Gauss) (m : Mono) (q : Poly) :
+    mulMono a m (scale z q) = scale z (mulMono a m q) := by
+  induction q with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      simp only [mulMono, scale, ih]
+      rw [← Gauss.mul_assoc, Gauss.mul_comm a z, Gauss.mul_assoc]
+
+theorem scale_pmul_right (z : Gauss) (p q : Poly) :
+    pmul p (scale z q) = scale z (pmul p q) := by
+  induction p with
+  | nil => simp [pmul, Universe.Quotient.mul, scale]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pmul ((a, m) :: rest) (scale z q) =
+          mulMono a m (scale z q) ++ pmul rest (scale z q) from rfl]
+      rw [show scale z (pmul ((a, m) :: rest) q) =
+          scale z (mulMono a m q ++ pmul rest q) from rfl]
+      rw [scale_append, mulMono_scale, ih]
+
+theorem mulMono_unit (z : Gauss) (p : Poly) : mulMono z Mono.one p = scale z p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m => simp only [mulMono, scale, ih, Mono.one_mul]
+
+theorem pmul_unit_scale (z : Gauss) (p : Poly) : pmul (single z Mono.one) p = scale z p := by
+  have h : pmul (single z Mono.one) p = mulMono z Mono.one p ++ [] := by
+    simp [pmul, Universe.Quotient.mul, single]
+  rw [h, mulMono_unit, List.append_nil]
+
+theorem polySame_scale (z : Gauss) {p q : Poly} (h : polySame p q) :
+    polySame (scale z p) (scale z q) := by
+  intro t
+  rw [coeff_scale, coeff_scale, h t]
+
+theorem polySame_scale_zero (p : Poly) : polySame (scale (0 : Gauss) p) [] := by
+  intro t
+  rw [coeff_scale, Gauss.zero_mul, coeffOf_nil]
+
+theorem matNeg_rel {M N : Mat} (h : matRel M N) : matRel (matNeg M) (matNeg N) := by
+  have entry (a b : Poly) (hab : inIdeal (psub a b)) :
+      inIdeal (psub (pneg a) (pneg b)) := by
+    have hs : polySame (psub (pneg a) (pneg b)) (pneg (psub a b)) := by
+      intro t
+      rw [coeff_psub, coeff_pneg, coeff_pneg, coeff_pneg, coeff_psub, Gauss.neg_neg,
+        Gauss.neg_add, Gauss.neg_neg]
+    exact inIdeal_polySame hs (inIdeal_neg hab)
+  exact ⟨entry _ _ h.1, entry _ _ h.2.1, entry _ _ h.2.2.1, entry _ _ h.2.2.2⟩
+
+theorem matScale_rel (p : Poly) {M N : Mat} (h : matRel M N) :
+    matRel (matScale p M) (matScale p N) := by
+  have entry (a b : Poly) (hab : inIdeal (psub a b)) :
+      inIdeal (psub (pmul p a) (pmul p b)) :=
+    inIdeal_polySame (polySame.symm (polySame_mul_psub_right p a b)) (inIdeal_mul_left p hab)
+  exact ⟨entry _ _ h.1, entry _ _ h.2.1, entry _ _ h.2.2.1, entry _ _ h.2.2.2⟩
+
 end Universe.Dynamics

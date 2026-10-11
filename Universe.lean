@@ -66,11 +66,17 @@ sono il caso `genericQuad`.
 `energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)`, per ogni
 ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 `e_z`, prima e dopo `Φ` (`point_energy_x`, `point_energy_z`).
+`Universe.Interaction` costruisce `G = |1⟩⟨1| ⊗ H`. `generator_cube` è
+`G³ = G`. `controlled_from_hamiltonian` è l'evoluzione controllata, e
+`cnot_point` la legge nel punto `c = 0`, `s = 1`, `n = e_x` come `CNOT`
+seguito dalla fase `−i`. `cnot_point_born` dice che quella fase esce dai
+pesi di Born.
 -/
 import Universe.Composition
 import Universe.Dynamics
 import Universe.Epistemology
 import Universe.Evaluation
+import Universe.Interaction
 import Universe.Observer
 import Universe.Ontology
 import Universe.Qubit
