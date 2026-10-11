@@ -65,7 +65,7 @@ The model does not simulate our universe, and it does not try to. It is a labora
 Requirements: Python 3.11 or later, and Lean 4 through [elan](https://github.com/leanprover/elan) (the version is pinned in `lean-toolchain`). There are no other dependencies: no Mathlib, no numerical libraries.
 
 ```sh
-pip install -e . --group dev   # pytest and the pinned ruff (pip ≥ 25.1)
+pip install -e . --group dev   # pytest, pinned ruff and mypy (pip ≥ 25.1)
 python -m universe        # the Python certificate
 lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
@@ -73,7 +73,7 @@ lake build                # the Lean proofs
 
 `python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 54 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
-`./check.sh` runs every gate of CI locally: ruff (pinned 0.17.0, recommended rule set), prettier on the Markdown, the unit tests in `tests/`, the certificate, and `lake build --wfail` (warnings fail the build; `autoImplicit` is off). Three tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines, and `tests/test_lean_map.py` fails unless every certificate line is mapped, in `universe/lean_map.py`, to Lean theorems that exist. GitHub Actions runs the same gates on every push, with actions pinned by commit SHA and kept current by Dependabot.
+`./check.sh` runs every gate of CI locally: ruff (pinned 0.17.0, recommended rule set), mypy on `universe/`, prettier on the Markdown, the unit tests in `tests/`, the certificate, and `lake build --wfail` (warnings fail the build; `autoImplicit` is off). Three tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines, and `tests/test_lean_map.py` fails unless every certificate line is mapped, in `universe/lean_map.py`, to Lean theorems that exist. GitHub Actions runs the same gates on every push, with actions pinned by commit SHA and kept current by Dependabot.
 
 ## Repository layout
 

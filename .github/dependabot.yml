@@ -4,9 +4,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     # Lower bounds stay as declared; bump only when a new release falls outside them.
     versioning-strategy: increase-if-necessary
