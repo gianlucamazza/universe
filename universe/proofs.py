@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 66 righe.
+"""Certificato eseguibile del primo universo. Stampa 68 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -59,7 +59,11 @@ generico. Lean lo prova per ogni `Quad`,
 `Universe.Observer.no_signalling_any_0` e
 `Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
-`Universe.Observer.no_signalling_gen_1`.
+`Universe.Observer.no_signalling_gen_1`. Su tre qubit, sedici reali di
+ampiezza più `c`, `s`, `n`, un unitario sul qubit di Wigner e uno sul
+qubit dell'amico lasciano i pesi del sistema con resto zero
+(`Universe.Observer.no_signalling_wigner`,
+`Universe.Observer.no_signalling_friend`).
 `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
 `(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
@@ -150,6 +154,7 @@ from universe.observer import (
     cnot12,
     determinant_2x2,
     no_signalling_gap,
+    no_signalling_three,
     purity,
     reduced,
 )
@@ -726,6 +731,29 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Observer.no_signalling_gen_0, Universe.Observer.no_signalling_gen_1"
         if signal_ok
         else (gap0_reason or gap1_reason or ""),
+    )
+
+    w0, w1, f0, f1 = no_signalling_three()
+    w0_reason, w1_reason = w0.certification(), w1.certification()
+    f0_reason, f1_reason = f0.certification(), f1.certification()
+    three = "stato generico di tre qubit, anello (c, s, nx, ny, nz, a0r, …, a7i)\n"
+    wigner_ok = w0_reason is None and w1_reason is None
+    add(
+        "Osservatore",
+        "un unitario sul qubit di Wigner non cambia i pesi del sistema",
+        wigner_ok,
+        three + "Universe.Observer.no_signalling_wigner"
+        if wigner_ok
+        else (w0_reason or w1_reason or ""),
+    )
+    friend_ok = f0_reason is None and f1_reason is None
+    add(
+        "Osservatore",
+        "un unitario sul qubit dell'amico non cambia i pesi del sistema",
+        friend_ok,
+        three + "Universe.Observer.no_signalling_friend"
+        if friend_ok
+        else (f0_reason or f1_reason or ""),
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

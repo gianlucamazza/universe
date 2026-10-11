@@ -61,7 +61,10 @@ non cambia i pesi del sistema. Dopo `CNOT` con `|0⟩` i teoremi sono
 Per ogni stato di due qubit sono `Universe.Observer.no_signalling_any_0`
 e `Universe.Observer.no_signalling_any_1`; su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
-`Universe.Observer.no_signalling_gen_1`.
+`Universe.Observer.no_signalling_gen_1`. Per ogni stato di tre qubit,
+`Universe.Observer.no_signalling_wigner` e
+`Universe.Observer.no_signalling_friend` dicono lo stesso di un unitario
+sul qubit di Wigner e su quello dell'amico.
 
 `U` commuta con `H` nell'anello libero:
 `Universe.Symmetry.evolution_commutes_hamiltonian`. L'energia

@@ -126,6 +126,12 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Observer.no_signalling_gen_0",
         "Universe.Observer.no_signalling_gen_1",
     ),
+    "un unitario sul qubit di Wigner non cambia i pesi del sistema": (
+        "Universe.Observer.no_signalling_wigner",
+    ),
+    "un unitario sul qubit dell'amico non cambia i pesi del sistema": (
+        "Universe.Observer.no_signalling_friend",
+    ),
     "c = 3/5, s = 4/5, n = e_x: U†U = I nei razionali di Gauss": (
         "Universe.Epistemology.point_unitary",
     ),

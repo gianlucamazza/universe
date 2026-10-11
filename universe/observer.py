@@ -36,6 +36,13 @@ e `Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
 `Universe.Observer.no_signalling_gen_0` e
 `Universe.Observer.no_signalling_gen_1`. Il caso `CNOT(|ψ⟩ ⊗ |0⟩)` resta
 `Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
+
+`no_signalling_three` è lo stesso conto su tre qubit. Sedici reali di
+ampiezza, più `c`, `s`, `n`, in un anello fresco. `I ⊗ I ⊗ U` sul qubit
+di Wigner e `I ⊗ U ⊗ I` sul qubit dell'amico lasciano i due pesi del
+sistema con resto zero. Sono `Universe.Observer.no_signalling_wigner` e
+`Universe.Observer.no_signalling_friend`: ogni marginale è la somma di
+due norme di un qubit.
 """
 
 from __future__ import annotations
@@ -222,3 +229,58 @@ def no_signalling_gap() -> tuple[Poly, Poly]:
     before = marginal(state, 0, 2, 2)
     after = marginal(local.apply(state), 0, 2, 2)
     return after[0] - before[0], after[1] - before[1]
+
+
+def no_signalling_three() -> tuple[Poly, Poly, Poly, Poly]:
+    """Differenza dei pesi del sistema, dopo un unitario su Wigner o sull'amico.
+
+    Otto ampiezze, sedici reali, sull'anello
+    `(c, s, nx, ny, nz, a0r, a0i, …, a7r, a7i)`. `U = c I − i s H` usa
+    le regole `c²` e `nx²`. L'indice è `4 * i + 2 * j + k`. Il marginale
+    del sistema è `marginal(·, 0, 2, 4)`.
+
+    Le prime due differenze sono `I ⊗ I ⊗ U`,
+    `Universe.Observer.no_signalling_wigner`. Le altre due sono
+    `I ⊗ U ⊗ I`, `Universe.Observer.no_signalling_friend`.
+    """
+    names = (
+        "c",
+        "s",
+        "nx",
+        "ny",
+        "nz",
+        *(name for k in range(8) for name in (f"a{k}r", f"a{k}i")),
+    )
+    ring = Ring(names)
+    symbol = {name: ring.var(name) for name in names}
+    one = ring.one()
+    ring.set_square("c", one - symbol["s"] ** 2)
+    ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
+    zero = ring.zero()
+    scalars = Scalars(
+        ring=ring,
+        c=symbol["c"],
+        s=symbol["s"],
+        nx=symbol["nx"],
+        ny=symbol["ny"],
+        nz=symbol["nz"],
+        ar=zero,
+        ai=zero,
+        br=zero,
+        bi=zero,
+    )
+    imag = ring.constant(g(0, 1))
+    state = State(tuple(symbol[f"a{k}r"] + symbol[f"a{k}i"] * imag for k in range(8)))
+    law = evolution(scalars, hamiltonian(scalars))
+    idle = Operator.eye(ring, 2)
+    on_wigner = idle.tensor(idle).tensor(law)
+    on_friend = idle.tensor(law.tensor(idle))
+    before = marginal(state, 0, 2, 4)
+    wigner = marginal(on_wigner.apply(state), 0, 2, 4)
+    friend = marginal(on_friend.apply(state), 0, 2, 4)
+    return (
+        wigner[0] - before[0],
+        wigner[1] - before[1],
+        friend[0] - before[0],
+        friend[1] - before[1],
+    )

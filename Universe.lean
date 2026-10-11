@@ -68,7 +68,9 @@ e i pesi di Wigner `9/25`, `16/25`.
 dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
 in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono
 per ogni stato di due qubit; `no_signalling_gen_0` e `no_signalling_gen_1`
-sono il caso `genericQuad`.
+sono il caso `genericQuad`. `no_signalling_wigner` e `no_signalling_friend`
+lo dicono per ogni stato di tre qubit: un unitario sul qubit di Wigner,
+o su quello dell'amico, lascia la diagonale di `reduceSystem` in `(gC, gN)`.
 `Universe.Symmetry` dice che `U` commuta con `H` nell'anello libero
 (`evolution_commutes_hamiltonian`): `UH` e `HU` sono `c H − i s H²`.
 `energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)`, per ogni

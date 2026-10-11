@@ -42,6 +42,11 @@ moltiplicati per `|α|²` e per `|β|²`. Lo stesso conto vale per ogni
 `Quad`: ogni blocco dell'apparato è `‖Uγ‖² − ‖γ‖²`, e i termini
 incrociati sono l'entrata fuori diagonale di `U†U`. `genericQuad`
 è il caso delle quattro ampiezze libere.
+
+Lo stesso argomento sui tre qubit, per ogni `Oct`. `I ⊗ I ⊗ U` sul
+qubit di Wigner e `I ⊗ U ⊗ I` sul qubit dell'amico lasciano la
+diagonale di `reduceSystem` in `(gC, gN)`. Quel marginale è la somma
+di due norme di un qubit, e ciascuna è `literal_evolution_norm`.
 -/
 import Universe.Composition
 import Universe.Epistemology
@@ -889,5 +894,131 @@ theorem no_signalling_gen_1 :
       (psub (marginalLeft (applyIU evolution genericQuad)).a1
         (marginalLeft genericQuad).a1) :=
   no_signalling_any_1 genericQuad
+
+/-! ### Tre parti, nessun segnale -/
+
+/-- `(I ⊗ I ⊗ U)` sul bit basso, il qubit di Wigner.
+
+L'indice è `4 * i + 2 * j + k`. Per ogni `(i, j)` le celle `k = 0` e
+`k = 1` sono un qubit. -/
+def applyIIU (U : Mat) (v : Oct) : Oct where
+  a0 := pmul U.a00 v.a0 ++ pmul U.a01 v.a1
+  a1 := pmul U.a10 v.a0 ++ pmul U.a11 v.a1
+  a2 := pmul U.a00 v.a2 ++ pmul U.a01 v.a3
+  a3 := pmul U.a10 v.a2 ++ pmul U.a11 v.a3
+  a4 := pmul U.a00 v.a4 ++ pmul U.a01 v.a5
+  a5 := pmul U.a10 v.a4 ++ pmul U.a11 v.a5
+  a6 := pmul U.a00 v.a6 ++ pmul U.a01 v.a7
+  a7 := pmul U.a10 v.a6 ++ pmul U.a11 v.a7
+
+/-- `(I ⊗ U ⊗ I)` sul bit medio, il qubit dell'amico.
+
+Per ogni `(i, k)` le celle `j = 0` e `j = 1` sono un qubit. -/
+def applyIUI (U : Mat) (v : Oct) : Oct where
+  a0 := pmul U.a00 v.a0 ++ pmul U.a01 v.a2
+  a1 := pmul U.a00 v.a1 ++ pmul U.a01 v.a3
+  a2 := pmul U.a10 v.a0 ++ pmul U.a11 v.a2
+  a3 := pmul U.a10 v.a1 ++ pmul U.a11 v.a3
+  a4 := pmul U.a00 v.a4 ++ pmul U.a01 v.a6
+  a5 := pmul U.a00 v.a5 ++ pmul U.a01 v.a7
+  a6 := pmul U.a10 v.a4 ++ pmul U.a11 v.a6
+  a7 := pmul U.a10 v.a5 ++ pmul U.a11 v.a7
+
+/-- Quattro moduli, raggruppati a coppie consecutive. -/
+theorem polySame_paired (a b c d : Poly) :
+    polySame (((a ++ b) ++ c) ++ d) ((a ++ b) ++ (c ++ d)) :=
+  polySame_append_assoc (a ++ b) c d
+
+/-- Gli stessi quattro moduli, sui blocchi `(0, 2)` e `(1, 3)`. -/
+theorem polySame_crossed (a b c d : Poly) :
+    polySame (((a ++ b) ++ c) ++ d) ((a ++ c) ++ (b ++ d)) :=
+  polySame.trans (polySame_paired a b c d) (polySame_append4_mid a b c d)
+
+/-- La somma di due norme di un qubit sta in `(gC, gN)` dopo `U`.
+
+È `literal_evolution_norm` su ciascun blocco, lo stesso passo di
+`no_signalling_any_0` e `no_signalling_any_1`, poi `inIdeal_append`. -/
+theorem block_pair_ideal (α β γ δ : Poly) :
+    inIdeal
+      (psub (literalNorm evolution α β ++ literalNorm evolution γ δ)
+        ((columnBorn α ++ columnBorn β) ++ (columnBorn γ ++ columnBorn δ))) :=
+  inIdeal_polySame
+    (polySame_psub_append (literalNorm evolution α β) (literalNorm evolution γ δ)
+      (columnBorn α ++ columnBorn β) (columnBorn γ ++ columnBorn δ))
+    (inIdeal_append (literal_evolution_norm α β) (literal_evolution_norm γ δ))
+
+/-- Dopo `I ⊗ I ⊗ U` il marginale del sistema è la somma delle due norme. -/
+theorem wigner_blocks (U : Mat) (v : Oct) :
+    polySame (reduceSystem (applyIIU U v)).a00
+        (literalNorm U v.a0 v.a1 ++ literalNorm U v.a2 v.a3) ∧
+      polySame (reduceSystem (applyIIU U v)).a11
+        (literalNorm U v.a4 v.a5 ++ literalNorm U v.a6 v.a7) := by
+  simp only [reduceSystem, applyIIU, literalNorm]
+  exact ⟨polySame_paired _ _ _ _, polySame_paired _ _ _ _⟩
+
+/-- Prima di `I ⊗ I ⊗ U` gli stessi blocchi sono le coppie di celle. -/
+theorem wigner_born (v : Oct) :
+    polySame (reduceSystem v).a00
+        ((columnBorn v.a0 ++ columnBorn v.a1) ++
+          (columnBorn v.a2 ++ columnBorn v.a3)) ∧
+      polySame (reduceSystem v).a11
+        ((columnBorn v.a4 ++ columnBorn v.a5) ++
+          (columnBorn v.a6 ++ columnBorn v.a7)) := by
+  simp only [reduceSystem]
+  exact ⟨polySame_paired _ _ _ _, polySame_paired _ _ _ _⟩
+
+/-- `I ⊗ I ⊗ U` non cambia i pesi di Born del sistema, per ogni `Oct`.
+
+La diagonale di `reduceSystem` è quel marginale. Ogni componente è
+la somma di due blocchi, e `block_pair_ideal` la mette in `(gC, gN)`. -/
+theorem no_signalling_wigner (v : Oct) :
+    inIdeal
+        (psub (reduceSystem (applyIIU evolution v)).a00 (reduceSystem v).a00) ∧
+      inIdeal
+        (psub (reduceSystem (applyIIU evolution v)).a11 (reduceSystem v).a11) := by
+  have hU := wigner_blocks evolution v
+  have hBorn := wigner_born v
+  exact
+    ⟨inIdeal_polySame (polySame_psub hU.1 hBorn.1)
+        (block_pair_ideal v.a0 v.a1 v.a2 v.a3),
+      inIdeal_polySame (polySame_psub hU.2 hBorn.2)
+        (block_pair_ideal v.a4 v.a5 v.a6 v.a7)⟩
+
+/-- Dopo `I ⊗ U ⊗ I` il marginale è la somma dei blocchi dell'amico. -/
+theorem friend_blocks (U : Mat) (v : Oct) :
+    polySame (reduceSystem (applyIUI U v)).a00
+        (literalNorm U v.a0 v.a2 ++ literalNorm U v.a1 v.a3) ∧
+      polySame (reduceSystem (applyIUI U v)).a11
+        (literalNorm U v.a4 v.a6 ++ literalNorm U v.a5 v.a7) := by
+  simp only [reduceSystem, applyIUI, literalNorm]
+  exact ⟨polySame_crossed _ _ _ _, polySame_crossed _ _ _ _⟩
+
+/-- Prima di `I ⊗ U ⊗ I` i blocchi sono `(0, 2)`, `(1, 3)` e i due alti. -/
+theorem friend_born (v : Oct) :
+    polySame (reduceSystem v).a00
+        ((columnBorn v.a0 ++ columnBorn v.a2) ++
+          (columnBorn v.a1 ++ columnBorn v.a3)) ∧
+      polySame (reduceSystem v).a11
+        ((columnBorn v.a4 ++ columnBorn v.a6) ++
+          (columnBorn v.a5 ++ columnBorn v.a7)) := by
+  simp only [reduceSystem]
+  exact ⟨polySame_crossed _ _ _ _, polySame_crossed _ _ _ _⟩
+
+/-- `I ⊗ U ⊗ I` non cambia i pesi di Born del sistema, per ogni `Oct`.
+
+Stesso ideale di `no_signalling_wigner`. I blocchi sono le fibre del
+bit medio, e `block_pair_ideal` è di nuovo `literal_evolution_norm`. -/
+theorem no_signalling_friend (v : Oct) :
+    inIdeal
+        (psub (reduceSystem (applyIUI evolution v)).a00 (reduceSystem v).a00) ∧
+      inIdeal
+        (psub (reduceSystem (applyIUI evolution v)).a11 (reduceSystem v).a11) := by
+  have hU := friend_blocks evolution v
+  have hBorn := friend_born v
+  exact
+    ⟨inIdeal_polySame (polySame_psub hU.1 hBorn.1)
+        (block_pair_ideal v.a0 v.a2 v.a1 v.a3),
+      inIdeal_polySame (polySame_psub hU.2 hBorn.2)
+        (block_pair_ideal v.a4 v.a6 v.a5 v.a7)⟩
 
 end Universe.Observer

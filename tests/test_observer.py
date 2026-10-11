@@ -12,6 +12,7 @@ from universe.observer import (
     cnot12,
     determinant_2x2,
     no_signalling_gap,
+    no_signalling_three,
     purity,
     reduced,
 )
@@ -262,6 +263,14 @@ def test_local_unitary_on_a_generic_state_does_not_signal():
     gap0, gap1 = no_signalling_gap()
     assert gap0.certification() is None
     assert gap1.certification() is None
+
+
+def test_local_unitary_on_three_qubits_does_not_signal():
+    wigner0, wigner1, friend0, friend1 = no_signalling_three()
+    assert wigner0.certification() is None
+    assert wigner1.certification() is None
+    assert friend0.certification() is None
+    assert friend1.certification() is None
 
 
 def test_tensor_index_assoc():
