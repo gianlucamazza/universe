@@ -11,6 +11,8 @@ Every fact is checked twice, independently:
 - a Python program recomputes it with exact fractions and fails if anything is off;
 - a Lean 4 proof is checked by a machine.
 
+![Map of the project: states, law and observation, each law checked by Python and by Lean](papers/figures/mappa.svg)
+
 **Nothing here is new physics.** Every statement is textbook quantum mechanics. What is new is the object: a complete, certified model in which nothing is assumed without being written down and proved.
 
 ### Where it is going
@@ -71,6 +73,8 @@ In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + 
 `c` and `s` stay indeterminates of the circle quotient. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form.
 
 `CNOT` swaps the cells `|10⟩` and `|11⟩`. It is an involution, and it preserves the sum of the four Born weights. On `|ψ⟩ ⊗ |0⟩` the image is `α|00⟩ + β|11⟩`. The determinant `a₀a₃ − a₁a₂` of every product state is the zero polynomial. At `c = 3/5`, `s = 4/5`, `n = e_x` that determinant is `−12/25 i`, so `CNOT(Φ|0⟩ ⊗ |0⟩)` is not a product.
+
+![CNOT couples the system to an apparatus: before it the amplitude grid is a product, after it the state is entangled](papers/figures/cnot.svg)
 
 The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 28.
 

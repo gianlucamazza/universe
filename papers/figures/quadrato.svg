@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
-  <title>Le due parentesizzazioni e U sul primo fattore</title>
-  <desc>tensor_assoc in orizzontale, tensor_assoc_ui e tensor_assoc_ui_right in verticale. I due cammini arrivano alla stessa lista.</desc>
-  <rect width="920" height="460" fill="#faf8f4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" role="img">
+  <title>(ψ ⊗ φ) ⊗ χ = ψ ⊗ (φ ⊗ χ), before and after U ⊗ I ⊗ I</title>
+  <desc>Horizontal edges are equalities (tensor_assoc). Vertical edges apply U ⊗ I ⊗ I (tensor_assoc_ui, tensor_assoc_ui_right). Both paths reach the same eight amplitudes.</desc>
+  <rect width="920" height="470" fill="#faf8f4"/>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a1814"/>
@@ -11,23 +11,34 @@
     text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
     .box { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.4; }
     .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
-    .name { font-size: 20px; text-anchor: middle; }
-    .lemma { font-size: 15px; text-anchor: middle; fill: #8c3a2f; }
+    .same { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .name { font-size: 22px; text-anchor: middle; }
+    .code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; text-anchor: middle; fill: #6b6458; }
+    .op { font-size: 18px; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+    .eq { font-size: 26px; text-anchor: middle; }
   </style>
-  <rect class="box" x="36" y="36" width="360" height="92" rx="2"/>
-  <rect class="box" x="524" y="36" width="360" height="92" rx="2"/>
-  <rect class="box" x="36" y="292" width="360" height="92" rx="2"/>
-  <rect class="box" x="524" y="292" width="360" height="92" rx="2"/>
-  <text class="name" x="216" y="90">tensorLeft (ψ, φ, χ)</text>
-  <text class="name" x="704" y="90">tensorRight (ψ, φ, χ)</text>
-  <text class="name" x="216" y="346">tensorLeft (Uψ, φ, χ)</text>
-  <text class="name" x="704" y="346">tensorRight (Uψ, φ, χ)</text>
-  <path class="edge" d="M 404 82 H 512"/>
-  <path class="edge" d="M 404 338 H 512"/>
-  <path class="edge" d="M 216 136 V 280"/>
-  <path class="edge" d="M 704 136 V 280"/>
-  <text class="lemma" x="460" y="70">tensor_assoc</text>
-  <text class="lemma" x="460" y="326">tensor_assoc</text>
-  <text class="lemma" x="248" y="214">tensor_assoc_ui</text>
-  <text class="lemma" x="736" y="214">tensor_assoc_ui_right</text>
+  <rect class="box" x="36" y="36" width="360" height="96" rx="2"/>
+  <rect class="box" x="524" y="36" width="360" height="96" rx="2"/>
+  <rect class="box" x="36" y="300" width="360" height="96" rx="2"/>
+  <rect class="box" x="524" y="300" width="360" height="96" rx="2"/>
+  <text class="name" x="216" y="86">(ψ ⊗ φ) ⊗ χ</text>
+  <text class="code" x="216" y="112">tensorLeft</text>
+  <text class="name" x="704" y="86">ψ ⊗ (φ ⊗ χ)</text>
+  <text class="code" x="704" y="112">tensorRight</text>
+  <text class="name" x="216" y="350">(Uψ ⊗ φ) ⊗ χ</text>
+  <text class="code" x="216" y="376">tensorLeft</text>
+  <text class="name" x="704" y="350">Uψ ⊗ (φ ⊗ χ)</text>
+  <text class="code" x="704" y="376">tensorRight</text>
+  <path class="same" d="M 404 80 H 516 M 404 88 H 516"/>
+  <path class="same" d="M 404 344 H 516 M 404 352 H 516"/>
+  <text class="lemma" x="460" y="62" text-anchor="middle">tensor_assoc</text>
+  <text class="lemma" x="460" y="326" text-anchor="middle">tensor_assoc</text>
+  <path class="edge" d="M 216 140 V 290"/>
+  <path class="edge" d="M 704 140 V 290"/>
+  <text class="op" x="230" y="210">U ⊗ I ⊗ I</text>
+  <text class="lemma" x="230" y="232">tensor_assoc_ui</text>
+  <text class="op" x="718" y="210">U ⊗ I ⊗ I</text>
+  <text class="lemma" x="718" y="232">tensor_assoc_ui_right</text>
+  <text class="code" x="460" y="440" style="font-size:14px">grouping first and evolving, or evolving first and grouping: same eight amplitudes</text>
 </svg>

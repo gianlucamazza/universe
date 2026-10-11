@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
-  <title>Otto celle di tre copie di Φ|0⟩</title>
-  <desc>Pesi nel punto c = 3/5, s = 4/5, n = e_x. L'altezza è proporzionale al numeratore su 15625. La somma è 1.</desc>
+  <title>Eight cells of three copies of Φ|0⟩</title>
+  <desc>Born weights at c = 3/5, s = 4/5, n = eₓ. Each bar is a numerator over 15625; its height is proportional to it. Each 0 bit contributes 9/25, each 1 bit 16/25. The eight weights sum to 1.</desc>
   <rect width="920" height="460" fill="#faf8f4"/>
   <style>
     text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
@@ -10,7 +10,7 @@
     .frac { font-size: 13px; text-anchor: middle; }
     .bit { font-size: 16px; text-anchor: middle; }
   </style>
-  <text class="title" x="36" y="40">(Φ|0⟩)⊗³ nel punto c = 3/5, s = 4/5, n = e_x</text>
+  <text class="title" x="36" y="40">Φ|0⟩ ⊗ Φ|0⟩ ⊗ Φ|0⟩ <tspan fill="#6b6458">· c = 3/5, s = 4/5, n = eₓ</tspan></text>
   <line class="base" x1="36" y1="320" x2="884" y2="320"/>
   <rect class="bar" x="52" y="280.85" width="64" height="39.15"/>
   <rect class="bar" x="156" y="250.39" width="64" height="69.61"/>
@@ -44,5 +44,5 @@
   <text class="bit" x="604" y="372">5</text>
   <text class="bit" x="708" y="372">6</text>
   <text class="bit" x="812" y="372">7</text>
-  <text class="title" x="36" y="420">denominatore 15625, somma 1</text>
+  <text class="title" x="36" y="420">weight = numerator / 15625 = (9/25)<tspan baseline-shift="super" font-size="13">zeros</tspan> · (16/25)<tspan baseline-shift="super" font-size="13">ones</tspan> <tspan fill="#6b6458">· the eight weights sum to 1</tspan></text>
 </svg>

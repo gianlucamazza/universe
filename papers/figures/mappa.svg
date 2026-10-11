@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
+  <title>Map of the project: one universe, two independent certificates</title>
+  <desc>Top: the three ingredients of the universe, states X, law Φ, observation Obs. Obs is an axiom today; the observer plan derives it from an apparatus inside. Bottom: every law is checked twice, by a Python certificate with exact fractions and by a Lean 4 proof, neither generated from the other.</desc>
+  <rect width="920" height="460" fill="#faf8f4"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a1814"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .box { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.4; }
+    .open { fill: #fffdf8; stroke: #8c3a2f; stroke-width: 1.4; stroke-dasharray: 6 4; }
+    .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+    .link { stroke: #b8b0a2; stroke-width: 1.2; fill: none; }
+    .sym { font-size: 28px; text-anchor: middle; }
+    .name { font-size: 17px; text-anchor: middle; }
+    .sub { font-size: 15px; text-anchor: middle; fill: #6b6458; }
+    .code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; text-anchor: middle; fill: #6b6458; }
+    .accent { fill: #8c3a2f; }
+    .band { font-size: 16px; text-anchor: middle; }
+  </style>
+
+  <text class="sub" x="460" y="34" style="font-size:16px">the universe</text>
+  <rect class="box" x="36" y="50" width="248" height="128" rx="2"/>
+  <rect class="box" x="336" y="50" width="248" height="128" rx="2"/>
+  <rect class="open" x="636" y="50" width="248" height="128" rx="2"/>
+  <text class="sym" x="160" y="92">X</text>
+  <text class="name" x="160" y="120">states</text>
+  <text class="sub" x="160" y="148">one, two, three qubits</text>
+  <text class="sym" x="460" y="92">Φ</text>
+  <text class="name" x="460" y="120">law of motion</text>
+  <text class="sub" x="460" y="148">U = c I − i s (n·σ)</text>
+  <text class="sym" x="760" y="92">Obs</text>
+  <text class="name" x="760" y="120">observation</text>
+  <text class="sub" x="760" y="148">Born weights |α|², |β|²</text>
+  <path class="edge" d="M 290 114 H 328"/>
+  <path class="edge" d="M 590 114 H 628"/>
+  <text class="sub accent" x="760" y="202" style="fill:#8c3a2f">axiom today → theorem in progress</text>
+  <text class="code" x="760" y="222">plans/observer-inside.md</text>
+
+  <path class="link" d="M 160 186 V 268 M 460 186 V 268 M 760 232 V 268"/>
+  <line x1="36" y1="268" x2="884" y2="268" stroke="#1a1814" stroke-width="1.4"/>
+  <text class="band" x="460" y="292">every law is an exact identity, checked twice, independently</text>
+  <path class="link" d="M 248 300 V 330 M 672 300 V 330"/>
+
+  <rect class="box" x="96" y="330" width="304" height="96" rx="2"/>
+  <rect class="box" x="520" y="330" width="304" height="96" rx="2"/>
+  <text class="name" x="248" y="364">Python certificate</text>
+  <text class="sub" x="248" y="388">exact fractions, no floating point</text>
+  <text class="code" x="248" y="410">python -m universe</text>
+  <text class="name" x="672" y="364">Lean 4 proof</text>
+  <text class="sub" x="672" y="388">checked by machine, no sorry</text>
+  <text class="code" x="672" y="410">lake build</text>
+  <text class="sub" x="460" y="384" style="font-size:13px">neither is</text>
+  <text class="sub" x="460" y="400" style="font-size:13px">generated from</text>
+  <text class="sub" x="460" y="416" style="font-size:13px">the other</text>
+</svg>

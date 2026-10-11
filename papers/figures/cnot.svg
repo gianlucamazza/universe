@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" role="img">
+  <title>CNOT couples a system to an apparatus and produces entanglement</title>
+  <desc>Left: the circuit, system Φ|0⟩ controls an apparatus in |0⟩. Right: the four amplitudes as a 2×2 grid, rows are the system bit, columns the apparatus bit, shading proportional to the Born weight, at c = 3/5, s = 4/5, n = eₓ. Before CNOT the determinant is 0, a product. After CNOT it is −12/25 i, not a product.</desc>
+  <rect width="920" height="440" fill="#faf8f4"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a1814"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .wire { stroke: #1a1814; stroke-width: 1.6; fill: none; }
+    .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+    .cell { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.2; }
+    .w { fill: #8c3a2f; }
+    .big { font-size: 22px; }
+    .label { font-size: 18px; }
+    .small { font-size: 15px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <!-- circuit -->
+  <text class="label" x="36" y="52">the interaction</text>
+  <text class="big end" x="150" y="128">Φ|0⟩</text>
+  <text class="small muted end" x="150" y="150">system</text>
+  <text class="big end" x="150" y="218">|0⟩</text>
+  <text class="small muted end" x="150" y="240">apparatus</text>
+  <line class="wire" x1="164" y1="120" x2="380" y2="120"/>
+  <line class="wire" x1="164" y1="210" x2="380" y2="210"/>
+  <line class="wire" x1="270" y1="120" x2="270" y2="224"/>
+  <circle cx="270" cy="120" r="7" fill="#1a1814"/>
+  <circle cx="270" cy="210" r="14" fill="#faf8f4" stroke="#1a1814" stroke-width="1.6"/>
+  <line class="wire" x1="256" y1="210" x2="284" y2="210"/>
+  <text class="small muted mid" x="270" y="92">CNOT</text>
+  <text class="big mid" x="250" y="300">α|00⟩ + β|11⟩</text>
+  <text class="small muted mid" x="250" y="326">α = 3/5,  β = −4/5 i</text>
+  <text class="lemma" x="250" y="350" text-anchor="middle">cnot_ket0</text>
+
+  <!-- grid before -->
+  <text class="label mid" x="560" y="52">Φ|0⟩ ⊗ |0⟩</text>
+  <text class="small muted mid" x="520" y="102">k = 0</text>
+  <text class="small muted mid" x="600" y="102">k = 1</text>
+  <text class="small muted end" x="472" y="155">i = 0</text>
+  <text class="small muted end" x="472" y="235">i = 1</text>
+  <rect class="cell" x="480" y="110" width="80" height="80"/>
+  <rect class="cell" x="560" y="110" width="80" height="80"/>
+  <rect class="cell" x="480" y="190" width="80" height="80"/>
+  <rect class="cell" x="560" y="190" width="80" height="80"/>
+  <rect class="w" x="480" y="110" width="80" height="80" fill-opacity="0.198"/>
+  <rect class="w" x="480" y="190" width="80" height="80" fill-opacity="0.352"/>
+  <text class="label mid" x="520" y="156">3/5</text>
+  <text class="label mid" x="600" y="156">0</text>
+  <text class="label mid" x="520" y="236">−4/5 i</text>
+  <text class="label mid" x="600" y="236">0</text>
+  <text class="label mid" x="560" y="306">a₀a₃ − a₁a₂ = 0</text>
+  <text class="small muted mid" x="560" y="330">a product: two separate states</text>
+  <text class="lemma" x="560" y="354" text-anchor="middle">product_det</text>
+
+  <!-- arrow -->
+  <path class="edge" d="M 650 190 H 706"/>
+  <text class="small muted mid" x="678" y="176">CNOT</text>
+
+  <!-- grid after -->
+  <text class="label mid" x="800" y="52">CNOT (Φ|0⟩ ⊗ |0⟩)</text>
+  <text class="small muted mid" x="760" y="102">k = 0</text>
+  <text class="small muted mid" x="840" y="102">k = 1</text>
+  <rect class="cell" x="720" y="110" width="80" height="80"/>
+  <rect class="cell" x="800" y="110" width="80" height="80"/>
+  <rect class="cell" x="720" y="190" width="80" height="80"/>
+  <rect class="cell" x="800" y="190" width="80" height="80"/>
+  <rect class="w" x="720" y="110" width="80" height="80" fill-opacity="0.198"/>
+  <rect class="w" x="800" y="190" width="80" height="80" fill-opacity="0.352"/>
+  <text class="label mid" x="760" y="156">3/5</text>
+  <text class="label mid" x="840" y="156">0</text>
+  <text class="label mid" x="760" y="236">0</text>
+  <text class="label mid" x="840" y="236">−4/5 i</text>
+  <text class="label mid" x="800" y="306">a₀a₃ − a₁a₂ = −12/25 i</text>
+  <text class="small muted mid" x="800" y="330">not a product: entangled</text>
+  <text class="lemma" x="800" y="354" text-anchor="middle">point_not_product</text>
+
+  <text class="small muted" x="36" y="408">shading ∝ Born weight: 9/25 and 16/25 · rows i = system bit, columns k = apparatus bit</text>
+</svg>
