@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" role="img">
+  <title>Rotations about two axes: the order changes the state, not the weights</title>
+  <desc>At c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = eₓ, m = e_z, the amplitudes of UₙUₘ|0⟩ and UₘUₙ|0⟩ drawn in the complex plane. The amplitude of |0⟩ is 9/25 − 12/25 i in both orders; the amplitude of |1⟩ is −16/25 − 12/25 i in one order and 16/25 − 12/25 i in the other. All four points lie inside the unit circle, and the Born weights are 9/25 and 16/25 in both orders. On the right, the Pauli product, the two-axis law and the norm identity.</desc>
+  <rect width="920" height="540" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .axis { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .circle { fill: none; stroke: #b8b0a2; stroke-width: 1.2; stroke-dasharray: 5 5; }
+    .ray { stroke: #b8b0a2; stroke-width: 1.2; }
+    .guide { stroke: #b8b0a2; stroke-width: 1; stroke-dasharray: 3 4; }
+    .head { font-size: 18px; }
+    .label { font-size: 17px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <text class="head" x="36" y="44">the order of two rotations</text>
+  <text class="tiny muted" x="36" y="64">amplitudes of U|0⟩ in the complex plane · c = 3/5, s = 4/5 · n = eₓ, m = e_z</text>
+
+  <!-- complex plane: centre (250, 270), 170 px per unit -->
+  <circle class="circle" cx="250" cy="270" r="170"/>
+  <line class="axis" x1="50" y1="270" x2="460" y2="270"/>
+  <line class="axis" x1="250" y1="455" x2="250" y2="90"/>
+  <text class="small" x="466" y="275">re</text>
+  <text class="small" x="258" y="100">im</text>
+  <text class="tiny muted" x="424" y="288">1</text>
+  <text class="tiny muted" x="256" y="455">−i</text>
+
+  <line class="guide" x1="141.2" y1="270" x2="141.2" y2="351.6"/>
+  <line class="guide" x1="358.8" y1="270" x2="358.8" y2="351.6"/>
+  <line class="guide" x1="130" y1="351.6" x2="370" y2="351.6"/>
+
+  <line class="ray" x1="250" y1="270" x2="311.2" y2="351.6"/>
+  <line class="ray" x1="250" y1="270" x2="141.2" y2="351.6" style="stroke:#8c3a2f"/>
+  <line class="ray" x1="250" y1="270" x2="358.8" y2="351.6" style="stroke:#1a1814"/>
+
+  <circle cx="311.2" cy="351.6" r="6" fill="#fffdf8" stroke="#1a1814" stroke-width="1.6"/>
+  <circle cx="141.2" cy="351.6" r="6" fill="#8c3a2f"/>
+  <circle cx="358.8" cy="351.6" r="6" fill="#1a1814"/>
+
+  <text class="small mid" x="311" y="380">⟨0|·⟩, both orders</text>
+  <text class="tiny muted mid" x="311" y="398">9/25 − 12/25 i</text>
+  <text class="small mid" x="141" y="380" style="fill:#8c3a2f">⟨1|UₙUₘ|0⟩</text>
+  <text class="tiny muted mid" x="141" y="398">−16/25 − 12/25 i</text>
+  <text class="small mid" x="392" y="330">⟨1|UₘUₙ|0⟩</text>
+  <text class="tiny muted mid" x="392" y="312">16/25 − 12/25 i</text>
+
+  <text class="tiny muted" x="36" y="486">the two |1⟩ amplitudes are mirror images:</text>
+  <text class="tiny muted" x="36" y="504">same modulus, so the same Born weights 9/25 and 16/25</text>
+  <text class="lemma" x="36" y="526">point_axes, rotations_noncommute</text>
+
+  <!-- laws -->
+  <text class="head" x="560" y="110">the Pauli product</text>
+  <text class="label" x="560" y="142">(n·σ)(m·σ) = (n·m) I + i (n×m)·σ</text>
+  <text class="small muted" x="560" y="166">no rule used: the free ring</text>
+  <text class="lemma" x="560" y="188">pauli_product</text>
+
+  <text class="head" x="560" y="238">two axes, one rotation</text>
+  <text class="label" x="560" y="270">U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)</text>
+  <text class="small" x="560" y="296">a = c₁c₂ − s₁s₂ (n·m)</text>
+  <text class="small" x="560" y="318">b = s₁c₂ n + c₁s₂ m + s₁s₂ (n×m)</text>
+  <text class="small muted" x="560" y="342">the n×m term flips with the order</text>
+  <text class="lemma" x="560" y="364">evolution_compose_axes</text>
+
+  <text class="head" x="560" y="414">still a rotation</text>
+  <text class="label" x="560" y="446">a² + |b|² = (c₁² + s₁²|n|²)(c₂² + s₂²|m|²)</text>
+  <text class="small muted" x="560" y="470">so a² + |b|² − 1 ∈ (gC, gN, gC2, gM)</text>
+  <text class="lemma" x="560" y="492">axes_norm_free, compose_axes_norm</text>
+</svg>

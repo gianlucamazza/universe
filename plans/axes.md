@@ -1,15 +1,15 @@
 # Plan: rotations about different axes
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress.
+Status: complete. All five phases are done and pushed.
 
-| Phase | State   | Goal                                                                |
-| ----- | ------- | ------------------------------------------------------------------- |
-| 1     | done    | the Pauli product `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ`, free ring     |
-| 2     | done    | `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, free ring              |
-| 3     | done    | the product stays unitary: `a² + \|b\|² − 1` in `(gC, gN, gC2, gM)` |
-| 4     | done    | the rational point, and two rotations that do not commute           |
-| 5     | planned | docs, figure, release                                               |
+| Phase | State | Goal                                                                |
+| ----- | ----- | ------------------------------------------------------------------- |
+| 1     | done  | the Pauli product `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ`, free ring     |
+| 2     | done  | `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, free ring              |
+| 3     | done  | the product stays unitary: `a² + \|b\|² − 1` in `(gC, gN, gC2, gM)` |
+| 4     | done  | the rational point, and two rotations that do not commute           |
+| 5     | done  | docs, figure, release                                               |
 
 ## 1. Why
 

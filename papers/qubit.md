@@ -78,6 +78,10 @@ Il tempo si compone. `evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − 
 
 ![Il tempo si compone](figures/tempo.svg)
 
+Due assi. `pauli_product` dà `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` nel libero, per polinomi qualsiasi. Con `evolutionM`, il passo sull'asse `m`, `evolution_compose_axes` dà `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)` nel libero, con `a = c₁c₂ − s₁s₂ (n·m)` e `b = s₁c₂ n + c₁s₂ m + s₁s₂ (n×m)`: la legge sullo stesso asse chiedeva `gN`, questa nessuna regola. `compose_axes_same` ritrova quella legge con `m = n`, modulo `gN`. `axes_norm_free` è l'identità dei quattro quadrati, `a² + |b|² = (c₁² + s₁²|n|²)(c₂² + s₂²|m|²)`, e `compose_axes_norm` mette `a² + |b|² − 1` in `(gC, gN, gC2, gM)` (`inIdeal4`) con cofattori `R₂`, `s₁² R₂`, `1`, `s₂²`, dove `R₂ = c₂² + s₂²|m|²`; `gM = mx² + my² + mz² − 1` resta fuori da `reduce`. `evalAt3` legge anche `mx my mz` e coincide con `evalAt2` dove sono nulli (`evalAt3_agrees`). In `n = eₓ`, `m = e_z`, `(3/5, 4/5)` due volte, `a = 9/25` e `b = (12/25, −16/25, 12/25)` (`point_axes`). `rotations_noncommute`: `UₙUₘ|0⟩` e `UₘUₙ|0⟩` hanno la stessa ampiezza su `|0⟩`, `9/25 − 12/25 i`, e su `|1⟩` `−16/25 − 12/25 i` e `16/25 − 12/25 i`; i pesi sono `9/25` e `16/25` in entrambi gli ordini.
+
+![Due assi: l'ordine cambia lo stato, non i pesi](figures/assi.svg)
+
 Il principio d'identità del nucleo ha un caso base. Per ogni matrice `V` con `V†V = I` nel libero, `conj_evolution` dà `V(Uψ) = (VUV†)(Vψ)` e `conj_born` dà ai pesi di `Vψ` nella base `V|k⟩` i valori di `ψ`: la descrizione ruotata evolve e osserva come l'originale. `conj_inverse` ricava `VV† = I`. Con `V†V = I` modulo `(gC, gN)` gli stessi enunciati valgono nell'ideale (`conj_evolution_rel`, `conj_born_rel`), e si applicano alla legge simbolica, `V = U` (`conj_evolution_law`, `conj_born_law`). Nel punto, `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩` (`point_conj_evolution`, `point_conj_born`).
 
 ## 4. L'osservazione
