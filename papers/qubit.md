@@ -92,13 +92,13 @@ Lungo x, `axis_x_prob0` è `|c|² − (1 − s²) = gC` sull'ampiezza specializz
 
 Il certificato Python sostituisce `nx`, `ny`, `nz` nei pesi di Born già calcolati per `Φ|0⟩` e confronta le forme ridotte: lungo x, `P(0) = 1 − s²` e `P(1) = s²`; lungo z, `P(0) = 1` e `P(1) = 0`. Quel polinomio è `spec` di `groundP0` e di `groundP1`. `reduce` sbuccia ancora solo `c²` e `nx²`.
 
-Il punto `c = 3/5`, `s = 4/5`, `n = e_x` è un corollario. `point_prob0` e `point_prob1` valutano i pesi specializzati e ottengono `9/25` e `16/25`, i quadrati di `3/5` e `4/5`. `point_gC` e `point_gN` sono i due vincoli in `ℚ`. `point_unitary` valuta `δ` in quel punto e ottiene zero. La chiusura è `ext`, poi `simp`, poi `grind` sui razionali di Gauss. Il certificato Python moltiplica la matrice numerica e legge gli stessi valori sui moduli della prima colonna.
+Il punto `c = 3/5`, `s = 4/5`, `n = eₓ` è un corollario. `point_prob0` e `point_prob1` valutano i pesi specializzati e ottengono `9/25` e `16/25`, i quadrati di `3/5` e `4/5`. `point_gC` e `point_gN` sono i due vincoli in `ℚ`. `point_unitary` valuta `δ` in quel punto e ottiene zero. La chiusura è `ext`, poi `simp`, poi `grind` sui razionali di Gauss. Il certificato Python moltiplica la matrice numerica e legge gli stessi valori sui moduli della prima colonna.
 
-| lettura | P(0) | P(1) |
-|---|---|---|
-| lungo x | 1 − s² | s² |
-| lungo z | 1 | 0 |
-| c = 3/5, s = 4/5, n = e_x | 9/25 | 16/25 |
+| lettura                  | P(0)   | P(1)  |
+| ------------------------ | ------ | ----- |
+| lungo x                  | 1 − s² | s²    |
+| lungo z                  | 1      | 0     |
+| c = 3/5, s = 4/5, n = eₓ | 9/25   | 16/25 |
 
 ![Il cerchio e il punto 3/5, 4/5](figures/cerchio.svg)
 
@@ -124,33 +124,33 @@ Sul fattore generico `(ar + i ai, br + i bi)`, `marginal_left_sphere` e `margina
 
 Su tre qubit, `tensorIndex_assoc_qubit` è `tensorIndexAssoc` con dimensioni `2` e `2`. `tensor_assoc` è l'uguaglianza di liste fra le due parentesizzazioni. La cella `(i, j, k)` vale `ψᵢ φⱼ χₖ` in entrambe, e l'indice è `4·i + 2·j + k`. `assoc_row` fa attraversare a una riga di `U` i due prodotti, con `pmul_assoc` e `pmul_append_left`. `applyUII` agisce sul bit alto: la prima riga di `U` sulle celle `0`–`3`, la seconda sulle celle `4`–`7`. `tensor_assoc_ui` è `(U ⊗ I ⊗ I)((ψ ⊗ φ) ⊗ χ) = ((Uψ) ⊗ φ) ⊗ χ`. `tensor_assoc_ui_right` è la stessa azione sulla parentesizzazione destra. `bornOct` applica `columnBorn` a ogni cella, e `tensor_assoc_obs` identifica i due pesi.
 
-| cella | i | j | k | ampiezza |
-|---|---|---|---|---|
-| 0 | 0 | 0 | 0 | ψ₀ φ₀ χ₀ |
-| 1 | 0 | 0 | 1 | ψ₀ φ₀ χ₁ |
-| 2 | 0 | 1 | 0 | ψ₀ φ₁ χ₀ |
-| 3 | 0 | 1 | 1 | ψ₀ φ₁ χ₁ |
-| 4 | 1 | 0 | 0 | ψ₁ φ₀ χ₀ |
-| 5 | 1 | 0 | 1 | ψ₁ φ₀ χ₁ |
-| 6 | 1 | 1 | 0 | ψ₁ φ₁ χ₀ |
-| 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
+| cella | i   | j   | k   | ampiezza |
+| ----- | --- | --- | --- | -------- |
+| 0     | 0   | 0   | 0   | ψ₀ φ₀ χ₀ |
+| 1     | 0   | 0   | 1   | ψ₀ φ₀ χ₁ |
+| 2     | 0   | 1   | 0   | ψ₀ φ₁ χ₀ |
+| 3     | 0   | 1   | 1   | ψ₀ φ₁ χ₁ |
+| 4     | 1   | 0   | 0   | ψ₁ φ₀ χ₀ |
+| 5     | 1   | 0   | 1   | ψ₁ φ₀ χ₁ |
+| 6     | 1   | 1   | 0   | ψ₁ φ₁ χ₀ |
+| 7     | 1   | 1   | 1   | ψ₁ φ₁ χ₁ |
 
 Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. La riga di associatività usa due anelli. Gli indici stanno su `(i, j, k, nb, nc)`. Ampiezze e `(U ⊗ I ⊗ I)` stanno su `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
 
-Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = e_x`, riempiono le otto celle. Il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`. Le due parentesizzazioni danno gli stessi pesi e la somma è `1`. È la stessa riga del punto razionale: Lean ha `point_prob0` e `point_prob1` sul singolo fattore, il certificato valuta il triplo tensore. Quella misura non aggiunge una riga.
+Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = eₓ`, riempiono le otto celle. Il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`. Le due parentesizzazioni danno gli stessi pesi e la somma è `1`. È la stessa riga del punto razionale: Lean ha `point_prob0` e `point_prob1` sul singolo fattore, il certificato valuta il triplo tensore. Quella misura non aggiunge una riga.
 
 ![Otto celle di tre copie di Φ|0⟩](figures/celle.svg)
 
-| cella | bit | peso |
-|---|---|---|
-| 0 | 000 | 729/15625 |
-| 1 | 001 | 1296/15625 |
-| 2 | 010 | 1296/15625 |
-| 3 | 011 | 2304/15625 |
-| 4 | 100 | 1296/15625 |
-| 5 | 101 | 2304/15625 |
-| 6 | 110 | 2304/15625 |
-| 7 | 111 | 4096/15625 |
+| cella | bit | peso       |
+| ----- | --- | ---------- |
+| 0     | 000 | 729/15625  |
+| 1     | 001 | 1296/15625 |
+| 2     | 010 | 1296/15625 |
+| 3     | 011 | 2304/15625 |
+| 4     | 100 | 1296/15625 |
+| 5     | 101 | 2304/15625 |
+| 6     | 110 | 2304/15625 |
+| 7     | 111 | 4096/15625 |
 
 ## 7. L'osservatore
 
@@ -162,7 +162,7 @@ Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = e_x`, riempiono l
 CNOT(|ψ⟩ ⊗ |0⟩) = α|00⟩ + β|11⟩.
 ```
 
-`quadDet` è `a₀a₃ − a₁a₂`. `product_det` lo annulla su ogni prodotto: è la commutatività e l'associatività di `pmul` nei coefficienti. `entangled_det` dà `α β` dopo `CNOT`. Nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, `point_bell` valuta le quattro celle in `3/5`, `0`, `0`, `−4/5 i`, `point_entangled` dà `−12/25 i`, e `point_not_product` dice che nessuna coppia di vettori di `ℚ(i)` ha quel tensore.
+`quadDet` è `a₀a₃ − a₁a₂`. `product_det` lo annulla su ogni prodotto: è la commutatività e l'associatività di `pmul` nei coefficienti. `entangled_det` dà `α β` dopo `CNOT`. Nel punto `c = 3/5`, `s = 4/5`, `n = eₓ`, `point_bell` valuta le quattro celle in `3/5`, `0`, `0`, `−4/5 i`, `point_entangled` dà `−12/25 i`, e `point_not_product` dice che nessuna coppia di vettori di `ℚ(i)` ha quel tensore.
 
 ![CNOT e la griglia delle ampiezze](figures/cnot.svg)
 
@@ -182,9 +182,13 @@ Un unitario locale sull'apparato non cambia i pesi del sistema. `no_signalling_0
 
 Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`. Quella generalità non entra nel monomio di Lean. La riga del README registra lo scarto, come `kronecker_ui_gen` registra `|φ⟩ = |0⟩`.
 
+![Un unitario sull'apparato: i pesi del sistema restano, quelli dell'apparato cambiano](figures/segnale.svg)
+
 La ripartizione è questa. Nel libero stanno `CNOT`, il determinante, la decoerenza, `pointer_born` e l'accordo dei due apparati. In `(gC, gN)` sta il no-signalling, con i cofattori di `δ`. `purity_sphere` usa `gA`. Il certificato Python esegue `CNOT`, il determinante, la decoerenza, `pointer_born`, la purezza nel punto, i due osservatori e il no-signalling sullo stato generico. `reduceLeft_diag`, `reduce_product`, `purity_before` e `purity_sphere` sono solo in Lean.
 
 Questo non dice quale esito avviene, né perché la base sia quella computazionale: la base è scelta da `CNOT`. Dice che, dentro il modello, i pesi di Born sono ciò che un sottosistema registra, che due registrazioni coincidono, e che un unitario locale sull'apparato non li cambia.
+
+L'argomento, i vicoli ciechi e i tre candidati per il passo successivo sono in [`researches/osservatore.md`](../researches/osservatore.md).
 
 ## 8. Fuori da questa nota
 

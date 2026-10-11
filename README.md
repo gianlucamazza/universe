@@ -1,5 +1,7 @@
 # universe
 
+[![check](https://github.com/gianlucamazza/universe/actions/workflows/check.yml/badge.svg)](https://github.com/gianlucamazza/universe/actions/workflows/check.yml)
+
 A tiny quantum universe in which every law is a proved theorem.
 
 ## In plain words
@@ -19,13 +21,13 @@ Every fact is checked twice, independently:
 
 1. **One qubit in time.** It evolves without losing probability, and the measurement probabilities add up to 1. Done.
 2. **Several qubits together.** Two systems combine into one, and the order in which three are grouped does not matter. Done.
-3. **The observer inside.** Measurement used to be an _axiom_: the model was told from outside what an observation returns. [`plans/observer-inside.md`](plans/observer-inside.md) replaces it with a second qubit, an _apparatus_, that interacts with the system through a `CNOT` gate. Proved so far:
+3. **The observer inside.** Measurement used to be an _axiom_: the model was told from outside what an observation returns. Now a second qubit, an _apparatus_, interacts with the system through a `CNOT` gate, and the rest is proved. Done:
    - the interaction entangles system and apparatus: their joint state is no longer two separate states;
    - the apparatus reads exactly the probabilities the axiom assumed, and the system, seen alone, loses its coherence;
    - two apparatuses on the same system never disagree, whatever the order in which they look;
-   - nothing done locally to an apparatus changes what the system does.
+   - nothing done to an apparatus changes what the system does.
 
-   Next: a research note on what this does and does not settle.
+   What this settles and what it does not, and the candidate next steps, are in [`researches/osservatore.md`](researches/osservatore.md).
 
 The model does not simulate our universe, and it does not try to. It is a laboratory where the parts of a physical theory can be made exact one at a time.
 
@@ -40,71 +42,84 @@ The model does not simulate our universe, and it does not try to. It is a labora
 | `n`             | the rotation axis, a unit vector                                                                     |
 | Born weight     | the probability of an outcome, the squared modulus of an amplitude                                   |
 | entanglement    | a state of two systems that cannot be written as one state for each                                  |
-| cofactors       | the receipt of a proof: they show exactly how an identity follows from `c² + s² = 1` and `\|n\| = 1` |
+| apparatus       | a qubit that interacts with the system and records it                                                |
+| partial trace   | the state of one part of a composite system, with the other part ignored                             |
+| decoherence     | the loss of the off-diagonal terms of that state once the system is recorded                         |
+| purity          | `1` for a state known exactly, below `1` for a mixture                                               |
+| free ring       | polynomials with no rule imposed: an identity there holds for every value of the symbols             |
+| `gC`, `gN`      | the two rules `c² + s² − 1` and `nx² + ny² + nz² − 1`                                                |
+| `gA`            | the rule that the amplitudes are normalized, `\|α\|² + \|β\|² − 1`                                   |
+| `δ`             | the single defect `gC + s² gN` that pays for unitarity                                               |
+| ideal           | everything that vanishes once some rules hold; "in the ideal `(gC, gN)`" means "zero on the circle"  |
+| cofactors       | the receipt of a proof: they show exactly how an identity follows from the rules                     |
 | `3/5`, `4/5`    | a rational point on the circle, the 3-4-5 triangle, where every prediction becomes an exact fraction |
 
-## The kernel
+## Getting started
 
-The triple is `(X, Φ, Obs)`. The first world is a qubit.
-
-`X` is a finite-dimensional state space. `Φ` is `exp(-i φ n·σ)`, packaged as the closed form `U = c I − i s H` on the quotient `c² + s² = 1`, `|n| = 1`. `Obs` is the computational-basis measurement. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
-
-The Python package is the executable certificate. Lean 4 is the formal one. Both rewrite `c²` and `nx²` and keep the cofactors. Neither is an extraction of the other. The note that records how the identities split is [`papers/qubit.md`](papers/qubit.md). The monic division behind `reduce_complete` is [`researches/divisione-monica.md`](researches/divisione-monica.md). The three-qubit associativity is [`researches/associazione.md`](researches/associazione.md).
-
-## Run
+Requirements: Python 3.11 or later, and Lean 4 through [elan](https://github.com/leanprover/elan) (the version is pinned in `lean-toolchain`). There are no other dependencies: no Mathlib, no numerical libraries.
 
 ```sh
-python -m universe
-lake build
+pip install -e ".[dev]"   # pytest and the pinned ruff
+python -m universe        # the Python certificate
+lake build                # the Lean proofs
+./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 33 lines. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 33 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
-`./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push (`.github/workflows/check.yml`).
+`./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
 
-## Reading
+## Repository layout
 
-The statements separate by the generators they use.
+| Path              | Content                                                                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `proofs.py` |
+| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Composition`, `Observer`  |
+| `tests/`          | unit tests of the Python side and the documentation guards                                                                                          |
+| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                |
+| `papers/figures/` | the figures, hand-written SVG                                                                                                                       |
+| `researches/`     | arguments behind single results                                                                                                                     |
+| `plans/`          | executed work plans                                                                                                                                 |
 
-In the free ring: `H† = H`, `|z|² = re(z)² + im(z)²` with rational coefficients, `⟨ψ|Π₀|ψ⟩ = |α|²`, `|0⟩ ⊗ |0⟩ = |00⟩`, the Kronecker identities with an idle `|0⟩`, `CNOT² = I`, the sum of the four Born weights, the vanishing of the product determinant, `decoherence` together with `pointer_born` (the off-diagonals are zero and the diagonal is the Born pair), and `two_pointers`: on `α|000⟩ + β|111⟩` the Born weight of cells 1–6 is zero.
+The README is in English. The notes in `papers/` and `researches/`, the docstrings and the certificate output are in Italian.
 
-In the ideal `(gC, gN)`, one defect `δ = gC + s² gN`: `U†U − I`, `UU† − I`, `det U − 1`, norm preservation for arbitrary amplitudes, `P(0) + P(1) − 1` on evolved `|0⟩`, and the system's marginal after `I ⊗ U` on the coupled apparatus. The amplitudes of `|0⟩` are `1` and `0`.
+## How the proofs work
 
-In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + i ai, br + i bi)`. `gA` is the amplitude sphere. `reduce` still rewrites only `c²` and `nx²`. `purity_sphere` puts `1 − purity − 2|α|²|β|²` in that ideal, with the cofactor only on `gA`.
+The universe is the triple `(X, Φ, Obs)`. `X` is a finite-dimensional state space. `Φ` is `exp(−i φ n·σ)`, written in closed form as `U = c I − i s H` with `H = n·σ`; `c` and `s` stay symbols, bound only by `c² + s² = 1` and `|n| = 1`. `expCoeff_hamiltonian` is what licenses that closed form: `H² = I`, so the series of `exp` collapses to cosine and sine. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
 
-`keepX` and `keepZ` specialize an axis. Along x the coefficients of `gN` are zero and the circle remains. Along z the second amplitude is the zero polynomial. The point `c = 3/5`, `s = 4/5`, `n = e_x` evaluates `δ` to zero in `ℚ`.
+A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial, and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
 
-`literal_sandwich` gives the literal modulus `‖Uψ‖²` and the sandwich `ψ†(U†U)ψ` the same coefficients, for every matrix. `literal_evolution_norm` and `literal_sphere` carry the ideal memberships onto `‖Uψ‖² − ‖ψ‖²` and `‖Uψ‖² − 1`. Python reduces those polynomials, and the sphere line uses `certify_extra`. `specX_pmul` and `specZ_pmul` make specialization a ring homomorphism, so `axis_x_born0`, `axis_x_born1`, `axis_z_born0` and `axis_z_born1` start from `groundP0` and `groundP1`, the polynomials Python substitutes. `axis_z_gn` sends the coefficients of `gN` to zero along z. Lean evaluates `δ` and those weights; Python multiplies the numeric matrix. `kronecker_ui_gen` is `(U ⊗ I)(|ψ⟩ ⊗ |φ⟩) = (U|ψ⟩) ⊗ |φ⟩` for every second factor, and `marginal_left_gen` multiplies the Born weights by `‖φ‖²`. On a generic factor that scale is removed by the cofactor `gA`, outside `reduce`. The `|φ⟩ = |0⟩` case is the constant `1`, which is what Python compares; `|00⟩` is `α = 1`, `β = 0`.
+The statements separate by the rules they need:
 
-`c` and `s` stay indeterminates of the circle quotient. `expCoeff_hamiltonian` is what licenses writing `U` as that closed form.
+- **free ring**, no rule: `H† = H`, `|z|² = re(z)² + im(z)²`, `⟨ψ|Π₀|ψ⟩ = |α|²`, the tensor identities, `CNOT² = I`, decoherence, the apparatus reading the Born weights, two observers agreeing;
+- **`(gC, gN)`**, the circle and the axis, one defect `δ = gC + s² gN`: `U†U = I`, `UU† = I`, `det U = 1`, norm preservation, `P(0) + P(1) = 1` on evolved `|0⟩`, no-signalling;
+- **`(gC, gN, gA)`**, adding normalized amplitudes: `P(0) + P(1) = 1` on a generic state, and `1 − purity = 2|α|²|β|²` after the apparatus records the system.
 
-`CNOT` swaps the cells `|10⟩` and `|11⟩`. It is an involution, and it preserves the sum of the four Born weights. On `|ψ⟩ ⊗ |0⟩` the image is `α|00⟩ + β|11⟩`. The determinant `a₀a₃ − a₁a₂` of every product state is the zero polynomial. At `c = 3/5`, `s = 4/5`, `n = e_x` that determinant is `−12/25 i`, so `CNOT(Φ|0⟩ ⊗ |0⟩)` is not a product.
+The rational point `c = 3/5`, `s = 4/5`, `n = eₓ` turns those polynomials into fractions: `δ` evaluates to zero there, and `9/25`, `16/25` are the squares of `3/5`, `4/5`.
 
-`reduceLeft` traces out the apparatus. Before `CNOT` the off-diagonal of the system is `α β̄`. After `CNOT` both off-diagonals are the zero polynomial and the diagonal is the Born pair, in the free ring. `pointer_born` reads the same weights on the apparatus after `Φ`, so `Obs` is that diagonal. At `c = 3/5`, `s = 4/5`, `n = e_x` the purity of the reduced system is `337/625`, below 1. `reduceLeft_diag`, `reduce_product`, `purity_before` and `purity_sphere` are proved in Lean only. The diagonal matches the existing marginal. A product state reduces to `‖φ‖² |ψ⟩⟨ψ|`. A pure projector has purity `‖ψ‖⁴`. On the amplitude sphere, `1 − purity − 2|α|²|β|²` lies in `(gA)`.
+## One qubit
 
-`cnot01` swaps cells `4↔6` and `5↔7`. `cnot02` swaps cells `4↔5` and `6↔7`. On `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` either order is `α|000⟩ + β|111⟩`. The Born weight of cells 1–6 is the zero polynomial, so the two apparatuses never disagree. `tensor_assoc` carries the same three facts to the other parenthesization. All of this is in the free ring.
+`U†U − I`, `UU† − I` and `det U − 1` lie in `(gC, gN)` with the same cofactors `gC + s² gN`. `literal_sandwich` gives the literal modulus `‖Uψ‖²` and the sandwich `ψ†(U†U)ψ` the same coefficients for every matrix, so `literal_evolution_norm` and `literal_sphere` carry the ideal memberships onto `‖Uψ‖² − ‖ψ‖²` and `‖Uψ‖² − 1`. Python reduces those polynomials, and the sphere line uses `certify_extra` to add `gA` next to the two rules of the ring.
 
-`no_signalling_0` and `no_signalling_1` say that `I ⊗ U` on `CNOT(|ψ⟩ ⊗ |0⟩)` changes each Born weight of the system by a polynomial in `(gC, gN)`. The cofactors are those of `δ`, multiplied on the left by `|α|²` or `|β|²`. The apparatus starts in `|0⟩`, so only cells 0 and 3 are occupied, and the nine exponents suffice. Python checks the same difference on a generic two-qubit state. Those eight real amplitudes do not fit `Mono`.
+`keepX` and `keepZ` specialize the axis; `specX_pmul` and `specZ_pmul` make that a ring homomorphism. Along x the coefficients of `gN` vanish and the circle remains: `P(0) = 1 − s²`, `P(1) = s²`. Along z, `|0⟩` is an eigenstate: the second amplitude is the zero polynomial and `P(0) = 1`.
 
-![Two apparatuses on the same system: only 000 and 111 occur, so A and B never disagree](papers/figures/osservatori.svg)
+![The circle and the point 3/5, 4/5](papers/figures/cerchio.svg)
 
-![Decoherence: the system before and after CNOT, and the apparatus reading the Born weights](papers/figures/decoerenza.svg)
+| reading                  | P(0)   | P(1)  |
+| ------------------------ | ------ | ----- |
+| along x                  | 1 − s² | s²    |
+| along z                  | 1      | 0     |
+| c = 3/5, s = 4/5, n = eₓ | 9/25   | 16/25 |
 
-![CNOT couples the system to an apparatus: before it the amplitude grid is a product, after it the state is entangled](papers/figures/cnot.svg)
+## Several qubits
 
-The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 33.
+The cell of `|i⟩ ⊗ |k⟩` is `2·i + k`. `kronecker_ui_gen` is `(U ⊗ I)(|ψ⟩ ⊗ |φ⟩) = (U|ψ⟩) ⊗ |φ⟩` for every second factor, and `marginal_left_gen` multiplies the Born weights by `‖φ‖²`; on a generic factor that scale is removed by the cofactor of `gA`. Python compares the case `|φ⟩ = |0⟩`, where the scale is the constant `1`.
 
-`Universe.Dynamics.reduce_complete` is the converse for this `reduce`: membership in `(gC, gN)` means every coefficient of the remainder is zero. The statement is on `coeffOf`. Cofactors are a witness, and they are not unique. The rational point is the 3-4-5 triangle on the circle, so `9/25` and `16/25` are the squares of `3/5` and `4/5`. Those coefficients show which generator pays for which identity.
-
-## Representations
-
-The two parenthesizations are one encoded state. Association and then `U` on the first factor is the same list as `U` and then association.
+Three qubits can be grouped two ways. `tensor_assoc` says the two groupings are the same eight amplitudes, and `tensor_assoc_ui` and `tensor_assoc_ui_right` say that evolving the first factor commutes with the grouping. `tensor_assoc_obs` gives the two groupings the same Born weights.
 
 ![The two parenthesizations and U on the first factor](papers/figures/quadrato.svg)
 
-`tensor_assoc_obs` equates `z · conj(z)` on each cell of the two states before `U`. The two states after `U` have the same weights because those states are equal.
-
-The cell of `|i⟩ ⊗ |j⟩ ⊗ |k⟩` is `4·i + 2·j + k`. Both constructions fill the same table. `applyUII` uses the first row of `U` on cells `0`–`3` and the second row on cells `4`–`7`.
+The cell of `|i⟩ ⊗ |j⟩ ⊗ |k⟩` is `4·i + 2·j + k`, in both constructions:
 
 | cell | i   | j   | k   | amplitude |
 | ---- | --- | --- | --- | --------- |
@@ -117,67 +132,92 @@ The cell of `|i⟩ ⊗ |j⟩ ⊗ |k⟩` is `4·i + 2·j + k`. Both constructions
 | 6    | 1   | 1   | 0   | ψ₁ φ₁ χ₀  |
 | 7    | 1   | 1   | 1   | ψ₁ φ₁ χ₁  |
 
-The index identity of the certificate lives on the ring `(i, j, k, nb, nc)`. The amplitudes and `(U ⊗ I ⊗ I)` live on `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. The three writings `(U ⊗ I) ⊗ I`, `U ⊗ (I ⊗ I)` and `U ⊗ I₄` meet the factored state. Lean states the same identities for every polynomial. The printed detail cites `tensor_assoc`, `tensor_assoc_ui` and `tensor_assoc_obs`.
-
-On the circle, the rational point is the 3-4-5 triangle. `δ` evaluates to zero there. `9/25` and `16/25` are the squares of `3/5` and `4/5`.
-
-![The circle and the point 3/5, 4/5](papers/figures/cerchio.svg)
-
-| reading                   | P(0)   | P(1)  |
-| ------------------------- | ------ | ----- |
-| along x                   | 1 − s² | s²    |
-| along z                   | 1      | 0     |
-| c = 3/5, s = 4/5, n = e_x | 9/25   | 16/25 |
-
-Three copies of that evolved `|0⟩` fill the eight cells. Each bit `0` contributes a factor `9/25`, and each bit `1` contributes `16/25`. The two parenthesizations agree, and the eight weights sum to 1. The same certificate line prints the fractions.
+Three copies of evolved `|0⟩` at the rational point fill the eight cells: each bit `0` contributes `9/25`, each bit `1` contributes `16/25`, and the eight weights sum to 1.
 
 ![Eight cells of three copies of evolved ground state](papers/figures/celle.svg)
 
-| cell | bits | weight     |
-| ---- | ---- | ---------- |
-| 0    | 000  | 729/15625  |
-| 1    | 001  | 1296/15625 |
-| 2    | 010  | 1296/15625 |
-| 3    | 011  | 2304/15625 |
-| 4    | 100  | 1296/15625 |
-| 5    | 101  | 2304/15625 |
-| 6    | 110  | 2304/15625 |
-| 7    | 111  | 4096/15625 |
+## The observer inside
+
+**Entanglement.** `CNOT` swaps the cells `|10⟩` and `|11⟩`. On `|ψ⟩ ⊗ |0⟩` it gives `α|00⟩ + β|11⟩`. The determinant `a₀a₃ − a₁a₂` of every product state is the zero polynomial (`product_det`); after `CNOT` it is `α β`, which at the rational point is `−12/25 i`. So `CNOT(Φ|0⟩ ⊗ |0⟩)` is not a product (`point_not_product`).
+
+![CNOT couples the system to an apparatus: before it the amplitude grid is a product, after it the state is entangled](papers/figures/cnot.svg)
+
+**Decoherence and the pointer.** `reduceLeft` is the partial trace over the apparatus. Before `CNOT` the system keeps the coherence `α β̄`. After `CNOT` both off-diagonals are the zero polynomial and the diagonal is the Born pair (`decoherence`). `pointer_born` reads the same weights on the apparatus, for evolved `Φ|ψ⟩`: the observation is now that theorem, not an axiom. The system's purity drops from 1 to `337/625` at the rational point.
+
+![Decoherence: the system before and after CNOT, and the apparatus reading the Born weights](papers/figures/decoerenza.svg)
+
+**Two observers.** With a second apparatus, either order of the two `CNOT` gates gives `α|000⟩ + β|111⟩`. The Born weight of every cell where the two pointers differ is the zero polynomial (`observers_agree`).
+
+![Two apparatuses on the same system: only 000 and 111 occur, so A and B never disagree](papers/figures/osservatori.svg)
+
+**No signalling.** Evolving the apparatus alone changes each Born weight of the system by a polynomial in `(gC, gN)`, with the cofactors of `δ` times `|α|²` or `|β|²` (`no_signalling_0`, `no_signalling_1`). The apparatus's own weights do change. Lean proves it on `CNOT(|ψ⟩ ⊗ |0⟩)`; Python on a generic two-qubit state, whose eight real amplitudes do not fit the nine symbols of the Lean monomial.
+
+![No signalling: the system's weights stay 9/25 and 16/25 while the apparatus's change](papers/figures/segnale.svg)
 
 ## What is proved
 
-| Layer       | Fact                                                                                                             | Python                                                    | Lean                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------ |
-| Ring        | Gauss arithmetic, `i² = -1`                                                                                      | `universe.ring.Gauss`                                     | `Universe.Ring`                                                                                                                                                                 |
-| Ring        | Quotient `c² + s² = 1`, `\|n\| = 1`, with cofactors                                                              | `reduce_witness`, driven by `Ring.set_square`             | `Universe.Quotient.reduce_sound`, `Universe.Dynamics.reduce_complete`                                                                                                           |
-| Law         | `exp(-i φ a) = cos φ · 1 + (-i sin φ) · a` when `a² = 1`                                                         | cited                                                     | `Universe.Series.expCoeff`                                                                                                                                                      |
-| Law         | `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                                                                          | `universe.dynamics.pauli`                                 | `Universe.Qubit.hamiltonian_pauli`                                                                                                                                              |
-| Law         | `H† = H` in the free ring                                                                                        | certificate                                               | `Universe.Qubit.hamiltonian_dagger`                                                                                                                                             |
-| Law         | `H² = I` in the quotient, diagonal cofactor `gN`                                                                 | certificate                                               | `Universe.Qubit.hamiltonian_sq`                                                                                                                                                 |
-| Law         | `H³ = H`, from `H² = I`                                                                                          | certificate                                               | `Universe.Qubit.hamiltonian_cube`                                                                                                                                               |
-| Law         | `H⁴ = I`, from `H² = I`                                                                                          | certificate                                               | `Universe.Qubit.hamiltonian_fourth`                                                                                                                                             |
-| Law         | That instance on `H`                                                                                             | closed form                                               | `Universe.Qubit.expCoeff_hamiltonian`                                                                                                                                           |
-| Law         | `U†U − I`, cofactors `gC + s² gN`                                                                                | certificate                                               | `Universe.Qubit.evolution_unitary`                                                                                                                                              |
-| Law         | `UU† − I`, same cofactors                                                                                        | certificate                                               | `Universe.Qubit.evolution_unitary_rev`                                                                                                                                          |
-| Law         | `det U − 1`, same cofactors                                                                                      | certificate                                               | `Universe.Qubit.evolution_det`                                                                                                                                                  |
-| Law         | `‖Uψ‖² = ‖ψ‖²` on a generic state                                                                                | certificate, by `reduce`                                  | `Universe.Epistemology.literal_evolution_norm`                                                                                                                                  |
-| Law         | `ψ†(U†U)ψ − ‖ψ‖²` in that ideal, any amplitudes                                                                  | same coefficients, by `literal_sandwich`                  | `Universe.Qubit.evolution_norm`                                                                                                                                                 |
-| Observation | `P(0) + P(1) = 1` on evolved `                                                                                   | 0⟩`                                                       | certificate                                                                                                                                                                     | `Universe.Epistemology.ground_prob_sum` |
-| Observation | `                                                                                                                | z                                                         | ² = re(z)² + im(z)²`, imaginary part zero, any polynomial                                                                                                                       | certificate                             | `Universe.Epistemology.modulus_squares`, `modulus_imag_zero` |
-| Observation | `P(0)` and `P(1)` have rational coefficients, any amplitude and `Φ\|0⟩`                                          | certificate                                               | `Universe.Epistemology.columnBorn_real`, `ground_prob_real`                                                                                                                     |
-| Observation | `⟨ψ\|Π₀\|ψ⟩ = \|α\|²`, `Π₀ = diag(1, 0)`                                                                         | certificate                                               | `Universe.Epistemology.projector_born`                                                                                                                                          |
-| Observation | On the generic state, `‖Uψ‖² − 1` in `(gC, gN, gA)`                                                              | `certify_extra`                                           | `sphere_prob_sum`, `literal_sphere`                                                                                                                                             |
-| Observation | Axis x: `P(0) − (1 − s²) = gC`, `P(1) = s²`, coefficients of `gN` are zero                                       | certificate, substituting the Born polynomials            | `axis_x_born0`, `axis_x_born1`, `axis_x_gn`                                                                                                                                     |
-| Observation | Axis z: the second amplitude is zero, `P(0) − 1 = gC`, coefficients of `gN` are zero                             | certificate, reduced `P(0) = 1`                           | `axis_z_born1`, `axis_z_born0`, `axis_z_gn`                                                                                                                                     |
-| Observation | `c = 3/5`, `s = 4/5`, `n = e_x`: `P(0) = 9/25`, `P(1) = 16/25`, `δ` evaluates to 0; eight cells of `(Φ\|0⟩)⊗³`   | certificate, numeric matrix and the triple tensor         | `point_prob0`, `point_prob1`, `point_unitary`                                                                                                                                   |
-| Composition | Two parenthesizations of three qubits are the same state                                                         | `tensor_index`, amplitudes, `(U⊗I⊗I)`                     | `tensorIndexAssoc`, `tensor_assoc`, `tensor_assoc_ui`, `tensor_assoc_obs`                                                                                                       |
-| Composition | `\|0⟩ ⊗ \|0⟩ = \|00⟩`, amplitude `1` in cell 0                                                                   | certificate                                               | `Universe.Composition.ground_tensor`                                                                                                                                            |
-| Composition | `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)`                                              | certificate on `\|φ⟩ = \|0⟩`; `\|00⟩` is `α = 1`, `β = 0` | `kronecker_ui_gen`, `marginal_left_gen`                                                                                                                                         |
-| Composition | `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)`                                                            | certificate on `\|ψ⟩ = \|0⟩`, same reading                | `kronecker_iu_gen`, `marginal_right_gen`                                                                                                                                        |
-| Composition | `CNOT² = I`, `‖CNOT v‖² = ‖v‖²`, a product has determinant zero, `CNOT(Φ\|0⟩ ⊗ \|0⟩)` has determinant `−12/25 i` | certificate                                               | `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`, `Universe.Observer.product_det`, `Universe.Observer.point_entangled`, `Universe.Observer.point_not_product` |
-| Observer    | After `CNOT` the reduced system is diagonal, with the Born pair; before `CNOT` the off-diagonal is `α β̄`       | certificate, fresh ring `(p0r, p0i, p1r, p1i)`            | `Universe.Observer.decoherence`, `Universe.Observer.coherence_before`                                                                                                           |
-| Observer    | The apparatus reads `P(Φ\|ψ⟩)` on evolved `\|0⟩` and on the generic state                                        | certificate                                               | `Universe.Observer.pointer_born`                                                                                                                                                |
-| Observer    | At `c = 3/5`, `s = 4/5`, `n = e_x` the reduced purity is `337/625`, below 1                                     | certificate                                               | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                                                              |
-| Observer    | The reduced diagonal is the marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; purity of a projector is `‖ψ‖⁴`; on the sphere `1 − purity − 2\|α\|²\|β\|²` lies in `(gA)` | Lean only | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere` |
-| Observer    | Two apparatuses never disagree: either `CNOT` order on `\|ψ⟩ ⊗ \|0⟩ ⊗ \|0⟩` is `α\|000⟩ + β\|111⟩`, and cells 1–6 have weight zero | certificate, fresh ring `(p0r, p0i, p1r, p1i)` | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`, and the three `tensorRight` forms |
-| Observer    | A local unitary on the apparatus leaves the system's marginal unchanged | certificate on a generic two-qubit state; Lean is `CNOT(\|ψ⟩ ⊗ \|0⟩)` | `Universe.Observer.no_signalling_0`, `Universe.Observer.no_signalling_1` |
+Every row is a line of the certificate, a Lean theorem, or both. "certificate" means `python -m universe`.
+
+### Ring
+
+| Fact                                                | Python                                        | Lean                                                                  |
+| --------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| Gauss arithmetic, `i² = −1`                         | `universe.ring.Gauss`                         | `Universe.Ring`                                                       |
+| Quotient `c² + s² = 1`, `\|n\| = 1`, with cofactors | `reduce_witness`, driven by `Ring.set_square` | `Universe.Quotient.reduce_sound`, `Universe.Dynamics.reduce_complete` |
+| Evaluation respects coefficients and products       | `Poly.evaluate`                               | `Universe.Evaluation.eval_polySame`, `Universe.Evaluation.eval_pmul`  |
+
+### Law
+
+| Fact                                                      | Python                                   | Lean                                                                                                       |
+| --------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `exp(−i φ a) = cos φ · 1 + (−i sin φ) · a` when `a² = 1`  | cited                                    | `Universe.Series.expCoeff`                                                                                 |
+| `H = n·σ`, with `Y = [[0, −i], [i, 0]]`                   | `universe.dynamics.pauli`                | `Universe.Qubit.hamiltonian_pauli`                                                                         |
+| `H† = H` in the free ring                                 | certificate                              | `Universe.Qubit.hamiltonian_dagger`                                                                        |
+| `H² = I`, `H³ = H`, `H⁴ = I` in the quotient              | certificate                              | `Universe.Qubit.hamiltonian_sq`, `Universe.Qubit.hamiltonian_cube`, `Universe.Qubit.hamiltonian_fourth`    |
+| The collapse of the series on `H`                         | closed form                              | `Universe.Qubit.expCoeff_hamiltonian`                                                                      |
+| `U†U − I`, `UU† − I`, `det U − 1`, cofactors `gC + s² gN` | certificate                              | `Universe.Qubit.evolution_unitary`, `Universe.Qubit.evolution_unitary_rev`, `Universe.Qubit.evolution_det` |
+| `‖Uψ‖² = ‖ψ‖²` on a generic state                         | certificate, by `reduce`                 | `Universe.Epistemology.literal_evolution_norm`                                                             |
+| `ψ†(U†U)ψ − ‖ψ‖²` in `(gC, gN)`, any amplitudes           | same coefficients, by `literal_sandwich` | `Universe.Qubit.evolution_norm`                                                                            |
+
+### Observation
+
+| Fact                                                            | Python                                         | Lean                                                                                                            |
+| --------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `P(0) + P(1) = 1` on evolved `\|0⟩`                             | certificate                                    | `Universe.Epistemology.ground_prob_sum`                                                                         |
+| `\|z\|² = re(z)² + im(z)²`, imaginary part zero, any polynomial | certificate                                    | `Universe.Epistemology.modulus_squares`, `Universe.Epistemology.modulus_imag_zero`                              |
+| `P(0)` and `P(1)` have rational coefficients                    | certificate                                    | `Universe.Epistemology.columnBorn_real`, `Universe.Epistemology.ground_prob_real`                               |
+| `⟨ψ\|Π₀\|ψ⟩ = \|α\|²`, `Π₀ = diag(1, 0)`                        | certificate                                    | `Universe.Epistemology.projector_born`                                                                          |
+| `‖Uψ‖² − 1` in `(gC, gN, gA)` on a generic state                | `certify_extra`                                | `Universe.Epistemology.sphere_prob_sum`, `Universe.Epistemology.literal_sphere`                                 |
+| Axis x: `P(0) = 1 − s²`, `P(1) = s²`                            | certificate, substituting the Born polynomials | `Universe.Epistemology.axis_x_born0`, `Universe.Epistemology.axis_x_born1`, `Universe.Epistemology.axis_x_gn`   |
+| Axis z: the second amplitude is zero, `P(0) = 1`                | certificate                                    | `Universe.Epistemology.axis_z_born0`, `Universe.Epistemology.axis_z_born1`, `Universe.Epistemology.axis_z_gn`   |
+| At the rational point: `P(0) = 9/25`, `P(1) = 16/25`, `δ = 0`   | certificate, numeric matrix and triple tensor  | `Universe.Epistemology.point_prob0`, `Universe.Epistemology.point_prob1`, `Universe.Epistemology.point_unitary` |
+
+### Composition
+
+| Fact                                                                       | Python                                    | Lean                                                                                                                                                       |
+| -------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `\|0⟩ ⊗ \|0⟩ = \|00⟩`                                                      | certificate                               | `Universe.Composition.ground_tensor`                                                                                                                       |
+| `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)`        | certificate on `\|φ⟩ = \|0⟩`              | `Universe.Composition.kronecker_ui_gen`, `Universe.Composition.marginal_left_gen`                                                                          |
+| `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)`                      | certificate on `\|ψ⟩ = \|0⟩`              | `Universe.Composition.kronecker_iu_gen`, `Universe.Composition.marginal_right_gen`                                                                         |
+| The two groupings of three qubits are the same state, before and after `U` | `tensor_index`, amplitudes, `(U ⊗ I ⊗ I)` | `Universe.Ontology.tensorIndexAssoc`, `Universe.Composition.tensor_assoc`, `Universe.Composition.tensor_assoc_ui`, `Universe.Composition.tensor_assoc_obs` |
+
+### Observer
+
+| Fact                                                                                                      | Python                               | Lean                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CNOT² = I`, `‖CNOT v‖² = ‖v‖²`                                                                           | certificate                          | `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`                                                                            |
+| A product has determinant zero; `CNOT(Φ\|0⟩ ⊗ \|0⟩)` has `−12/25 i`                                       | certificate                          | `Universe.Observer.product_det`, `Universe.Observer.point_entangled`, `Universe.Observer.point_not_product`                                   |
+| After `CNOT` the reduced system is diagonal with the Born pair                                            | certificate                          | `Universe.Observer.decoherence`, `Universe.Observer.coherence_before`                                                                         |
+| The apparatus reads `P(Φ\|ψ⟩)`                                                                            | certificate                          | `Universe.Observer.pointer_born`                                                                                                              |
+| Purity `337/625` at the rational point                                                                    | certificate                          | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                            |
+| Reduced diagonal = marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; `1 − purity − 2\|α\|²\|β\|²` in `(gA)` | Lean only                            | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere` |
+| Two apparatuses never disagree, in either order                                                           | certificate                          | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`                                   |
+| Evolving the apparatus leaves the system's weights unchanged                                              | certificate, generic two-qubit state | `Universe.Observer.no_signalling_0`, `Universe.Observer.no_signalling_1`                                                                      |
+
+## Further reading
+
+- [`papers/qubit.md`](papers/qubit.md): the formal note, section by section, with the ideal of each identity.
+- [`researches/divisione-monica.md`](researches/divisione-monica.md): the monic division behind `reduce_complete`.
+- [`researches/associazione.md`](researches/associazione.md): the three-qubit associativity.
+- [`researches/osservatore.md`](researches/osservatore.md): what the observer construction settles, and what it does not.
+- [`plans/observer-inside.md`](plans/observer-inside.md): the plan that built the observer, phase by phase.

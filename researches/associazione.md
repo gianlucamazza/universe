@@ -23,20 +23,20 @@ Associazione e poi `U` sul primo fattore è la stessa lista di `U` e poi associa
 
 L'indice di `|i⟩ ⊗ |j⟩ ⊗ |k⟩` è `4 · i + 2 · j + k`. Le celle `0` … `7` sono i bit `(i, j, k)` in ordine lessicografico. `tensorLeft` moltiplica una quad per il terzo fattore: la cella `2 · q + k`. `tensorRight` moltiplica il primo fattore per una quad: la cella `4 · i + q`. Su uno stato prodotto le due liste coincidono per `pmul_assoc`. È un'uguaglianza di liste, nell'anello libero.
 
-| cella | i | j | k | ampiezza |
-|---|---|---|---|---|
-| 0 | 0 | 0 | 0 | ψ₀ φ₀ χ₀ |
-| 1 | 0 | 0 | 1 | ψ₀ φ₀ χ₁ |
-| 2 | 0 | 1 | 0 | ψ₀ φ₁ χ₀ |
-| 3 | 0 | 1 | 1 | ψ₀ φ₁ χ₁ |
-| 4 | 1 | 0 | 0 | ψ₁ φ₀ χ₀ |
-| 5 | 1 | 0 | 1 | ψ₁ φ₀ χ₁ |
-| 6 | 1 | 1 | 0 | ψ₁ φ₁ χ₀ |
-| 7 | 1 | 1 | 1 | ψ₁ φ₁ χ₁ |
+| cella | i   | j   | k   | ampiezza |
+| ----- | --- | --- | --- | -------- |
+| 0     | 0   | 0   | 0   | ψ₀ φ₀ χ₀ |
+| 1     | 0   | 0   | 1   | ψ₀ φ₀ χ₁ |
+| 2     | 0   | 1   | 0   | ψ₀ φ₁ χ₀ |
+| 3     | 0   | 1   | 1   | ψ₀ φ₁ χ₁ |
+| 4     | 1   | 0   | 0   | ψ₁ φ₀ χ₀ |
+| 5     | 1   | 0   | 1   | ψ₁ φ₀ χ₁ |
+| 6     | 1   | 1   | 0   | ψ₁ φ₁ χ₀ |
+| 7     | 1   | 1   | 1   | ψ₁ φ₁ χ₁ |
 
 `applyUII` usa la prima riga di `U` sulle celle `0`–`3` e la seconda sulle celle `4`–`7`.
 
-Tre copie di `Φ|0⟩` nel punto `c = 3/5`, `s = 4/5`, `n = e_x` danno un'altezza a ogni cella. Il peso è `(9/25)` per ogni zero e `(16/25)` per ogni uno. `point_prob0` e `point_prob1` sono i fattori. Il certificato valuta il triplo tensore, sulle due parentesizzazioni, e stampa le otto frazioni. La somma è `1`. La figura è `papers/figures/celle.svg`.
+Tre copie di `Φ|0⟩` nel punto `c = 3/5`, `s = 4/5`, `n = eₓ` danno un'altezza a ogni cella. Il peso è `(9/25)` per ogni zero e `(16/25)` per ogni uno. `point_prob0` e `point_prob1` sono i fattori. Il certificato valuta il triplo tensore, sulle due parentesizzazioni, e stampa le otto frazioni. La somma è `1`. La figura è `papers/figures/celle.svg`.
 
 ![Otto celle di tre copie di Φ|0⟩](../papers/figures/celle.svg)
 

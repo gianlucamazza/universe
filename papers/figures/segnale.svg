@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" role="img">
+  <title>No-signalling: acting on the apparatus does not change the system's statistics</title>
+  <desc>System Φ|0⟩ and apparatus |0⟩ are coupled by CNOT, then the apparatus alone evolves by U. At c = 3/5, s = 4/5, n = eₓ the system's Born weights stay 9/25 and 16/25, while the apparatus's weights move from 9/25 and 16/25 to 337/625 and 288/625.</desc>
+  <rect width="920" height="470" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .wire { stroke: #1a1814; stroke-width: 1.6; fill: none; }
+    .gate { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.6; }
+    .bar { fill: #1a1814; }
+    .after { fill: #8c3a2f; }
+    .base { stroke: #1a1814; stroke-width: 1.4; }
+    .head { font-size: 18px; }
+    .big { font-size: 21px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <!-- circuit -->
+  <text class="head" x="36" y="44">act on the apparatus only</text>
+  <text class="big end" x="112" y="137">Φ|0⟩</text>
+  <text class="tiny muted end" x="112" y="156">system</text>
+  <text class="big end" x="112" y="227">|0⟩</text>
+  <text class="tiny muted end" x="112" y="246">apparatus</text>
+  <line class="wire" x1="124" y1="130" x2="320" y2="130"/>
+  <line class="wire" x1="124" y1="220" x2="232" y2="220"/>
+  <line class="wire" x1="276" y1="220" x2="320" y2="220"/>
+  <line class="wire" x1="170" y1="130" x2="170" y2="233"/>
+  <circle cx="170" cy="130" r="6.5" fill="#1a1814"/>
+  <circle cx="170" cy="220" r="13" fill="#faf8f4" stroke="#1a1814" stroke-width="1.6"/>
+  <line class="wire" x1="157" y1="220" x2="183" y2="220"/>
+  <rect class="gate" x="232" y="198" width="44" height="44"/>
+  <text class="big mid" x="254" y="228">U</text>
+  <text class="tiny muted mid" x="170" y="106">CNOT</text>
+  <text class="tiny muted mid" x="254" y="268">I ⊗ U</text>
+  <text class="small" x="36" y="330">the system's weights move by a polynomial</text>
+  <text class="small" x="36" y="350">in the ideal (gC, gN): zero on the circle</text>
+  <text class="lemma" x="36" y="376">no_signalling_0, no_signalling_1</text>
+
+  <!-- system bars -->
+  <text class="head mid" x="490" y="44">system</text>
+  <text class="small muted mid" x="490" y="66">unchanged</text>
+  <line class="base" x1="380" y1="300" x2="600" y2="300"/>
+  <rect class="bar" x="392" y="184.8" width="36" height="115.2"/>
+  <rect class="after" x="432" y="184.8" width="36" height="115.2"/>
+  <rect class="bar" x="512" y="95.2" width="36" height="204.8"/>
+  <rect class="after" x="552" y="95.2" width="36" height="204.8"/>
+  <text class="tiny mid" x="430" y="176">9/25</text>
+  <text class="tiny mid" x="550" y="87">16/25</text>
+  <text class="small mid" x="430" y="322">P(0)</text>
+  <text class="small mid" x="550" y="322">P(1)</text>
+
+  <!-- apparatus bars -->
+  <text class="head mid" x="770" y="44">apparatus</text>
+  <text class="small muted mid" x="770" y="66">changed</text>
+  <line class="base" x1="660" y1="300" x2="880" y2="300"/>
+  <rect class="bar" x="672" y="184.8" width="36" height="115.2"/>
+  <rect class="after" x="712" y="127.5" width="36" height="172.5"/>
+  <rect class="bar" x="792" y="95.2" width="36" height="204.8"/>
+  <rect class="after" x="832" y="152.5" width="36" height="147.5"/>
+  <text class="tiny mid" x="690" y="176">9/25</text>
+  <text class="tiny mid" x="730" y="119">337/625</text>
+  <text class="tiny mid" x="810" y="87">16/25</text>
+  <text class="tiny mid" x="852" y="143">288/625</text>
+  <text class="small mid" x="710" y="322">P(0)</text>
+  <text class="small mid" x="830" y="322">P(1)</text>
+
+  <rect class="bar" x="380" y="356" width="14" height="14"/>
+  <text class="tiny" x="400" y="368">before U</text>
+  <rect class="after" x="480" y="356" width="14" height="14"/>
+  <text class="tiny" x="500" y="368">after U</text>
+
+  <line x1="36" y1="404" x2="884" y2="404" stroke="#b8b0a2" stroke-width="1"/>
+  <text class="small" x="36" y="432">What happens to the apparatus cannot be read off the system: no signal travels through entanglement.</text>
+  <text class="tiny muted" x="36" y="454">bars at c = 3/5, s = 4/5, n = eₓ, with U the same evolution on the apparatus · height ∝ probability</text>
+</svg>

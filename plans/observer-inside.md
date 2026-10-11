@@ -1,16 +1,18 @@
 # Plan: the observer inside the universe
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: phases 1–3 done (`9996340`, `919b254`, `09a8442`); phase 4 next.
-Baseline for phase 4: `./check.sh` green, certificate prints 32 lines.
+Status: complete. Every phase is done and pushed.
 
-| Phase | State | Key theorems |
-|---|---|---|
-| 1 | done | `cnot_involutive`, `cnot_norm`, `product_det`, `point_not_product` |
-| 2 | done | `decoherence`, `pointer_born`, `purity_sphere`, `point_purity` |
-| 3 | done | `two_pointers`, `observers_agree`, `order_irrelevant` |
-| 4 | next | no-signalling |
-| 5 | open | research note |
+| Phase | State | Commit    | Key theorems                                                       |
+| ----- | ----- | --------- | ------------------------------------------------------------------ |
+| 1     | done  | `9996340` | `cnot_involutive`, `cnot_norm`, `product_det`, `point_not_product` |
+| 2     | done  | `919b254` | `decoherence`, `pointer_born`, `purity_sphere`, `point_purity`     |
+| 3     | done  | `09a8442` | `two_pointers`, `observers_agree`, `order_irrelevant`              |
+| 4     | done  | `abae267` | `no_signalling_0`, `no_signalling_1` (Lean on `CNOT(\|ψ⟩ ⊗ \|0⟩)`) |
+| 5     | done  | —         | `researches/osservatore.md`                                        |
+
+Outcome: `Obs` is derived (`pointer_born`). The next step the note confirms is a parametric
+`Mono`; a preferred basis and real `cos φ` are rejected with arguments.
 
 ## 1. Why
 
@@ -65,7 +67,7 @@ The result we want to be able to state, exactly and in both certificates:
 | `U ⊗ I`, `I ⊗ U`, `U ⊗ I ⊗ I`         | `applyUI`, `applyIU`, `applyUII`                          | `Operator.tensor`                        |
 | Born weights, marginals               | `columnBorn`, `bornPair`, `marginalLeft/Right`, `bornOct` | `born`, `marginal`                       |
 | The evolution and its unitarity       | `Qubit.evolution`, `evolution_unitary`                    | `QubitUniverse.U`                        |
-| Rational point `c=3/5, s=4/5, n=e_x`  | `point_prob0`, `point_prob1`, `point_unitary`             | `proofs.py`, "Corollario"                |
+| Rational point `c=3/5, s=4/5, n=eₓ`   | `point_prob0`, `point_prob1`, `point_unitary`             | `proofs.py`, "Corollario"                |
 | Generic state, sphere                 | `genericPair`, `gA`, `marginal_left_sphere`               | `QubitUniverse.generic`, `certify_extra` |
 
 Read `Composition.lean` in full before starting; it is the template for every new proof.
@@ -96,7 +98,7 @@ Lean, `Universe/Observer.lean`, namespace `Universe.Observer`:
      `coeffOf` level; reuse what `slide_right`, `assoc_row` and `columnBorn_pmul` already
      use before writing new lemmas.
    - `theorem entangled_det (ψ) : polySame (quadDet (applyCNOT (tensorPair ψ ket0))) (pmul ψ.a0 ψ.a1)`.
-6. Entanglement at the rational point. On `Φ|0⟩` at `c = 3/5, s = 4/5, n = e_x` the
+6. Entanglement at the rational point. On `Φ|0⟩` at `c = 3/5, s = 4/5, n = eₓ` the
    amplitudes are `3/5` and `−4/5 i`, so the determinant evaluates to `−12/25 i ≠ 0`.
    - `theorem point_entangled`: the evaluated determinant is `−12/25 i`. Reuse the evaluation
      path behind `point_prob0`.
