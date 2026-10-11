@@ -70,7 +70,10 @@ ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 nell'ideale di `gN`: l'unica regola è `H² = I`. `evolution_compose_axes`
 mette `U(c₁, s₁, n) U(c₂, s₂, m)` uguale a `a I − i (b·σ)` nell'anello
 libero, e `compose_axes_same` ritrova la legge sullo stesso asse, modulo
-`gN`. `compose_circle` mette
+`gN`. `axes_norm_free` è `a² + |b|² = (c₁² + s₁² |n|²)(c₂² + s₂² |m|²)`
+nell'anello libero, e `compose_axes_norm` mette `a² + |b|² − 1` in
+`(gC, gN, gC2, gM)`. `gM = mx² + my² + mz² − 1` resta fuori da `reduce`.
+`compose_circle` mette
 `c² + s² − 1` in `(gC, gC2)`, e `gC2` resta fuori da `reduce`.
 `conj_evolution_rel` e `conj_born_rel` portano il cambio di base
 nell'ideale `(gC, gN)`. Con `V = U` sono `conj_evolution_law` e

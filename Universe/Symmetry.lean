@@ -19,7 +19,10 @@ un cofattore di `gN`: `H² = I` è l'unica regola, il cerchio non entra.
 `U(c₁, s₁, n) U(c₂, s₂, m)` è `a I − i (b·σ)` nell'anello libero, con
 `a = c₁c₂ − s₁s₂ (n·m)` e `b = s₁c₂ n + c₁s₂ m + s₁s₂ (n×m)`.
 `compose_axes_same` ritrova la coppia di `evolution_compose` quando `m = n`,
-modulo `gN`.
+modulo `gN`. `axes_norm_free` è l'identità libera
+`a² + |b|² = (c₁² + s₁² |n|²)(c₂² + s₂² |m|²)`. `compose_axes_norm` ne ricava
+`a² + |b|² − 1` in `(gC, gN, gC2, gM)`. `gM = mx² + my² + mz² − 1` resta
+fuori da `reduce`, come `gA` e `gC2`.
 Se le due coppie stanno sul cerchio, ci sta anche il composto, nell'ideale
 `(gC, gC2)`. `gC2 = c2² + s2² − 1` resta fuori da `reduce`, come `gA`.
 Se `V†V − I` sta in `(gC, gN)`, `V (U ψ)` e `(V U V†) (V ψ)` differiscono
@@ -2119,5 +2122,657 @@ theorem compose_axes_same :
       (inIdealN_polySame (by
         rw [hclosed, lin_a11, lin_a11]
         exact polySame_cancel_right _ _ _) axesA_same_gap)
+
+/-! ### Norma del prodotto di due assi -/
+
+def mxSq : Mono := {Mono.one with mx := 2}
+def mySq : Mono := {Mono.one with my := 2}
+def mzSq : Mono := {Mono.one with mz := 2}
+
+def mAxisSq : Poly := single 1 mxSq ++ single 1 mySq ++ single 1 mzSq
+
+/-- `mx² + my² + mz² − 1`. Generatore fuori da `reduce`, come `gA` e `gC2`. -/
+def gM : Poly := mAxisSq ++ single (-1) Mono.one
+
+/-- Appartenenza a `(gC, gN, gC2, gM)`, con quattro cofattori. `gM` non entra in `reduce`. -/
+def inIdeal4 (p : Poly) : Prop :=
+  ∃ f1 f2 f3 f4, polySame p (pmul f1 gC ++ pmul f2 gN ++ pmul f3 gC2 ++ pmul f4 gM)
+
+/-- `c₁² + s₁² |n|²`. -/
+def radiusN : Poly := pmul cP cP ++ pmul (single 1 sSq) (dot nAxis nAxis)
+
+/-- `c₂² + s₂² |m|²`. -/
+def radiusM : Poly := pmul c2P c2P ++ pmul (single 1 s2Sq) (dot mAxis mAxis)
+
+private theorem mx1_sq : mx1.mul mx1 = mxSq := rfl
+private theorem my1_sq : my1.mul my1 = mySq := rfl
+private theorem mz1_sq : mz1.mul mz1 = mzSq := rfl
+
+private theorem gM_plus_one : polySame (gM ++ single 1 Mono.one) mAxisSq := by
+  rw [gM]
+  refine polySame.trans (polySame_append_assoc _ _ _) ?_
+  refine polySame.trans (polySame_append (polySame_refl _) neg_one_plus_one) ?_
+  intro t
+  rw [coeffOf_append, coeffOf_nil, Gauss.add_zero]
+
+private theorem dot_self_m : polySame (dot mAxis mAxis) mAxisSq := by
+  rw [dot, mAxis, mAxisSq, pmul_single_single, pmul_single_single, pmul_single_single, mx1_sq,
+    my1_sq, mz1_sq, Gauss.one_mul]
+  exact polySame_append (polySame_append (polySame_append_nil _) (polySame_append_nil _))
+    (polySame_append_nil _)
+
+private theorem c_square : polySame (pmul cP cP) (single 1 cSq) := by
+  rw [cP, pmul_single_single, c1_sq, Gauss.mul_one]
+  exact polySame_append_nil _
+
+private theorem c2_square : polySame (pmul c2P c2P) (single 1 c2Sq) := by
+  rw [c2P, pmul_single_single, Gauss.mul_one]
+  rw [show c2One.mul c2One = c2Sq from rfl]
+  exact polySame_append_nil _
+
+private theorem sum_ad (a b c d : Poly) :
+    polySame ((a ++ b) ++ (c ++ d)) ((a ++ d) ++ (b ++ c)) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem diff_sq (a b : Poly) :
+    polySame (pmul (psub a b) (psub a b))
+      ((pmul a a ++ pmul b b) ++ (pneg (pmul a b) ++ pneg (pmul b a))) := by
+  rw [psub]
+  refine polySame.trans (polySame_mul_sum a (pneg b) a (pneg b)) ?_
+  refine polySame.trans
+      (polySame_append
+        (polySame_append (polySame_refl _) (by rw [pmul_pneg_right]; exact polySame_refl _))
+        (polySame_append (by rw [← pneg_pmul]; exact polySame_refl _)
+          (by rw [pmul_pneg_pneg]; exact polySame_refl _))) ?_
+  exact sum_ad (pmul a a) (pneg (pmul a b)) (pneg (pmul b a)) (pmul b b)
+
+private theorem sq_prod (a b : Poly) :
+    polySame (pmul (pmul a b) (pmul a b)) (pmul (pmul a a) (pmul b b)) :=
+  polySame_assoc_comm a b a b
+
+/-- `(a b)(c d)` vale `(a d)(c b)`. -/
+private theorem pair_split (a b c d : Poly) :
+    polySame (pmul (pmul a b) (pmul c d)) (pmul (pmul a d) (pmul c b)) := by
+  refine polySame.trans (polySame_assoc_comm a b c d) ?_
+  refine polySame.trans (polySame_pmul_right (polySame_mul_comm b d) (pmul a c)) ?_
+  exact polySame_assoc_comm a c d b
+
+private theorem component_sq (a b c d : Poly) :
+    polySame (pmul (psub (pmul a b) (pmul c d)) (psub (pmul a b) (pmul c d)))
+      ((pmul (pmul a a) (pmul b b) ++ pmul (pmul c c) (pmul d d)) ++
+        (pneg (pmul (pmul a d) (pmul c b)) ++ pneg (pmul (pmul c b) (pmul a d)))) := by
+  refine polySame.trans (diff_sq (pmul a b) (pmul c d)) ?_
+  exact polySame_append
+    (polySame_append (sq_prod a b) (sq_prod c d))
+    (polySame_append (polySame_pneg (pair_split a b c d)) (polySame_pneg (pair_split c d a b)))
+
+private def tAdd (a b : Triple) : Triple := ⟨a.x ++ b.x, a.y ++ b.y, a.z ++ b.z⟩
+
+private def tScale (p : Poly) (n : Triple) : Triple := ⟨pmul p n.x, pmul p n.y, pmul p n.z⟩
+
+private theorem dot_comm (a b : Triple) : polySame (dot a b) (dot b a) := by
+  rw [dot, dot]
+  exact polySame_append
+    (polySame_append (polySame_mul_comm a.x b.x) (polySame_mul_comm a.y b.y))
+    (polySame_mul_comm a.z b.z)
+
+private theorem dot_add_left (a b c : Triple) :
+    polySame (dot a (tAdd b c)) (dot a b ++ dot a c) := by
+  rw [dot, dot, dot, tAdd]
+  refine polySame.trans
+      (polySame_append
+        (polySame_append (polySame_mul_right_sum a.x b.x c.x) (polySame_mul_right_sum a.y b.y c.y))
+        (polySame_mul_right_sum a.z b.z c.z)) ?_
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem dot_add_right (a b c : Triple) :
+    polySame (dot (tAdd a b) c) (dot a c ++ dot b c) :=
+  polySame.trans (dot_comm (tAdd a b) c)
+    (polySame.trans (dot_add_left c a b) (polySame_append (dot_comm c a) (dot_comm c b)))
+
+private theorem dot_sum_sq (a b : Triple) :
+    polySame (dot (tAdd a b) (tAdd a b))
+      ((dot a a ++ dot a b) ++ (dot b a ++ dot b b)) := by
+  refine polySame.trans (dot_add_left (tAdd a b) a b) ?_
+  exact polySame_append
+    (polySame.trans (dot_comm (tAdd a b) a) (dot_add_left a a b))
+    (polySame.trans (dot_comm (tAdd a b) b) (dot_add_left b a b))
+
+private theorem dot_scale (p q : Poly) (n m : Triple) :
+    polySame (dot (tScale p n) (tScale q m)) (pmul (pmul p q) (dot n m)) := by
+  rw [dot, dot, tScale, tScale]
+  refine polySame.trans
+      (polySame_append
+        (polySame_append (polySame_assoc_comm p n.x q m.x) (polySame_assoc_comm p n.y q m.y))
+        (polySame_assoc_comm p n.z q m.z)) ?_
+  refine polySame.symm ?_
+  refine polySame.trans (polySame_mul_right_sum (pmul p q) _ _) ?_
+  exact polySame_append (polySame_mul_right_sum (pmul p q) _ _) (polySame_refl _)
+
+private theorem mul_psub (a b c : Poly) :
+    polySame (pmul a (psub b c)) (pmul a b ++ pneg (pmul a c)) := by
+  rw [psub]
+  refine polySame.trans (polySame_mul_right_sum a b (pneg c)) ?_
+  exact polySame_append (polySame_refl _) (by rw [pmul_pneg_right]; exact polySame_refl _)
+
+private theorem left_comm (a b c : Poly) :
+    polySame (pmul a (pmul b c)) (pmul (pmul b a) c) := by
+  rw [← pmul_assoc]
+  exact polySame_pmul_left (polySame_mul_comm a b) c
+
+private theorem mul_comm_left (a b c : Poly) :
+    polySame (pmul a (pmul b c)) (pmul b (pmul a c)) :=
+  polySame.trans (left_comm a b c) (polySame_pmul_assoc b a c)
+
+/-- `a (b c)` vale `c (b a)`. -/
+private theorem cycle_right (a b c : Poly) :
+    polySame (pmul a (pmul b c)) (pmul c (pmul b a)) := by
+  refine polySame.trans (polySame.symm (polySame_pmul_assoc a b c)) ?_
+  refine polySame.trans (polySame_mul_comm (pmul a b) c) ?_
+  exact polySame_pmul_right (polySame_mul_comm a b) c
+
+private theorem pair_cancel (a b : Poly) (h : polySame b (pneg a)) : polySame (a ++ b) [] :=
+  polySame.trans (polySame_append (polySame_refl _) h) (polySame_add_neg a)
+
+set_option maxHeartbeats 1000000 in
+private theorem six_to_pairs (a b c d e f : Poly) :
+    polySame (((a ++ b) ++ (c ++ d)) ++ (e ++ f)) (((a ++ d) ++ (e ++ b)) ++ (c ++ f)) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+set_option maxHeartbeats 1000000 in
+private theorem six_to_other (a b c d e f : Poly) :
+    polySame (((a ++ b) ++ (c ++ d)) ++ (e ++ f)) (((a ++ f) ++ (c ++ b)) ++ (e ++ d)) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem three_nil (a b c : Poly) (ha : polySame a []) (hb : polySame b [])
+    (hc : polySame c []) : polySame ((a ++ b) ++ c) [] := by
+  refine polySame.trans (polySame_append (polySame_append ha hb) hc) ?_
+  simp only [List.nil_append]
+  exact polySame_refl _
+
+private theorem dot_cross_self (n m : Triple) : polySame (dot n (cross n m)) [] := by
+  rw [dot, cross]
+  refine polySame.trans
+      (polySame_append
+        (polySame_append (mul_psub n.x (pmul n.y m.z) (pmul n.z m.y))
+          (mul_psub n.y (pmul n.z m.x) (pmul n.x m.z)))
+        (mul_psub n.z (pmul n.x m.y) (pmul n.y m.x))) ?_
+  refine polySame.trans
+      (six_to_pairs (pmul n.x (pmul n.y m.z)) (pneg (pmul n.x (pmul n.z m.y)))
+        (pmul n.y (pmul n.z m.x)) (pneg (pmul n.y (pmul n.x m.z)))
+        (pmul n.z (pmul n.x m.y)) (pneg (pmul n.z (pmul n.y m.x)))) ?_
+  exact three_nil
+    (pmul n.x (pmul n.y m.z) ++ pneg (pmul n.y (pmul n.x m.z)))
+    (pmul n.z (pmul n.x m.y) ++ pneg (pmul n.x (pmul n.z m.y)))
+    (pmul n.y (pmul n.z m.x) ++ pneg (pmul n.z (pmul n.y m.x)))
+    (pair_cancel _ _ (polySame_pneg (polySame.symm (mul_comm_left n.x n.y m.z))))
+    (pair_cancel _ _ (polySame_pneg (mul_comm_left n.x n.z m.y)))
+    (pair_cancel _ _ (polySame_pneg (mul_comm_left n.z n.y m.x)))
+
+private theorem dot_cross_other (n m : Triple) : polySame (dot m (cross n m)) [] := by
+  rw [dot, cross]
+  refine polySame.trans
+      (polySame_append
+        (polySame_append (mul_psub m.x (pmul n.y m.z) (pmul n.z m.y))
+          (mul_psub m.y (pmul n.z m.x) (pmul n.x m.z)))
+        (mul_psub m.z (pmul n.x m.y) (pmul n.y m.x))) ?_
+  refine polySame.trans
+      (six_to_other (pmul m.x (pmul n.y m.z)) (pneg (pmul m.x (pmul n.z m.y)))
+        (pmul m.y (pmul n.z m.x)) (pneg (pmul m.y (pmul n.x m.z)))
+        (pmul m.z (pmul n.x m.y)) (pneg (pmul m.z (pmul n.y m.x)))) ?_
+  exact three_nil
+    (pmul m.x (pmul n.y m.z) ++ pneg (pmul m.z (pmul n.y m.x)))
+    (pmul m.y (pmul n.z m.x) ++ pneg (pmul m.x (pmul n.z m.y)))
+    (pmul m.z (pmul n.x m.y) ++ pneg (pmul m.y (pmul n.x m.z)))
+    (pair_cancel _ _ (polySame_pneg (polySame.symm (cycle_right m.x n.y m.z))))
+    (pair_cancel _ _ (polySame_pneg (cycle_right m.x n.z m.y)))
+    (pair_cancel _ _ (polySame_pneg (cycle_right m.y n.x m.z)))
+
+private theorem dot_scale_nil (p q : Poly) (n m : Triple) (h : polySame (dot n m) []) :
+    polySame (dot (tScale p n) (tScale q m)) [] := by
+  refine polySame.trans (dot_scale p q n m) ?_
+  refine polySame.trans (polySame_pmul_right h (pmul p q)) ?_
+  rw [pmul_nil]
+  exact polySame_refl _
+
+private def sqXX (n m : Triple) : Poly := pmul (pmul n.x n.x) (pmul m.x m.x)
+private def sqYY (n m : Triple) : Poly := pmul (pmul n.y n.y) (pmul m.y m.y)
+private def sqZZ (n m : Triple) : Poly := pmul (pmul n.z n.z) (pmul m.z m.z)
+private def pYZ (n m : Triple) : Poly := pmul (pmul n.y n.y) (pmul m.z m.z)
+private def pZY (n m : Triple) : Poly := pmul (pmul n.z n.z) (pmul m.y m.y)
+private def pZX (n m : Triple) : Poly := pmul (pmul n.z n.z) (pmul m.x m.x)
+private def pXZ (n m : Triple) : Poly := pmul (pmul n.x n.x) (pmul m.z m.z)
+private def pXY (n m : Triple) : Poly := pmul (pmul n.x n.x) (pmul m.y m.y)
+private def pYX (n m : Triple) : Poly := pmul (pmul n.y n.y) (pmul m.x m.x)
+private def cYZ (n m : Triple) : Poly := pmul (pmul n.y m.y) (pmul n.z m.z)
+private def cZY (n m : Triple) : Poly := pmul (pmul n.z m.z) (pmul n.y m.y)
+private def cZX (n m : Triple) : Poly := pmul (pmul n.z m.z) (pmul n.x m.x)
+private def cXZ (n m : Triple) : Poly := pmul (pmul n.x m.x) (pmul n.z m.z)
+private def cXY (n m : Triple) : Poly := pmul (pmul n.x m.x) (pmul n.y m.y)
+private def cYX (n m : Triple) : Poly := pmul (pmul n.y m.y) (pmul n.x m.x)
+
+private def diagP (n m : Triple) : Poly := (sqXX n m ++ sqYY n m) ++ sqZZ n m
+
+private def offP (n m : Triple) : Poly :=
+  ((pXY n m ++ pYX n m) ++ (pXZ n m ++ pYZ n m)) ++ (pZX n m ++ pZY n m)
+
+private def unnegP (n m : Triple) : Poly :=
+  ((cXY n m ++ cYX n m) ++ (cXZ n m ++ cYZ n m)) ++ (cZX n m ++ cZY n m)
+
+private theorem cross_expand (n m : Triple) :
+    polySame (dot (cross n m) (cross n m))
+      ((((pYZ n m ++ pZY n m) ++ (pneg (cYZ n m) ++ pneg (cZY n m))) ++
+          ((pZX n m ++ pXZ n m) ++ (pneg (cZX n m) ++ pneg (cXZ n m)))) ++
+        ((pXY n m ++ pYX n m) ++ (pneg (cXY n m) ++ pneg (cYX n m)))) := by
+  rw [dot, cross]
+  exact polySame_append
+    (polySame_append (component_sq n.y m.z n.z m.y) (component_sq n.z m.x n.x m.z))
+    (component_sq n.x m.y n.y m.x)
+
+private theorem nm_expand (n m : Triple) :
+    polySame (pmul (dot n n) (dot m m))
+      ((((sqXX n m ++ pXY n m) ++ (pYX n m ++ sqYY n m)) ++ (pXZ n m ++ pYZ n m)) ++
+        ((pZX n m ++ pZY n m) ++ sqZZ n m)) := by
+  rw [dot, dot]
+  refine polySame.trans
+      (polySame_mul_sum (pmul n.x n.x ++ pmul n.y n.y) (pmul n.z n.z)
+        (pmul m.x m.x ++ pmul m.y m.y) (pmul m.z m.z)) ?_
+  exact polySame_append
+    (polySame_append (polySame_mul_sum (pmul n.x n.x) (pmul n.y n.y) (pmul m.x m.x) (pmul m.y m.y))
+      (by rw [pmul_append_left]; exact polySame_refl _))
+    (polySame_append (polySame_mul_right_sum (pmul n.z n.z) (pmul m.x m.x) (pmul m.y m.y))
+      (polySame_refl _))
+
+private theorem dd_expand (n m : Triple) :
+    polySame (pmul (dot n m) (dot n m))
+      ((((pmul (pmul n.x m.x) (pmul n.x m.x) ++ cXY n m) ++
+            (cYX n m ++ pmul (pmul n.y m.y) (pmul n.y m.y))) ++
+          (cXZ n m ++ cYZ n m)) ++
+        ((cZX n m ++ cZY n m) ++ pmul (pmul n.z m.z) (pmul n.z m.z))) := by
+  rw [dot]
+  refine polySame.trans
+      (polySame_mul_sum (pmul n.x m.x ++ pmul n.y m.y) (pmul n.z m.z)
+        (pmul n.x m.x ++ pmul n.y m.y) (pmul n.z m.z)) ?_
+  exact polySame_append
+    (polySame_append
+      (polySame_mul_sum (pmul n.x m.x) (pmul n.y m.y) (pmul n.x m.x) (pmul n.y m.y))
+      (by rw [pmul_append_left]; exact polySame_refl _))
+    (polySame_append (polySame_mul_right_sum (pmul n.z m.z) (pmul n.x m.x) (pmul n.y m.y))
+      (polySame_refl _))
+
+private theorem dd_diag (n m : Triple) :
+    polySame (pmul (dot n m) (dot n m))
+      ((((sqXX n m ++ cXY n m) ++ (cYX n m ++ sqYY n m)) ++ (cXZ n m ++ cYZ n m)) ++
+        ((cZX n m ++ cZY n m) ++ sqZZ n m)) := by
+  refine polySame.trans (dd_expand n m) ?_
+  exact polySame_append
+    (polySame_append
+      (polySame_append
+        (polySame_append (sq_prod n.x m.x) (polySame_refl _))
+        (polySame_append (polySame_refl _) (sq_prod n.y m.y)))
+      (polySame_refl _))
+    (polySame_append (polySame_refl _) (sq_prod n.z m.z))
+
+set_option maxHeartbeats 1000000 in
+private theorem split9 (a b c d e f g h i : Poly) :
+    polySame ((((a ++ b) ++ (c ++ d)) ++ (e ++ f)) ++ ((g ++ h) ++ i))
+      (((a ++ d) ++ i) ++ (((b ++ c) ++ (e ++ f)) ++ (g ++ h))) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+set_option maxHeartbeats 1000000 in
+private theorem cross_split (p1 p2 n1 n2 p3 p4 n3 n4 p5 p6 n5 n6 : Poly) :
+    polySame
+      ((((p1 ++ p2) ++ (n1 ++ n2)) ++ ((p3 ++ p4) ++ (n3 ++ n4))) ++ ((p5 ++ p6) ++ (n5 ++ n6)))
+      ((((p5 ++ p6) ++ (p4 ++ p1)) ++ (p3 ++ p2)) ++ (((n5 ++ n6) ++ (n4 ++ n1)) ++ (n3 ++ n2))) :=
+  by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem nm_split_form (n m : Triple) :
+    polySame (pmul (dot n n) (dot m m)) (diagP n m ++ offP n m) := by
+  refine polySame.trans (nm_expand n m) ?_
+  refine polySame.trans
+      (split9 (sqXX n m) (pXY n m) (pYX n m) (sqYY n m) (pXZ n m) (pYZ n m) (pZX n m) (pZY n m)
+        (sqZZ n m)) ?_
+  rw [diagP, offP]
+  exact polySame_refl _
+
+private theorem dd_split_form (n m : Triple) :
+    polySame (pmul (dot n m) (dot n m)) (diagP n m ++ unnegP n m) := by
+  refine polySame.trans (dd_diag n m) ?_
+  refine polySame.trans
+      (split9 (sqXX n m) (cXY n m) (cYX n m) (sqYY n m) (cXZ n m) (cYZ n m) (cZX n m) (cZY n m)
+        (sqZZ n m)) ?_
+  rw [diagP, unnegP]
+  exact polySame_refl _
+
+private theorem cross_off (n m : Triple) :
+    polySame (dot (cross n m) (cross n m)) (offP n m ++ pneg (unnegP n m)) := by
+  refine polySame.trans (cross_expand n m) ?_
+  refine polySame.trans
+      (cross_split (pYZ n m) (pZY n m) (pneg (cYZ n m)) (pneg (cZY n m)) (pZX n m) (pXZ n m)
+        (pneg (cZX n m)) (pneg (cXZ n m)) (pXY n m) (pYX n m) (pneg (cXY n m))
+        (pneg (cYX n m))) ?_
+  rw [offP, unnegP]
+  simp only [pneg_append]
+  exact polySame_refl _
+
+private theorem neg_then_pos (u : Poly) : polySame (pneg u ++ u) [] :=
+  polySame.trans (polySame_append_comm (pneg u) u) (polySame_add_neg u)
+
+private theorem cancel_join (off neg diag un : Poly) (h : polySame neg (pneg un)) :
+    polySame ((off ++ neg) ++ (diag ++ un)) (diag ++ off) := by
+  refine polySame.trans (polySame_append (polySame_append (polySame_refl off) h) (polySame_refl _)) ?_
+  refine polySame.trans (polySame_append (polySame_refl _) (polySame_append_comm diag un)) ?_
+  refine polySame.trans (polySame.symm (polySame_append_assoc (off ++ pneg un) un diag)) ?_
+  refine polySame.trans (polySame_append (polySame_append_assoc off (pneg un) un) (polySame_refl _)) ?_
+  refine polySame.trans
+      (polySame_append (polySame_append (polySame_refl _) (neg_then_pos un)) (polySame_refl _)) ?_
+  refine polySame.trans (polySame_append (polySame_append_nil off) (polySame_refl _)) ?_
+  exact polySame_append_comm off diag
+
+private theorem sub_of_sum (a b c : Poly) (h : polySame (a ++ b) c) : polySame a (psub c b) := by
+  intro t
+  have hsum : coeffOf a t + coeffOf b t = coeffOf c t := by
+    rw [← coeffOf_append]
+    exact h t
+  rw [coeff_psub]
+  calc
+    coeffOf a t = coeffOf a t + 0 := (Gauss.add_zero _).symm
+    _ = coeffOf a t + (coeffOf b t + -coeffOf b t) := by rw [← Gauss.add_neg_cancel]
+    _ = coeffOf a t + coeffOf b t + -coeffOf b t := by rw [← Gauss.add_assoc]
+    _ = coeffOf c t + -coeffOf b t := by rw [hsum]
+
+/-- `|n × m|² = |n|² |m|² − (n · m)²`, nell'anello libero. -/
+private theorem cross_square (n m : Triple) :
+    polySame (dot (cross n m) (cross n m))
+      (psub (pmul (dot n n) (dot m m)) (pmul (dot n m) (dot n m))) := by
+  have hsum : polySame (dot (cross n m) (cross n m) ++ pmul (dot n m) (dot n m))
+      (pmul (dot n n) (dot m m)) := by
+    refine polySame.trans (polySame_append (cross_off n m) (dd_split_form n m)) ?_
+    refine polySame.trans
+        (cancel_join (offP n m) (pneg (unnegP n m)) (diagP n m) (unnegP n m) (polySame_refl _)) ?_
+    exact polySame.symm (nm_split_form n m)
+  exact sub_of_sum _ _ _ hsum
+
+private theorem b_expand :
+    polySame (dot axesB axesB)
+      (((dot (tScale s1c2P nAxis) (tScale s1c2P nAxis) ++
+            dot (tScale s1c2P nAxis) (tScale c1s2P mAxis)) ++
+          (dot (tScale c1s2P mAxis) (tScale s1c2P nAxis) ++
+            dot (tScale c1s2P mAxis) (tScale c1s2P mAxis))) ++
+        dot (tScale s1s2P (cross nAxis mAxis)) (tScale s1s2P (cross nAxis mAxis))) := by
+  have hB : axesB =
+      tAdd (tAdd (tScale s1c2P nAxis) (tScale c1s2P mAxis))
+        (tScale s1s2P (cross nAxis mAxis)) := rfl
+  rw [hB]
+  let u := tScale s1c2P nAxis
+  let v := tScale c1s2P mAxis
+  let w := tScale s1s2P (cross nAxis mAxis)
+  refine polySame.trans (dot_sum_sq (tAdd u v) w) ?_
+  have h1 : polySame (dot (tAdd u v) w) [] := by
+    refine polySame.trans (dot_add_right u v w) ?_
+    refine polySame.trans
+        (polySame_append
+          (dot_scale_nil s1c2P s1s2P nAxis (cross nAxis mAxis) (dot_cross_self nAxis mAxis))
+          (dot_scale_nil c1s2P s1s2P mAxis (cross nAxis mAxis) (dot_cross_other nAxis mAxis))) ?_
+    simp only [List.nil_append]
+    exact polySame_refl _
+  have h2 : polySame (dot w (tAdd u v)) [] := by
+    refine polySame.trans (dot_add_left w u v) ?_
+    refine polySame.trans
+        (polySame_append
+          (dot_scale_nil s1s2P s1c2P (cross nAxis mAxis) nAxis
+            (polySame.trans (dot_comm (cross nAxis mAxis) nAxis) (dot_cross_self nAxis mAxis)))
+          (dot_scale_nil s1s2P c1s2P (cross nAxis mAxis) mAxis
+            (polySame.trans (dot_comm (cross nAxis mAxis) mAxis) (dot_cross_other nAxis mAxis)))) ?_
+    simp only [List.nil_append]
+    exact polySame_refl _
+  refine polySame.trans
+      (polySame_append (polySame_append (polySame_refl _) h1) (polySame_append h2 (polySame_refl _))) ?_
+  refine polySame.trans (polySame_append (polySame_append_nil _) (polySame_nil_append _)) ?_
+  exact polySame_append (dot_sum_sq u v) (polySame_refl _)
+
+private theorem prod_bin (m n : Mono) :
+    polySame (pmul (single (1 : Gauss) m ++ []) (single (1 : Gauss) n ++ []))
+      (single 1 (m.mul n)) := by
+  rw [pmul_append_left, pmul_nil_left]
+  refine polySame.trans (polySame_append_nil _) ?_
+  refine polySame.trans (polySame_mul_right_sum (single (1 : Gauss) m) (single (1 : Gauss) n) []) ?_
+  rw [pmul_nil, pmul_single_single, Gauss.one_mul]
+  simp only [List.append_nil]
+  exact polySame_refl _
+
+private theorem bin_sq (m k : Mono) (h : m.mul m = k) :
+    polySame (pmul (single (1 : Gauss) m ++ []) (single (1 : Gauss) m ++ [])) (single 1 k) := by
+  refine polySame.trans (prod_bin m m) ?_
+  rw [h]
+  exact polySame_refl _
+
+private theorem single_prod (m n : Mono) :
+    polySame (pmul (single 1 m) (single 1 n)) (single 1 (m.mul n)) := by
+  rw [pmul_single_single, Gauss.one_mul]
+  exact polySame_append_nil _
+
+private def pieceA2 : Poly := pmul (pmul cP cP) (pmul c2P c2P)
+private def pieceRD : Poly :=
+  pmul (pmul s1s2P (dot nAxis mAxis)) (pmul s1s2P (dot nAxis mAxis))
+private def pieceUV : Poly := pmul (pmul cP c2P) (pmul s1s2P (dot nAxis mAxis))
+private def pieceVU : Poly := pmul (pmul s1s2P (dot nAxis mAxis)) (pmul cP c2P)
+private def pieceU2 : Poly := pmul (pmul (single 1 sSq) (dot nAxis nAxis)) (pmul c2P c2P)
+private def pieceV2 : Poly := pmul (pmul cP cP) (pmul (single 1 s2Sq) (dot mAxis mAxis))
+private def pieceW : Poly :=
+  pmul (pmul (single 1 sSq) (dot nAxis nAxis)) (pmul (single 1 s2Sq) (dot mAxis mAxis))
+
+private theorem pq_ar : polySame (pmul s1c2P c1s2P) (pmul (pmul cP c2P) s1s2P) := by
+  rw [s1c2P_bin, c1s2P_bin]
+  refine polySame.trans (prod_bin (s1.mul c2One) (c1.mul s2One)) ?_
+  rw [← mono_cross]
+  refine polySame.symm ?_
+  have hA : pmul cP c2P = single 1 (c1.mul c2One) ++ [] := by
+    rw [cP, c2P, pmul_single_single, Gauss.mul_one]
+  rw [hA, s1s2P_bin]
+  exact prod_bin (c1.mul c2One) (s1.mul s2One)
+
+private theorem uv_match :
+    polySame (dot (tScale s1c2P nAxis) (tScale c1s2P mAxis)) pieceUV := by
+  refine polySame.trans (dot_scale s1c2P c1s2P nAxis mAxis) ?_
+  refine polySame.trans (polySame_pmul_left pq_ar (dot nAxis mAxis)) ?_
+  rw [pieceUV, pmul_assoc]
+  exact polySame_refl _
+
+private theorem vu_match :
+    polySame (dot (tScale c1s2P mAxis) (tScale s1c2P nAxis)) pieceVU := by
+  refine polySame.trans (dot_scale c1s2P s1c2P mAxis nAxis) ?_
+  have hqp : polySame (pmul c1s2P s1c2P) (pmul s1s2P (pmul cP c2P)) :=
+    polySame.trans (polySame_mul_comm c1s2P s1c2P)
+      (polySame.trans pq_ar (polySame_mul_comm (pmul cP c2P) s1s2P))
+  refine polySame.trans (polySame_pmul_left hqp (dot nAxis mAxis)) ?_
+  refine polySame.trans (polySame_slide_mid s1s2P (pmul cP c2P) (dot nAxis mAxis)) ?_
+  rw [pieceVU]
+  exact polySame_refl _
+
+private theorem u_square :
+    polySame (dot (tScale s1c2P nAxis) (tScale s1c2P nAxis)) pieceU2 := by
+  refine polySame.trans (dot_scale s1c2P s1c2P nAxis nAxis) ?_
+  have hp : polySame (pmul s1c2P s1c2P) (pmul (single 1 sSq) (single 1 c2Sq)) := by
+    rw [s1c2P_bin]
+    refine polySame.trans (bin_sq (s1.mul c2One) (sSq.mul c2Sq) mono_sc) ?_
+    exact polySame.symm (single_prod sSq c2Sq)
+  refine polySame.trans (polySame_pmul_left hp (dot nAxis nAxis)) ?_
+  refine polySame.trans (polySame_slide_mid (single 1 sSq) (single 1 c2Sq) (dot nAxis nAxis)) ?_
+  refine polySame.trans (polySame_pmul_right (polySame.symm c2_square) _) ?_
+  rw [pieceU2]
+  exact polySame_refl _
+
+private theorem v_square :
+    polySame (dot (tScale c1s2P mAxis) (tScale c1s2P mAxis)) pieceV2 := by
+  refine polySame.trans (dot_scale c1s2P c1s2P mAxis mAxis) ?_
+  have hq : polySame (pmul c1s2P c1s2P) (pmul (single 1 cSq) (single 1 s2Sq)) := by
+    rw [c1s2P_bin]
+    refine polySame.trans (bin_sq (c1.mul s2One) (cSq.mul s2Sq) mono_cs) ?_
+    exact polySame.symm (single_prod cSq s2Sq)
+  refine polySame.trans (polySame_pmul_left hq (dot mAxis mAxis)) ?_
+  refine polySame.trans (polySame_pmul_assoc (single 1 cSq) (single 1 s2Sq) (dot mAxis mAxis)) ?_
+  refine polySame.trans (polySame_pmul_left (polySame.symm c_square) _) ?_
+  rw [pieceV2]
+  exact polySame_refl _
+
+private theorem w_radius :
+    polySame (dot (tScale s1s2P (cross nAxis mAxis)) (tScale s1s2P (cross nAxis mAxis)))
+      (pieceW ++ pneg pieceRD) := by
+  refine polySame.trans (dot_scale s1s2P s1s2P (cross nAxis mAxis) (cross nAxis mAxis)) ?_
+  refine polySame.trans (polySame_pmul_right (cross_square nAxis mAxis) (pmul s1s2P s1s2P)) ?_
+  refine polySame.trans
+      (mul_psub (pmul s1s2P s1s2P) (pmul (dot nAxis nAxis) (dot mAxis mAxis))
+        (pmul (dot nAxis mAxis) (dot nAxis mAxis))) ?_
+  have hleft : polySame (pmul (pmul s1s2P s1s2P) (pmul (dot nAxis nAxis) (dot mAxis mAxis)))
+      pieceW := by
+    have hr : polySame (pmul s1s2P s1s2P) (pmul (single 1 sSq) (single 1 s2Sq)) := by
+      rw [s1s2P_bin]
+      refine polySame.trans (bin_sq (s1.mul s2One) (sSq.mul s2Sq) mono_ss) ?_
+      exact polySame.symm (single_prod sSq s2Sq)
+    refine polySame.trans (polySame_pmul_left hr _) ?_
+    refine polySame.trans
+        (polySame_assoc_comm (single 1 sSq) (single 1 s2Sq) (dot nAxis nAxis) (dot mAxis mAxis)) ?_
+    rw [pieceW]
+    exact polySame_refl _
+  exact polySame_append hleft (polySame_pneg (polySame.symm (sq_prod s1s2P (dot nAxis mAxis))))
+
+private theorem a_square_parts :
+    polySame (pmul axesA axesA) ((pieceA2 ++ pieceRD) ++ (pneg pieceUV ++ pneg pieceVU)) := by
+  rw [axesA]
+  refine polySame.trans (diff_sq (pmul cP c2P) (pmul s1s2P (dot nAxis mAxis))) ?_
+  exact polySame_append (polySame_append (polySame_assoc_comm cP c2P cP c2P) (polySame_refl _))
+    (polySame_refl _)
+
+private theorem b_ready :
+    polySame (dot axesB axesB)
+      (((pieceU2 ++ pieceUV) ++ (pieceVU ++ pieceV2)) ++ (pieceW ++ pneg pieceRD)) := by
+  refine polySame.trans b_expand ?_
+  exact polySame_append
+    (polySame_append (polySame_append u_square uv_match) (polySame_append vu_match v_square))
+    w_radius
+
+private theorem junk_nil (b f g : Poly) :
+    polySame ((b ++ pneg b) ++ ((pneg f ++ f) ++ (pneg g ++ g))) [] := by
+  refine polySame.trans
+      (polySame_append (polySame_add_neg b) (polySame_append (neg_then_pos f) (neg_then_pos g))) ?_
+  simp only [List.nil_append]
+  exact polySame_refl _
+
+set_option maxHeartbeats 1000000 in
+private theorem norm_group (a b c d e f g h i j : Poly) :
+    polySame (((a ++ b) ++ (c ++ d)) ++ (((e ++ f) ++ (g ++ h)) ++ (i ++ j)))
+      (((a ++ h) ++ (e ++ i)) ++ ((b ++ j) ++ ((c ++ f) ++ (d ++ g)))) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+/-- `a² + |b|² = (c₁² + s₁² |n|²)(c₂² + s₂² |m|²)`, nell'anello libero. -/
+theorem axes_norm_free :
+    polySame (pmul axesA axesA ++ dot axesB axesB) (pmul radiusN radiusM) := by
+  refine polySame.trans (polySame_append a_square_parts b_ready) ?_
+  refine polySame.trans
+      (norm_group pieceA2 pieceRD (pneg pieceUV) (pneg pieceVU) pieceU2 pieceUV pieceVU pieceV2
+        pieceW (pneg pieceRD)) ?_
+  refine polySame.trans (polySame_append (polySame_refl _) (junk_nil pieceRD pieceUV pieceVU)) ?_
+  refine polySame.trans (polySame_append_nil _) ?_
+  exact polySame.symm
+    (polySame_mul_sum (pmul cP cP) (pmul (single 1 sSq) (dot nAxis nAxis)) (pmul c2P c2P)
+      (pmul (single 1 s2Sq) (dot mAxis mAxis)))
+
+private theorem slide3 (a b c : Poly) : polySame (a ++ (b ++ c)) ((a ++ c) ++ b) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem slide_one (a b : Poly) :
+    polySame ((a ++ single 1 Mono.one) ++ b) ((a ++ b) ++ single 1 Mono.one) := by
+  intro t
+  simp only [coeffOf_append]
+  ext <;> simp <;> grind
+
+private theorem axis_one : polySame (gN ++ single 1 Mono.one) axisSq := by
+  rw [← axis_tail]
+  refine polySame.trans (polySame_append_assoc axisSq (single (-1) Mono.one) (single 1 Mono.one)) ?_
+  refine polySame.trans (polySame_append (polySame_refl _) neg_one_plus_one) ?_
+  exact polySame_append_nil _
+
+private theorem radiusN_form :
+    polySame radiusN ((gC ++ pmul (single 1 sSq) gN) ++ single 1 Mono.one) := by
+  have hdot : polySame (dot nAxis nAxis) (gN ++ single 1 Mono.one) :=
+    polySame.trans dot_self_axis (polySame.symm axis_one)
+  refine polySame.trans (polySame_append c_square (polySame_pmul_right hdot (single 1 sSq))) ?_
+  have hdist : polySame (pmul (single 1 sSq) (gN ++ single 1 Mono.one))
+      (pmul (single 1 sSq) gN ++ single 1 sSq) := by
+    refine polySame.trans (polySame_mul_right_sum (single 1 sSq) gN (single 1 Mono.one)) ?_
+    rw [pmul_one]
+    exact polySame_refl _
+  refine polySame.trans (polySame_append (polySame_refl _) hdist) ?_
+  refine polySame.trans (slide3 (single 1 cSq) (pmul (single 1 sSq) gN) (single 1 sSq)) ?_
+  refine polySame.trans (polySame_append (polySame.symm gC_plus_one) (polySame_refl _)) ?_
+  exact slide_one gC (pmul (single 1 sSq) gN)
+
+private theorem radiusM_form :
+    polySame radiusM ((gC2 ++ pmul (single 1 s2Sq) gM) ++ single 1 Mono.one) := by
+  have hdot : polySame (dot mAxis mAxis) (gM ++ single 1 Mono.one) :=
+    polySame.trans dot_self_m (polySame.symm gM_plus_one)
+  refine polySame.trans (polySame_append c2_square (polySame_pmul_right hdot (single 1 s2Sq))) ?_
+  have hdist : polySame (pmul (single 1 s2Sq) (gM ++ single 1 Mono.one))
+      (pmul (single 1 s2Sq) gM ++ single 1 s2Sq) := by
+    refine polySame.trans (polySame_mul_right_sum (single 1 s2Sq) gM (single 1 Mono.one)) ?_
+    rw [pmul_one]
+    exact polySame_refl _
+  refine polySame.trans (polySame_append (polySame_refl _) hdist) ?_
+  refine polySame.trans (slide3 (single 1 c2Sq) (pmul (single 1 s2Sq) gM) (single 1 s2Sq)) ?_
+  refine polySame.trans (polySame_append (polySame.symm gC2_plus_one) (polySame_refl _)) ?_
+  exact slide_one gC2 (pmul (single 1 s2Sq) gM)
+
+private theorem regroup4 (a b c d : Poly) :
+    polySame ((a ++ b) ++ (c ++ d)) (((a ++ b) ++ c) ++ d) :=
+  polySame.symm (polySame_append_assoc (a ++ b) c d)
+
+/-- `a² + |b|² − 1` sta in `(gC, gN, gC2, gM)`. `gM` non entra in `reduce`. -/
+theorem compose_axes_norm :
+    inIdeal4 (psub (pmul axesA axesA ++ dot axesB axesB) (single 1 Mono.one)) := by
+  refine ⟨radiusM, pmul (single 1 sSq) radiusM, single 1 Mono.one, single 1 s2Sq, ?_⟩
+  let A := gC ++ pmul (single 1 sSq) gN
+  let B := gC2 ++ pmul (single 1 s2Sq) gM
+  have hA : A = gC ++ pmul (single 1 sSq) gN := rfl
+  have hB : B = gC2 ++ pmul (single 1 s2Sq) gM := rfl
+  have hprod : polySame (pmul radiusN radiusM)
+      (pmul (A ++ single 1 Mono.one) (B ++ single 1 Mono.one)) :=
+    polySame.trans (polySame_pmul_left radiusN_form radiusM)
+      (polySame_pmul_right radiusM_form (A ++ single 1 Mono.one))
+  have hgap : polySame (psub (pmul radiusN radiusM) (single 1 Mono.one))
+      (pmul A (B ++ single 1 Mono.one) ++ B) :=
+    polySame.trans (polySame_psub hprod (polySame_refl _)) (succ_mul A B)
+  have hback : polySame (pmul A (B ++ single 1 Mono.one) ++ B) (pmul A radiusM ++ B) :=
+    polySame_append (polySame_pmul_right (polySame.symm radiusM_form) A) (polySame_refl _)
+  have hsplit : polySame (pmul A radiusM)
+      (pmul radiusM gC ++ pmul (pmul (single 1 sSq) radiusM) gN) := by
+    rw [hA, pmul_append_left]
+    exact polySame_append (polySame_mul_comm gC radiusM)
+      (polySame_slide_mid (single 1 sSq) gN radiusM)
+  have hBexp : polySame B (pmul (single 1 Mono.one) gC2 ++ pmul (single 1 s2Sq) gM) := by
+    rw [hB, one_pmul]
+    exact polySame_refl _
+  refine polySame.trans (polySame_psub axes_norm_free (polySame_refl _)) ?_
+  refine polySame.trans hgap ?_
+  refine polySame.trans hback ?_
+  refine polySame.trans (polySame_append hsplit hBexp) ?_
+  exact regroup4 _ _ _ _
 
 end Universe.Symmetry

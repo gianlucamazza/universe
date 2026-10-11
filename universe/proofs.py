@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 56 righe.
+"""Certificato eseguibile del primo universo. Stampa 57 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -88,7 +88,10 @@ nell'ideale di `gN` solo, sull'anello fresco `(c1, s1, c2, s2, nx, ny, nz)`
 `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)` ha origine zero sull'anello
 `(c1, s1, c2, s2, nx, ny, nz, mx, my, mz)`, senza regole
 (`Universe.Symmetry.evolution_compose_axes`). Senza quadrati il resto non è zero,
-e il quadrato di `c1` da solo non paga la legge. `c² + s² − 1` ha resto zero
+e il quadrato di `c1` da solo non paga la legge. `a² + |b|² − 1` ha resto zero
+in `(gC, gN, gC2, gM)` (`Universe.Symmetry.axes_norm_free`,
+`Universe.Symmetry.compose_axes_norm`): senza `gM` il resto non è zero, e
+`gM` sta fuori da `reduce`, come `gA` e `gC2`. `c² + s² − 1` ha resto zero
 con `c1² = 1 − s1²` e la regola extra `c2² = 1 − s2²`
 (`Universe.Symmetry.compose_circle`): `gC2` sta fuori da `reduce`, come `gA`.
 Nel punto `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x` l'angolo composto è
@@ -951,6 +954,16 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if axes_free
         else "il prodotto su due assi non è zero nell'anello libero",
     )
+    axes_norm = _axes_norm()
+    add(
+        "Simmetria",
+        "a² + |b|² − 1 sta in (gC, gN, gC2, gM)",
+        axes_norm,
+        "senza gM il resto non è zero; gM fuori da reduce, come gA e gC2\n"
+        "Universe.Symmetry.axes_norm_free, Universe.Symmetry.compose_axes_norm"
+        if axes_norm
+        else "la norma del prodotto non sta in (gC, gN, gC2, gM)",
+    )
     add(
         "Simmetria",
         "se le due coppie stanno sul cerchio, ci sta (c, s)",
@@ -1172,6 +1185,20 @@ def _composition(ring: Ring) -> tuple[Operator, Poly, Poly, Operator]:
     return first.matmul(second) - closed, cosine, sine, closed
 
 
+def _axes_pair(ring: Ring) -> tuple[Poly, Poly, Poly, Poly]:
+    """`a` e le tre componenti di `b`, come in `evolution_compose_axes`."""
+    c1, s1, c2, s2, nx, ny, nz, mx, my, mz = (
+        ring.var(name) for name in (*_LAW, "mx", "my", "mz")
+    )
+    dotted = nx * mx + ny * my + nz * mz
+    return (
+        c1 * c2 - s1 * s2 * dotted,
+        s1 * c2 * nx + c1 * s2 * mx + s1 * s2 * (ny * mz - nz * my),
+        s1 * c2 * ny + c1 * s2 * my + s1 * s2 * (nz * mx - nx * mz),
+        s1 * c2 * nz + c1 * s2 * mz + s1 * s2 * (nx * my - ny * mx),
+    )
+
+
 def _axes_composition(ring: Ring) -> Operator:
     """`U(c₁, s₁, n) U(c₂, s₂, m) − (a I − i (b·σ))`, su `_LAW` più `mx my mz`."""
     c1, s1, c2, s2, nx, ny, nz, mx, my, mz = (
@@ -1179,14 +1206,28 @@ def _axes_composition(ring: Ring) -> Operator:
     )
     first = _evolution_cs(c1, s1, _axis_hamiltonian(ring, nx, ny, nz))
     second = _evolution_cs(c2, s2, _axis_hamiltonian(ring, mx, my, mz))
-    a = c1 * c2 - s1 * s2 * (nx * mx + ny * my + nz * mz)
-    b = _axis_hamiltonian(
-        ring,
-        s1 * c2 * nx + c1 * s2 * mx + s1 * s2 * (ny * mz - nz * my),
-        s1 * c2 * ny + c1 * s2 * my + s1 * s2 * (nz * mx - nx * mz),
-        s1 * c2 * nz + c1 * s2 * mz + s1 * s2 * (nx * my - ny * mx),
+    amplitude, bx, by, bz = _axes_pair(ring)
+    closed = _evolution_cs(amplitude, ring.one(), _axis_hamiltonian(ring, bx, by, bz))
+    return first.matmul(second) - closed
+
+
+def _axes_norm() -> bool:
+    """`a² + |b|² − 1` in `(gC, gN, gC2, gM)`. Senza `gM` il resto non è zero.
+
+    `set_square` sbuccia `c1` e `nx`. `c2` e `mx` entrano con `certify_extras`:
+    `gC2` e `gM` restano fuori da `reduce`, come `gA`.
+    """
+    ring = Ring((*_LAW, "mx", "my", "mz"))
+    ring.set_square("c1", ring.one() - ring.var("s1") ** 2)
+    ring.set_square("nx", ring.one() - ring.var("ny") ** 2 - ring.var("nz") ** 2)
+    amplitude, bx, by, bz = _axes_pair(ring)
+    gap = amplitude**2 + bx**2 + by**2 + bz**2 - ring.one()
+    circle = ("c2", ring.one() - ring.var("s2") ** 2)
+    axis = ("mx", ring.one() - ring.var("my") ** 2 - ring.var("mz") ** 2)
+    return (
+        gap.certify_extras((circle,)) is not None
+        and gap.certify_extras((circle, axis)) is None
     )
-    return first.matmul(second) - _evolution_cs(a, ring.one(), b)
 
 
 def _certified(operator: Operator) -> bool:

@@ -366,22 +366,33 @@ class Poly:
             return f"resto = {self}"
         return None
 
-    def certify_extra(self, name: str, replacement: Poly) -> str | None:
-        """`None` quando il resto è zero e i cofattori ricostruiscono l'origine.
-
-        La regola extra è `name² − replacement`, accanto a quelle dell'anello.
-        Il sostituto è la forma già ridotta. Il resto zero esibisce
-        l'appartenenza all'ideale generato da quelle regole.
-        """
+    def _extra_rule(
+        self, name: str, replacement: Poly, seen: set[int]
+    ) -> tuple[int, Raw]:
         self._same(replacement)
         idx = self.ring.index(name)
         if idx in self.ring.squares:
             raise ValueError(f"{name}² è già una regola dell'anello")
+        if idx in seen:
+            raise ValueError(f"{name}² è già una regola extra")
         normal = replacement.reduced()
         for exp, _coeff in normal.terms:
             if exp[idx] != 0:
                 raise ValueError(f"il sostituto di {name}² contiene ancora {name}")
-        extra = ((idx, Raw(self.ring, normal.terms)),)
+        seen.add(idx)
+        return idx, Raw(self.ring, normal.terms)
+
+    def certify_extras(self, rules: tuple[tuple[str, Poly], ...]) -> str | None:
+        """`None` quando il resto è zero e i cofattori ricostruiscono l'origine.
+
+        Ogni regola extra è `name² − replacement`, nell'ordine dato, dopo
+        quelle dell'anello. Il sostituto è la forma già ridotta. Il resto
+        zero esibisce l'appartenenza all'ideale generato da quelle regole.
+        """
+        seen: set[int] = set()
+        extra = tuple(
+            self._extra_rule(name, replacement, seen) for name, replacement in rules
+        )
         remainder, factors = reduce_witness(self.origin, extra)
         if not witness_holds(self.origin, remainder, factors, extra):
             return "cofattori non tornano"
@@ -389,6 +400,10 @@ class Poly:
             shown = Poly(self.ring, remainder.terms, remainder)
             return f"resto = {shown}"
         return None
+
+    def certify_extra(self, name: str, replacement: Poly) -> str | None:
+        """Una regola extra. Stesso contratto di `certify_extras`."""
+        return self.certify_extras(((name, replacement),))
 
     def substitute(self, values: dict[str, Gauss]) -> Poly:
         acc: dict[tuple[int, ...], Gauss] = {}

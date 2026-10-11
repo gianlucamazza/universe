@@ -73,6 +73,24 @@ def test_witness_holds_rejects_wrong_cofactors():
     assert not witness_holds(origin, remainder, factors[:1])
 
 
+def test_certify_extras_needs_every_rule():
+    ring = Ring(("x", "y", "u", "v"))
+    one = ring.one()
+    gap = (ring.var("x") ** 2 + ring.var("y") ** 2 - one) * (
+        ring.var("u") ** 2 + ring.var("v") ** 2
+    ) + (ring.var("u") ** 2 + ring.var("v") ** 2 - one)
+    first = ("x", one - ring.var("y") ** 2)
+    second = ("u", one - ring.var("v") ** 2)
+    missing = gap.certify_extras((first,))
+    assert missing is not None and missing.startswith("resto")
+    assert gap.certify_extra("x", first[1]) == missing
+    assert gap.certify_extras((first, second)) is None
+    with pytest.raises(ValueError):
+        one.certify_extras((("x", ring.var("x")),))
+    with pytest.raises(ValueError):
+        one.certify_extras((("x", one), ("x", one)))
+
+
 def test_certify_extra_sphere():
     s = qubit_scalars()
     sphere = s.ar**2 + s.ai**2 + s.br**2 + s.bi**2
