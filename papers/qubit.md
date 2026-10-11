@@ -164,6 +164,10 @@ Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = eₓ`, riempiono 
 | 6     | 110 | 2304/15625 |
 | 7     | 111 | 4096/15625 |
 
+Ogni numero di qubit. `Universe.Qubits` rappresenta uno stato di `n` qubit come un albero binario perfetto, `QState n`: `node l r` divide sul primo qubit, e l'ordine delle `2ⁿ` foglie è quello di `Quad` e di `Oct`. `applyAt k U` agisce sul qubit `k` mescolando le foglie che differiscono solo in quel bit; ogni prova è un'induzione sull'albero, e `Mono` non cresce. `norm_applyAt` mette `‖applyAt k U v‖² − ‖v‖²` in `(gC, gN)`: sul qubit alto è `literal_evolution_norm` foglia per foglia, più in basso la somma delle due differenze dei figli. `no_signalling_at` dice lo stesso del marginale di ogni qubit `a ≠ k`. `applyAt_comm` fa commutare due porte su qubit diversi, nel libero, foglia per foglia (`qstateSame`). `reduceAt` è la traccia parziale su un qubit; `reduceAt_diag` ne dà la diagonale, `marginalAt`, e `reduceAt_product` il valore `‖resto‖² |ψ⟩⟨ψ|` su un prodotto. Il fan-out, un `CNOT` dal qubit `0` verso ogni altro, dà `α|0…0⟩ + β|1…1⟩` (`fanout_ghz`); `fanout_agree` azzera il peso delle celle in cui due qubit differiscono, e `fanout_decoherence` rende diagonale il sistema per `n ≥ 2`. Sotto `ofQuad` e `ofOct`, `applyAt` è `applyUI`, `applyIU`, `applyUII`, `applyIUI`, `applyIIU`: `reduce_product`, `no_signalling_any_0`, `no_signalling_any_1`, `no_signalling_wigner` e `no_signalling_friend` ne sono corollari. Il certificato Python controlla gli stessi fatti su stati generici fino a quattro o cinque qubit (`universe/qubits.py`).
+
+![Ogni numero di qubit: lo stato è un albero, e una porta sul qubit k mescola coppie di foglie](figures/qubits.svg)
+
 ## 7. L'osservatore
 
 `Obs` era un assioma. Qui diventa la diagonale di un sottosistema. Il modulo è `Universe.Observer`; ogni enunciato vale per ogni coppia di ampiezze, nell'anello libero, salvo dove è detto.

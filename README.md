@@ -41,6 +41,8 @@ Every fact is checked twice, independently:
    - Wigner can undo the friend's measurement, and the system's coherence comes back, until the friend's record has been copied;
    - nothing done to the friend or to Wigner changes what the system does.
 
+6. **Any number of qubits.** The structural theorems hold for `n` qubits, for every `n`, not for two and three separately. Done: a gate on one qubit keeps the norm and changes no other qubit's weights; gates on different qubits commute; `n` observers on one system all agree, and the system decoheres.
+
    What comes next, and what "complete" means here, is [`plans/roadmap.md`](plans/roadmap.md).
 
 The model does not simulate our universe, and it does not try to. It is a laboratory where the parts of a physical theory can be made exact one at a time.
@@ -85,16 +87,16 @@ lake build                # the Lean proofs
 
 ## Repository layout
 
-| Path              | Content                                                                                                                                                                                                                                                   |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `interaction.py`, `proofs.py`, `lean_map.py` (certificate line → Lean theorems), `worlds/qubit.py`, `__main__.py` |
-| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Ontology`, `Composition`, `Observer`, `Symmetry`, `Interaction`                                                                 |
-| `tests/`          | unit tests of the Python side and the documentation guards                                                                                                                                                                                                |
-| `.github/`        | the CI workflow and the Dependabot configuration                                                                                                                                                                                                          |
-| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                                                                                                                      |
-| `papers/figures/` | the figures, hand-written SVG                                                                                                                                                                                                                             |
-| `researches/`     | arguments behind single results                                                                                                                                                                                                                           |
-| `plans/`          | work plans: executed, in progress, and the roadmap to 1.0                                                                                                                                                                                                 |
+| Path              | Content                                                                                                                                                                                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `universe/`       | the Python certificate: `ring.py` (exact scalars, quotient, cofactors), `ontology.py`, `dynamics.py`, `epistemology.py`, `observer.py`, `interaction.py`, `qubits.py` (states of `n` qubits), `proofs.py`, `lean_map.py` (certificate line → Lean theorems), `worlds/qubit.py`, `__main__.py` |
+| `Universe/`       | the Lean library, one module per layer: `Ring`, `Quotient`, `Series`, `Dynamics`, `Qubit`, `Epistemology`, `Evaluation`, `Ontology`, `Composition`, `Qubits`, `Observer`, `Symmetry`, `Interaction`                                                                                           |
+| `tests/`          | unit tests of the Python side and the documentation guards                                                                                                                                                                                                                                    |
+| `.github/`        | the CI workflow and the Dependabot configuration                                                                                                                                                                                                                                              |
+| `papers/qubit.md` | the formal note: which identity lives in which ideal                                                                                                                                                                                                                                          |
+| `papers/figures/` | the figures, hand-written SVG                                                                                                                                                                                                                                                                 |
+| `researches/`     | arguments behind single results                                                                                                                                                                                                                                                               |
+| `plans/`          | work plans: executed, in progress, and the roadmap to 1.0                                                                                                                                                                                                                                     |
 
 The README is in English. The notes in `papers/` and `researches/`, the docstrings and the certificate output are in Italian.
 
@@ -102,7 +104,7 @@ The README is in English. The notes in `papers/` and `researches/`, the docstrin
 
 The universe is the triple `(X, Φ, Obs)`. `X` is a finite-dimensional state space. `Φ` is `exp(−i φ n·σ)`, written in closed form as `U = c I − i s H` with `H = n·σ`; `c` and `s` stay symbols, bound only by `c² + s² = 1` and `|n| = 1`. `expCoeff_hamiltonian` is what licenses that closed form: `H² = I`, so the series of `exp` collapses to cosine and sine. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
 
-A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial over a monomial of eighteen named exponents (`c s nx ny nz` for the law, eight for the amplitudes of two qubits, `c2 s2` for a second time step, `mx my mz` for a second axis), and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
+A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial over a monomial of eighteen named exponents (`c s nx ny nz` for the law, eight for the amplitudes of two qubits, `c2 s2` for a second time step, `mx my mz` for a second axis). States of `n` qubits do not widen it: they are trees of polynomials, and their theorems hold for every state. `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
 
 The statements separate by the rules they need:
 
@@ -164,6 +166,17 @@ The cell of `|i⟩ ⊗ |j⟩ ⊗ |k⟩` is `4·i + 2·j + k`, in both constructi
 Three copies of evolved `|0⟩` at the rational point fill the eight cells: each bit `0` contributes `9/25`, each bit `1` contributes `16/25`, and the eight weights sum to 1.
 
 ![Eight cells of three copies of evolved ground state](papers/figures/celle.svg)
+
+**Any number of qubits.** A state of `n` qubits is a perfect binary tree (`QState n`): the root splits on the first qubit, and the `2ⁿ` leaves are the amplitudes, in the cell order above. A gate on qubit `k` (`applyAt`) mixes the leaves that differ only in that bit, so each pair is one qubit, and every proof is an induction on the tree. For every `n` and every state:
+
+- a gate on any qubit keeps the norm, modulo `(gC, gN)` (`norm_applyAt`), and leaves the Born weights of every other qubit unchanged (`no_signalling_at`);
+- gates on different qubits commute (`applyAt_comm`);
+- the state of one qubit, the partial trace over the others (`reduceAt`), has its Born weights on the diagonal (`reduceAt_diag`), and on a product state it is `‖rest‖² |ψ⟩⟨ψ|` (`reduceAt_product`);
+- `n` observers coupled to one system give `α|0…0⟩ + β|1…1⟩` (`fanout_ghz`), every pair of them agrees (`fanout_agree`), and the system decoheres to its Born weights (`fanout_decoherence`).
+
+The two- and three-qubit structures are the cases `n = 2` and `n = 3`: their no-signalling and reduced-product theorems are now corollaries of these. Python checks the same facts on generic states up to four or five qubits.
+
+![Any number of qubits: a state is a tree, and a gate on qubit k mixes pairs of leaves](papers/figures/qubits.svg)
 
 ## The observer inside
 
@@ -239,12 +252,15 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 
 ### Composition
 
-| Fact                                                                       | Python                                    | Lean                                                                                                                                                       |
-| -------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `\|0⟩ ⊗ \|0⟩ = \|00⟩`                                                      | certificate                               | `Universe.Composition.ground_tensor`                                                                                                                       |
-| `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)`        | certificate on `\|φ⟩ = \|0⟩`              | `Universe.Composition.kronecker_ui_gen`, `Universe.Composition.marginal_left_gen`                                                                          |
-| `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)`                      | certificate on `\|ψ⟩ = \|0⟩`              | `Universe.Composition.kronecker_iu_gen`, `Universe.Composition.marginal_right_gen`                                                                         |
-| The two groupings of three qubits are the same state, before and after `U` | `tensor_index`, amplitudes, `(U ⊗ I ⊗ I)` | `Universe.Ontology.tensorIndexAssoc`, `Universe.Composition.tensor_assoc`, `Universe.Composition.tensor_assoc_ui`, `Universe.Composition.tensor_assoc_obs` |
+| Fact                                                                                                              | Python                                    | Lean                                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `\|0⟩ ⊗ \|0⟩ = \|00⟩`                                                                                             | certificate                               | `Universe.Composition.ground_tensor`                                                                                                                       |
+| `(U ⊗ I)(\|ψ⟩ ⊗ \|φ⟩) = (U\|ψ⟩) ⊗ \|φ⟩`, marginal `‖φ‖² · P(U\|ψ⟩)`                                               | certificate on `\|φ⟩ = \|0⟩`              | `Universe.Composition.kronecker_ui_gen`, `Universe.Composition.marginal_left_gen`                                                                          |
+| `(I ⊗ U)(\|ψ⟩ ⊗ \|φ⟩)` has marginal `‖ψ‖² · P(U\|φ⟩)`                                                             | certificate on `\|ψ⟩ = \|0⟩`              | `Universe.Composition.kronecker_iu_gen`, `Universe.Composition.marginal_right_gen`                                                                         |
+| The two groupings of three qubits are the same state, before and after `U`                                        | `tensor_index`, amplitudes, `(U ⊗ I ⊗ I)` | `Universe.Ontology.tensorIndexAssoc`, `Universe.Composition.tensor_assoc`, `Universe.Composition.tensor_assoc_ui`, `Universe.Composition.tensor_assoc_obs` |
+| `n` qubits, every `n`: a gate keeps the norm and no other qubit's weights move; gates on different qubits commute | certificate, `n ≤ 4`                      | `Universe.Qubits.norm_applyAt`, `Universe.Qubits.no_signalling_at`, `Universe.Qubits.applyAt_comm`                                                         |
+| `n` qubits: the state of one qubit, its diagonal, and a product                                                   | certificate, `n ≤ 4`                      | `Universe.Qubits.reduceAt_diag`, `Universe.Qubits.reduceAt_product`                                                                                        |
+| `n` observers: `α\|0…0⟩ + β\|1…1⟩`, every pair agrees, the system decoheres                                       | certificate, `n ≤ 5`                      | `Universe.Qubits.fanout_ghz`, `Universe.Qubits.fanout_agree`, `Universe.Qubits.fanout_decoherence`                                                         |
 
 ### Observer
 

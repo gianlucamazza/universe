@@ -1,16 +1,16 @@
 # Plan: every number of qubits
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress. Milestone M2 of `plans/roadmap.md`, release `v0.6.0`.
+Status: complete. All six phases are done and pushed. Milestone M2 of `plans/roadmap.md`, release `v0.6.0`.
 
-| Phase | State   | Goal                                                                    |
-| ----- | ------- | ----------------------------------------------------------------------- |
-| 0     | done    | spike: `n`-qubit states, a gate on any qubit, the norm is kept          |
-| 1     | done    | no-signalling between any two qubits, for every `n`                     |
-| 2     | done    | gates on different qubits commute; the state of one qubit               |
-| 3     | done    | `n` observers on one system: `α\|0…0⟩ + β\|1…1⟩`, and every pair agrees |
-| 4     | done    | the `Quad` and `Oct` theorems are the cases `n = 2` and `n = 3`         |
-| 5     | planned | docs, figure, release                                                   |
+| Phase | State | Goal                                                                    |
+| ----- | ----- | ----------------------------------------------------------------------- |
+| 0     | done  | spike: `n`-qubit states, a gate on any qubit, the norm is kept          |
+| 1     | done  | no-signalling between any two qubits, for every `n`                     |
+| 2     | done  | gates on different qubits commute; the state of one qubit               |
+| 3     | done  | `n` observers on one system: `α\|0…0⟩ + β\|1…1⟩`, and every pair agrees |
+| 4     | done  | the `Quad` and `Oct` theorems are the cases `n = 2` and `n = 3`         |
+| 5     | done  | docs, figure, release                                                   |
 
 ## 1. Why
 

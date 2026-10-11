@@ -52,6 +52,8 @@ Otto reali in più, campi espliciti: 28 righe nette, un file, le prove restano, 
 
 La fase 3 si ferma. `Quotient.lean` resta a 1817 righe.
 
+Dopo la nota. Il problema che questa nota misurava, un qubit in più costa `2ⁿ⁺¹` reali con nome, è chiuso senza un monomio parametrico (`plans/n-qubits.md`). Uno stato di `n` qubit è un albero di polinomi, `Universe.Qubits.QState`, e i teoremi valgono per ogni stato, come già `no_signalling_any_0` per ogni `Quad`: le ampiezze non sono indeterminate di `Mono`, quindi `Mono` non cresce.
+
 ## Fuori da questo argomento
 
 `gA` resta fuori da `reduce`. `monoVal` e `evalAt` restano su `c s nx ny nz`. Il certificato è il Python, e questa nota non lo tocca. `README.md`, `papers/` e la fase 4 non sono questo testo.

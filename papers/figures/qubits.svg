@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" role="img">
+  <title>Any number of qubits: a state is a perfect binary tree, and a gate on qubit k mixes pairs of leaves</title>
+  <desc>Left: a three-qubit state as a perfect binary tree. The root splits on qubit 0, the next level on qubit 1, the last on qubit 2; the eight leaves are the amplitudes of 000 to 111. A gate on qubit 1 mixes the leaves that differ only in that bit: 000 with 010, 001 with 011, 100 with 110, 101 with 111. Right: the theorems proved in Lean for every n by induction on the tree.</desc>
+  <rect width="920" height="470" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .pair { stroke: #8c3a2f; stroke-width: 1.6; fill: none; }
+    .head { font-size: 18px; }
+    .label { font-size: 16px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <text class="head" x="36" y="44">a state of n qubits is a tree</text>
+
+  <!-- levels -->
+  <text class="tiny muted" x="20" y="134">qubit 0</text>
+  <text class="tiny muted" x="20" y="204">qubit 1</text>
+  <text class="tiny muted" x="20" y="274">qubit 2</text>
+
+  <!-- edges: root (266,110) -> (154,180), (378,180) -->
+  <line class="edge" x1="266" y1="110" x2="154" y2="180"/>
+  <line class="edge" x1="266" y1="110" x2="378" y2="180"/>
+  <line class="edge" x1="154" y1="180" x2="98" y2="250"/>
+  <line class="edge" x1="154" y1="180" x2="210" y2="250"/>
+  <line class="edge" x1="378" y1="180" x2="322" y2="250"/>
+  <line class="edge" x1="378" y1="180" x2="434" y2="250"/>
+  <line class="edge" x1="98" y1="250" x2="70" y2="320"/>
+  <line class="edge" x1="98" y1="250" x2="126" y2="320"/>
+  <line class="edge" x1="210" y1="250" x2="182" y2="320"/>
+  <line class="edge" x1="210" y1="250" x2="238" y2="320"/>
+  <line class="edge" x1="322" y1="250" x2="294" y2="320"/>
+  <line class="edge" x1="322" y1="250" x2="350" y2="320"/>
+  <line class="edge" x1="434" y1="250" x2="406" y2="320"/>
+  <line class="edge" x1="434" y1="250" x2="462" y2="320"/>
+
+  <g class="tiny muted mid">
+    <text x="196" y="138">0</text><text x="336" y="138">1</text>
+    <text x="114" y="210">0</text><text x="194" y="210">1</text>
+    <text x="338" y="210">0</text><text x="418" y="210">1</text>
+  </g>
+
+  <circle cx="266" cy="110" r="5" fill="#1a1814"/>
+  <circle cx="154" cy="180" r="5" fill="#1a1814"/>
+  <circle cx="378" cy="180" r="5" fill="#1a1814"/>
+  <circle cx="98" cy="250" r="5" fill="#1a1814"/>
+  <circle cx="210" cy="250" r="5" fill="#1a1814"/>
+  <circle cx="322" cy="250" r="5" fill="#1a1814"/>
+  <circle cx="434" cy="250" r="5" fill="#1a1814"/>
+  <g fill="#fffdf8" stroke="#1a1814" stroke-width="1.4">
+    <circle cx="70" cy="320" r="6"/><circle cx="126" cy="320" r="6"/>
+    <circle cx="182" cy="320" r="6"/><circle cx="238" cy="320" r="6"/>
+    <circle cx="294" cy="320" r="6"/><circle cx="350" cy="320" r="6"/>
+    <circle cx="406" cy="320" r="6"/><circle cx="462" cy="320" r="6"/>
+  </g>
+  <g class="tiny mid">
+    <text x="70" y="346">000</text><text x="126" y="346">001</text>
+    <text x="182" y="346">010</text><text x="238" y="346">011</text>
+    <text x="294" y="346">100</text><text x="350" y="346">101</text>
+    <text x="406" y="346">110</text><text x="462" y="346">111</text>
+  </g>
+
+  <!-- a gate on qubit 1 mixes leaves that differ in that bit -->
+  <path class="pair" d="M 70 356 Q 126 400 182 356"/>
+  <path class="pair" d="M 126 356 Q 182 392 238 356"/>
+  <path class="pair" d="M 294 356 Q 350 400 406 356"/>
+  <path class="pair" d="M 350 356 Q 406 392 462 356"/>
+  <text class="small" x="36" y="430" style="fill:#8c3a2f">a gate on qubit 1 mixes the leaves that differ only in that bit</text>
+  <text class="tiny muted" x="36" y="450">each pair is one qubit: its norm is kept by literal_evolution_norm, leaf by leaf</text>
+
+  <!-- theorems -->
+  <text class="head" x="540" y="44">for every n</text>
+  <text class="small" x="540" y="84">a gate on qubit k keeps the norm</text>
+  <text class="lemma" x="540" y="104">norm_applyAt</text>
+  <text class="small" x="540" y="140">and changes no other qubit's weights</text>
+  <text class="lemma" x="540" y="160">no_signalling_at</text>
+  <text class="small" x="540" y="196">gates on different qubits commute</text>
+  <text class="lemma" x="540" y="216">applyAt_comm</text>
+  <text class="small" x="540" y="252">one qubit's state: its weights on the</text>
+  <text class="small" x="540" y="272">diagonal, |ψ⟩⟨ψ| on a product</text>
+  <text class="lemma" x="540" y="292">reduceAt_diag, reduceAt_product</text>
+  <text class="small" x="540" y="328">n observers: α|0…0⟩ + β|1…1⟩,</text>
+  <text class="small" x="540" y="348">every pair agrees, the system decoheres</text>
+  <text class="lemma" x="540" y="368">fanout_ghz, fanout_agree,</text>
+  <text class="lemma" x="540" y="386">fanout_decoherence</text>
+  <text class="tiny muted" x="540" y="430">induction on the tree; Mono does not grow;</text>
+  <text class="tiny muted" x="540" y="450">Quad and Oct are the cases n = 2 and n = 3</text>
+</svg>
