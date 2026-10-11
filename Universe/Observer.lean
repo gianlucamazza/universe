@@ -31,6 +31,11 @@ Dopo la copia `cnot12`, la stessa porta lascia `α|000⟩ + β|101⟩`: le
 entrate fuori diagonale sono il polinomio zero, la diagonale è
 `bornPair`, e il marginale di Wigner resta `bornPair`.
 
+Nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, con `ψ = Φ|0⟩`, disfare
+l'amico restituisce coerenza `12/25 i` e purezza `1`. Dopo la copia
+la coerenza è `0`, la purezza è `337/625` e Wigner legge `9/25`,
+`16/25`.
+
 `I ⊗ U` sull'apparato, dopo `CNOT` con `|0⟩`, non cambia il marginale
 del sistema. La differenza sta in `(gC, gN)`: i cofattori di `δ`
 moltiplicati per `|α|²` e per `|β|²`. Lo stesso conto vale per ogni
@@ -708,6 +713,124 @@ theorem wigner_keeps_record (ψ : Pair) :
   rw [(copy_irreversible ψ).1]
   simp only [marginalWigner, bornPair, columnBorn_nil, List.append_nil, List.nil_append]
   exact pairSame_refl _
+
+/-! ### Il punto razionale -/
+
+/-- Nel punto `ψ = Φ|0⟩`, `c = 3/5`, `s = 4/5`, `n = e_x`.
+
+Disfare l'amico restituisce la coerenza `12/25 i` e la purezza `1`.
+`eval_purity` porta `Tr(ρ²)` sulle quattro entrate di `|ψ⟩⟨ψ|`. -/
+theorem point_undone :
+    evalAt pointC pointS 1 0 0
+        (reduceSystem (cnot01 (cnot01
+          (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0)))).a01 =
+      ⟨0, (12 : Rat) / 25⟩ ∧
+      evalAt pointC pointS 1 0 0
+          (purity (reduceSystem (cnot01 (cnot01
+            (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0))))) =
+        ⟨1, 0⟩ := by
+  have hket : applyMat evolution ket0 = ⟨evolution.a00, evolution.a10⟩ := by
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  refine ⟨?_, ?_⟩
+  · rw [eval_polySame (friend_undone (applyMat evolution ket0)).2, hket]
+    rw [eval_pmul, eval_conj, eval_a00_point, eval_a10_point]
+    simp only [pointAlpha, pointBeta, pointC, pointS, Gauss.conj]
+    ext <;> simp <;> grind
+  · have hrestore := (friend_undone (applyMat evolution ket0)).1
+    rw [hrestore]
+    rw [eval_polySame (purity_matSame (reduceSystem_product (applyMat evolution ket0)))]
+    have he00 : evalAt pointC pointS 1 0 0 (outer (applyMat evolution ket0)).a00 =
+        pointAlpha * Gauss.conj pointAlpha := by
+      rw [hket]
+      simp only [outer, columnBorn]
+      rw [eval_pmul, eval_conj, eval_a00_point]
+    have he11 : evalAt pointC pointS 1 0 0 (outer (applyMat evolution ket0)).a11 =
+        pointBeta * Gauss.conj pointBeta := by
+      rw [hket]
+      simp only [outer, columnBorn]
+      rw [eval_pmul, eval_conj, eval_a10_point]
+    have he01 : evalAt pointC pointS 1 0 0 (outer (applyMat evolution ket0)).a01 =
+        pointAlpha * Gauss.conj pointBeta := by
+      rw [hket]
+      simp only [outer]
+      rw [eval_pmul, eval_conj, eval_a00_point, eval_a10_point]
+    have he10 : evalAt pointC pointS 1 0 0 (outer (applyMat evolution ket0)).a10 =
+        pointBeta * Gauss.conj pointAlpha := by
+      rw [hket]
+      simp only [outer]
+      rw [eval_pmul, eval_conj, eval_a10_point, eval_a00_point]
+    rw [eval_purity, he00, he01, he10, he11]
+    simp only [pointAlpha, pointBeta, pointC, pointS, Gauss.conj]
+    ext <;> simp <;> grind
+
+/-- Nello stesso punto, dopo la copia, la coerenza è `0` e la purezza è `337/625`.
+
+Wigner legge `9/25` e `16/25`. `eval_purity` espande `Tr(ρ²)`. Il valore
+è quello di `point_purity`: la diagonale è la stessa di `decoherence`. -/
+theorem point_copied :
+    evalAt pointC pointS 1 0 0
+        (reduceSystem (cnot01 (cnot12 (cnot01
+          (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0))))).a01 = 0 ∧
+      evalAt pointC pointS 1 0 0
+          (purity (reduceSystem (cnot01 (cnot12 (cnot01
+            (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0)))))) =
+        ⟨(337 : Rat) / 625, 0⟩ ∧
+        evalAt pointC pointS 1 0 0
+            (marginalWigner (cnot01 (cnot12 (cnot01
+              (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0))))).a0 =
+          ⟨(9 : Rat) / 25, 0⟩ ∧
+          evalAt pointC pointS 1 0 0
+              (marginalWigner (cnot01 (cnot12 (cnot01
+                (tensorLeft (tensorPair (applyMat evolution ket0) ket0) ket0))))).a1 =
+            ⟨(16 : Rat) / 25, 0⟩ := by
+  let ψ := applyMat evolution ket0
+  have hket : ψ = ⟨evolution.a00, evolution.a10⟩ := by
+    unfold ψ
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  let copied :=
+    cnot01 (cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)))
+  have hcopy := copy_irreversible ψ
+  have hcells : matSame (reduceSystem copied)
+      ⟨columnBorn ψ.a0, [], [], columnBorn ψ.a1⟩ :=
+    ⟨hcopy.2.2.2.1, hcopy.2.1, hcopy.2.2.1, hcopy.2.2.2.2⟩
+  have hpur : polySame (purity (reduceSystem copied))
+      (purity (reduceLeft (applyCNOT (tensorPair ψ ket0)))) :=
+    polySame.trans (purity_matSame hcells)
+      (polySame.symm (purity_matSame (decohered_diag ψ)))
+  have he00 : evalAt pointC pointS 1 0 0 (reduceSystem copied).a00 =
+      pointAlpha * Gauss.conj pointAlpha := by
+    rw [eval_polySame hcells.1, hket]
+    simp only [columnBorn]
+    rw [eval_pmul, eval_conj, eval_a00_point]
+  have he01 : evalAt pointC pointS 1 0 0 (reduceSystem copied).a01 = 0 := by
+    rw [eval_polySame hcells.2.1]
+    rfl
+  have he10 : evalAt pointC pointS 1 0 0 (reduceSystem copied).a10 = 0 := by
+    rw [eval_polySame hcells.2.2.1]
+    rfl
+  have he11 : evalAt pointC pointS 1 0 0 (reduceSystem copied).a11 =
+      pointBeta * Gauss.conj pointBeta := by
+    rw [eval_polySame hcells.2.2.2, hket]
+    simp only [columnBorn]
+    rw [eval_pmul, eval_conj, eval_a10_point]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [eval_polySame hcells.2.1]
+    rfl
+  · rw [eval_purity, he00, he01, he10, he11]
+    have hvalue := point_purity.1
+    rw [(eval_polySame hpur pointC pointS 1 0 0).symm, eval_purity, he00, he01, he10,
+      he11] at hvalue
+    exact hvalue
+  · rw [eval_polySame (wigner_keeps_record ψ).1, hket]
+    simp only [bornPair, columnBorn]
+    rw [eval_pmul, eval_conj, eval_a00_point]
+    simp only [pointAlpha, pointC, Gauss.conj]
+    ext <;> simp <;> grind
+  · rw [eval_polySame (wigner_keeps_record ψ).2, hket]
+    simp only [bornPair, columnBorn]
+    rw [eval_pmul, eval_conj, eval_a10_point]
+    simp only [pointBeta, pointS, Gauss.conj]
+    ext <;> simp <;> grind
 
 /-! ### L'apparato non segnala -/
 

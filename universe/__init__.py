@@ -50,6 +50,11 @@ e `Universe.Observer.order_irrelevant`. Wigner legge l'amico con
 `Universe.Observer.reduceSystem_product`). Dopo la copia il sistema
 resta diagonale (`Universe.Observer.copy_irreversible`) e Wigner
 conserva il peso di Born (`Universe.Observer.wigner_keeps_record`).
+Nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, con `ψ = Φ|0⟩`, disfare
+l'amico dà coerenza `12/25 i` e purezza `1`
+(`Universe.Observer.point_undone`). Dopo la copia la coerenza è `0`,
+la purezza è `337/625` e Wigner legge `9/25` e `16/25`
+(`Universe.Observer.point_copied`).
 Un unitario locale sull'apparato
 non cambia i pesi del sistema. Dopo `CNOT` con `|0⟩` i teoremi sono
 `Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.

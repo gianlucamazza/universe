@@ -54,7 +54,7 @@ u₀ · ((x₀ · y) · z) + u₁ · ((x₁ · y) · z) = ((u₀ · x₀ + u₁ 
 
 ## Testimone
 
-`python -m universe` stampa 64 righe. La riga di associatività resta una sola. Gli indici stanno sull'anello `(i, j, k, nb, nc)`: è l'identità polinomiale di `tensor_index`, dunque `tensorIndexAssoc` sui naturali. Ampiezze e `(U ⊗ I ⊗ I)` stanno sull'anello `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Le tre scritture `(U ⊗ I) ⊗ I`, `U ⊗ (I ⊗ I)` e `U ⊗ I₄` danno lo stesso stato di `U` applicato al primo fattore e poi composto. I moduli quadri delle due parentesizzazioni coincidono, e coincidono anche dopo `Φ`, perché gli stati coincidono. Il dettaglio cita `tensor_index`, `Universe.Composition.tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
+`python -m universe` stampa 66 righe. La riga di associatività resta una sola. Gli indici stanno sull'anello `(i, j, k, nb, nc)`: è l'identità polinomiale di `tensor_index`, dunque `tensorIndexAssoc` sui naturali. Ampiezze e `(U ⊗ I ⊗ I)` stanno sull'anello `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Le tre scritture `(U ⊗ I) ⊗ I`, `U ⊗ (I ⊗ I)` e `U ⊗ I₄` danno lo stesso stato di `U` applicato al primo fattore e poi composto. I moduli quadri delle due parentesizzazioni coincidono, e coincidono anche dopo `Φ`, perché gli stati coincidono. Il dettaglio cita `tensor_index`, `Universe.Composition.tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
 
 ## Fuori da questo argomento
 
@@ -62,4 +62,4 @@ u₀ · ((x₀ · y) · z) + u₁ · ((x₁ · y) · z) = ((u₀ · x₀ + u₁ 
 
 ## Verifica
 
-`lake build` sulla libreria `Universe`. `python -m universe` stampa `64/64` ed esce 0.
+`lake build` sulla libreria `Universe`. `python -m universe` stampa `66/66` ed esce 0.

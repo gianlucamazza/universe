@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 64 righe.
+"""Certificato eseguibile del primo universo. Stampa 66 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -48,7 +48,11 @@ volte, restituisce `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` e la coerenza `α β̄`
 lascia `α|000⟩ + β|101⟩`: l'antidiagonale del sistema è zero e la
 diagonale è il peso di Born (`Universe.Observer.copy_irreversible`).
 Il marginale di Wigner resta quel peso
-(`Universe.Observer.wigner_keeps_record`). Un unitario locale sull'apparato
+(`Universe.Observer.wigner_keeps_record`). Nel punto `c = 3/5`, `s = 4/5`,
+`n = e_x`, con `ψ = Φ|0⟩`, disfare l'amico dà coerenza `12/25 i` e
+purezza `1` (`Universe.Observer.point_undone`). Dopo la copia la
+coerenza è `0`, la purezza è `337/625` e Wigner legge `9/25` e `16/25`
+(`Universe.Observer.point_copied`). Un unitario locale sull'apparato
 non cambia i due pesi del sistema. Il conto sta sull'anello
 `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`: lo stato è
 generico. Lean lo prova per ogni `Quad`,
@@ -663,6 +667,51 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "marginale del bit basso\nUniverse.Observer.wigner_keeps_record"
         if record_ok
         else "Wigner non legge più il sistema",
+    )
+
+    lab = tensor_state(tensor_state(ground, world.ground()), world.ground())
+    friend_gate = cnot01(ring)
+    wigner_gate = cnot12(ring)
+    undone_state = friend_gate.apply(friend_gate.apply(lab))
+    copied_state = friend_gate.apply(wigner_gate.apply(friend_gate.apply(lab)))
+    undone_rho = reduced(undone_state, 0, 2, 4)
+    copied_rho = reduced(copied_state, 0, 2, 4)
+    undone_coherence = undone_rho.rows[0][1].evaluate(rational)
+    undone_purity = purity(undone_rho).evaluate(rational)
+    copied_coherence = copied_rho.rows[0][1].evaluate(rational)
+    copied_other = copied_rho.rows[1][0].evaluate(rational)
+    copied_purity = purity(copied_rho).evaluate(rational)
+    wigner_margin = marginal(copied_state, 1, 4, 2)
+    weight0 = wigner_margin[0].evaluate(rational)
+    weight1 = wigner_margin[1].evaluate(rational)
+    coherence_ok = undone_coherence == g(0, Fraction(12, 25))
+    purity_ok = undone_purity == g(1)
+    undone_point_ok = coherence_ok and purity_ok
+    add(
+        "Osservatore",
+        "nel punto, disfare l'amico dà coerenza 12/25 i e purezza 1",
+        undone_point_ok,
+        "ψ = Φ|0⟩, c = 3/5, s = 4/5, n = e_x\nUniverse.Observer.point_undone"
+        if undone_point_ok
+        else f"coerenza {undone_coherence}, purezza {undone_purity}",
+    )
+    copied_point_ok = (
+        copied_coherence == g(0)
+        and copied_other == g(0)
+        and copied_purity == g(Fraction(337, 625))
+        and weight0 == g(Fraction(9, 25))
+        and weight1 == g(Fraction(16, 25))
+    )
+    add(
+        "Osservatore",
+        "nel punto, dopo la copia: coerenza 0, purezza 337/625, pesi 9/25 e 16/25",
+        copied_point_ok,
+        "Wigner legge ancora il sistema\nUniverse.Observer.point_copied"
+        if copied_point_ok
+        else (
+            f"coerenza {copied_coherence}, purezza {copied_purity}, "
+            f"pesi {weight0}, {weight1}"
+        ),
     )
 
     gap0, gap1 = no_signalling_gap()

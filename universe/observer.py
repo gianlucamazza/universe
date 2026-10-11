@@ -23,7 +23,11 @@ e la coerenza `α β̄` (`Universe.Observer.friend_undone`,
 `Universe.Observer.reduceSystem_product`). Dopo `cnot12` resta
 `α|000⟩ + β|101⟩`: il sistema è diagonale con i pesi di Born
 (`Universe.Observer.copy_irreversible`) e il marginale di Wigner è lo
-stesso peso (`Universe.Observer.wigner_keeps_record`).
+stesso peso (`Universe.Observer.wigner_keeps_record`). Nel punto
+`c = 3/5`, `s = 4/5`, `n = e_x`, con `ψ = Φ|0⟩`, la coerenza torna
+`12/25 i` e la purezza vale `1` (`Universe.Observer.point_undone`).
+Dopo la copia la coerenza è `0`, la purezza è `337/625` e Wigner
+legge `9/25` e `16/25` (`Universe.Observer.point_copied`).
 
 `no_signalling_gap` è `I ⊗ U` su uno stato di due qubit generico. `U` è
 `c I − i s H` nel quoziente. La differenza dei pesi del sistema ha resto

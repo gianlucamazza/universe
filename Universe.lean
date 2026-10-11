@@ -61,6 +61,9 @@ in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
 `reduceSystem` traccia amico e Wigner. `friend_undone` restituisce
 `α conj(β)`. `copy_irreversible` lascia `α|000⟩ + β|101⟩` con il
 sistema diagonale, e `wigner_keeps_record` conserva `bornPair`.
+`point_undone` valuta, su `Φ|0⟩` nel punto, coerenza `12/25 i` e
+purezza `1`. `point_copied` valuta coerenza `0`, purezza `337/625`
+e i pesi di Wigner `9/25`, `16/25`.
 `no_signalling_0` e `no_signalling_1` dicono che `I ⊗ U` sull'apparato,
 dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
 in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono

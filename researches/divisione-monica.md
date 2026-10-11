@@ -35,7 +35,7 @@ I cofattori non sono unici. `gN · gC + (−gC) · gN` ha tutti i coefficienti z
 
 `reduce_gC_rem` e `reduce_gN_rem` restano il calcolo diretto sui due generatori.
 
-`python -m universe` stampa 64 righe. Una riga è dimostrata quando il resto è zero e l'espansione libera dei cofattori ricostruisce il polinomio. Quel testimone eseguibile e `reduce_complete` si citano. Il teorema è su `Universe.Quotient.reduce`.
+`python -m universe` stampa 66 righe. Una riga è dimostrata quando il resto è zero e l'espansione libera dei cofattori ricostruisce il polinomio. Quel testimone eseguibile e `reduce_complete` si citano. Il teorema è su `Universe.Quotient.reduce`.
 
 ## Fuori da questo argomento
 
@@ -43,4 +43,4 @@ I cofattori non sono unici. `gN · gC + (−gC) · gN` ha tutti i coefficienti z
 
 ## Verifica
 
-`lake build` sulla libreria `Universe`. `python -m universe` stampa `64/64` ed esce 0.
+`lake build` sulla libreria `Universe`. `python -m universe` stampa `66/66` ed esce 0.

@@ -232,6 +232,32 @@ def test_undoing_the_friend_until_the_record_is_copied():
     assert record.rows[1][1] == weights[1]
 
 
+def test_rational_point_of_wigners_friend():
+    world = QubitUniverse()
+    point = {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    ring = world.scalars.ring
+    ket = world.ground()
+    lab = tensor_state(tensor_state(world.evolve(ket), ket), ket)
+    friend, wigner = cnot01(ring), cnot12(ring)
+    undone = reduced(friend.apply(friend.apply(lab)), 0, 2, 4)
+    assert undone.rows[0][1].evaluate(point) == g(0, Fraction(12, 25))
+    assert purity(undone).evaluate(point) == g(1)
+    copied_state = friend.apply(wigner.apply(friend.apply(lab)))
+    copied = reduced(copied_state, 0, 2, 4)
+    assert copied.rows[0][1].evaluate(point) == g(0)
+    assert copied.rows[1][0].evaluate(point) == g(0)
+    assert purity(copied).evaluate(point) == g(Fraction(337, 625))
+    record = reduced(copied_state, 1, 4, 2)
+    assert record.rows[0][0].evaluate(point) == g(Fraction(9, 25))
+    assert record.rows[1][1].evaluate(point) == g(Fraction(16, 25))
+
+
 def test_local_unitary_on_a_generic_state_does_not_signal():
     gap0, gap1 = no_signalling_gap()
     assert gap0.certification() is None

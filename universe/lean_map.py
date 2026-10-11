@@ -114,6 +114,12 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Observer.copy_irreversible",
     ),
     "Wigner conserva il peso di Born": ("Universe.Observer.wigner_keeps_record",),
+    "nel punto, disfare l'amico dà coerenza 12/25 i e purezza 1": (
+        "Universe.Observer.point_undone",
+    ),
+    "nel punto, dopo la copia: coerenza 0, purezza 337/625, pesi 9/25 e 16/25": (
+        "Universe.Observer.point_copied",
+    ),
     "un unitario locale sull'apparato non cambia i pesi del sistema": (
         "Universe.Observer.no_signalling_any_0",
         "Universe.Observer.no_signalling_any_1",
