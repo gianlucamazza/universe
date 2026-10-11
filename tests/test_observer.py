@@ -200,6 +200,38 @@ def test_wigner_reads_the_friend_on_a_fresh_ring():
     assert all(weight.is_zero() for weight in weights[1:7])
 
 
+def test_undoing_the_friend_until_the_record_is_copied():
+    ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    imag = ring.constant(g(0, 1))
+    alpha = ring.var("p0r") + ring.var("p0i") * imag
+    beta = ring.var("p1r") + ring.var("p1i") * imag
+    psi = State((alpha, beta))
+    ket = State((ring.one(), ring.zero()))
+    zero = ring.zero()
+    prepared = tensor_state(tensor_state(psi, ket), ket)
+    friend, wigner = cnot01(ring), cnot12(ring)
+    restored = friend.apply(friend.apply(prepared))
+    assert restored.amplitudes == prepared.amplitudes
+    coherence = alpha * beta.conj()
+    weights = (alpha.modulus_squared(), beta.modulus_squared())
+    prepared_system = reduced(prepared, 0, 2, 4)
+    assert prepared_system.rows[0][0] == weights[0]
+    assert prepared_system.rows[1][1] == weights[1]
+    assert prepared_system.rows[0][1] == coherence
+    assert prepared_system.rows[1][0] == beta * alpha.conj()
+    assert reduced(restored, 0, 2, 4).rows[0][1] == coherence
+    undone = friend.apply(wigner.apply(friend.apply(prepared)))
+    assert undone.amplitudes == (alpha, zero, zero, zero, zero, beta, zero, zero)
+    system = reduced(undone, 0, 2, 4)
+    assert system.rows[0][1].is_zero()
+    assert system.rows[1][0].is_zero()
+    assert system.rows[0][0] == weights[0]
+    assert system.rows[1][1] == weights[1]
+    record = reduced(undone, 1, 4, 2)
+    assert record.rows[0][0] == weights[0]
+    assert record.rows[1][1] == weights[1]
+
+
 def test_local_unitary_on_a_generic_state_does_not_signal():
     gap0, gap1 = no_signalling_gap()
     assert gap0.certification() is None

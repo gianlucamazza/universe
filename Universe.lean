@@ -58,6 +58,9 @@ sistema ridotto in `337/625`.
 in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
 `cnot12` legge l'amico: `chain_pointers` è lo stesso stato,
 `chain_is_fanout` lo identifica col fan-out, `chain_agree` è l'accordo.
+`reduceSystem` traccia amico e Wigner. `friend_undone` restituisce
+`α conj(β)`. `copy_irreversible` lascia `α|000⟩ + β|101⟩` con il
+sistema diagonale, e `wigner_keeps_record` conserva `bornPair`.
 `no_signalling_0` e `no_signalling_1` dicono che `I ⊗ U` sull'apparato,
 dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
 in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono

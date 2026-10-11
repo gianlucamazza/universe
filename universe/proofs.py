@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 61 righe.
+"""Certificato eseguibile del primo universo. Stampa 64 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -41,7 +41,14 @@ entrambi gli ordini e su entrambe le parentesizzazioni, danno
 la catena è lo stesso stato del fan-out
 (`Universe.Observer.chain_pointers`, `Universe.Observer.chain_is_fanout`,
 `Universe.Observer.cnot12_involutive`) e i pesi delle celle 1–6 restano
-zero (`Universe.Observer.chain_agree`). Un unitario locale sull'apparato
+zero (`Universe.Observer.chain_agree`). Disfare l'amico, `cnot01` due
+volte, restituisce `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` e la coerenza `α β̄`
+(`Universe.Observer.friend_undone`,
+`Universe.Observer.reduceSystem_product`). Dopo `cnot12` la stessa porta
+lascia `α|000⟩ + β|101⟩`: l'antidiagonale del sistema è zero e la
+diagonale è il peso di Born (`Universe.Observer.copy_irreversible`).
+Il marginale di Wigner resta quel peso
+(`Universe.Observer.wigner_keeps_record`). Un unitario locale sull'apparato
 non cambia i due pesi del sistema. Il conto sta sull'anello
 `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`: lo stato è
 generico. Lean lo prova per ogni `Quad`,
@@ -591,6 +598,71 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "celle 1–6 con peso zero\nUniverse.Observer.chain_agree"
         if chain_agree_ok
         else "i puntatori discordano",
+    )
+
+    restored = first_observer.apply(first_observer.apply(prepared_left))
+    prepared_system = reduced(prepared_left, 0, 2, 4)
+    restored_system = reduced(restored, 0, 2, 4)
+    born_alpha = agree_alpha.modulus_squared()
+    born_beta = agree_beta.modulus_squared()
+    restored_coherence = agree_alpha * agree_beta.conj()
+    undone_ok = (
+        restored.amplitudes == prepared_left.amplitudes
+        and prepared_system.rows[0][0] == born_alpha
+        and prepared_system.rows[1][1] == born_beta
+        and prepared_system.rows[0][1] == restored_coherence
+        and prepared_system.rows[1][0] == agree_beta * agree_alpha.conj()
+        and restored_system.rows[0][1] == restored_coherence
+    )
+    add(
+        "Osservatore",
+        "disfare l'amico restituisce la coerenza α β̄",
+        undone_ok,
+        "cnot01 due volte, su |ψ⟩ ⊗ |0⟩ ⊗ |0⟩\n"
+        "Universe.Observer.friend_undone, Universe.Observer.reduceSystem_product"
+        if undone_ok
+        else "la coerenza non torna",
+    )
+
+    copied_undone = first_observer.apply(chain)
+    irreversible = reduced(copied_undone, 0, 2, 4)
+    irreversible_ok = (
+        copied_undone.amplitudes
+        == (
+            agree_alpha,
+            agree_zero,
+            agree_zero,
+            agree_zero,
+            agree_zero,
+            agree_beta,
+            agree_zero,
+            agree_zero,
+        )
+        and irreversible.rows[0][1].is_zero()
+        and irreversible.rows[1][0].is_zero()
+        and irreversible.rows[0][0] == born_alpha
+        and irreversible.rows[1][1] == born_beta
+    )
+    add(
+        "Osservatore",
+        "dopo la copia, disfare l'amico lascia il sistema diagonale",
+        irreversible_ok,
+        "α|000⟩ + β|101⟩, antidiagonale zero\nUniverse.Observer.copy_irreversible"
+        if irreversible_ok
+        else "la copia non blocca il disfacimento",
+    )
+
+    wigner_record = reduced(copied_undone, 1, 4, 2)
+    record_ok = (
+        wigner_record.rows[0][0] == born_alpha and wigner_record.rows[1][1] == born_beta
+    )
+    add(
+        "Osservatore",
+        "Wigner conserva il peso di Born",
+        record_ok,
+        "marginale del bit basso\nUniverse.Observer.wigner_keeps_record"
+        if record_ok
+        else "Wigner non legge più il sistema",
     )
 
     gap0, gap1 = no_signalling_gap()

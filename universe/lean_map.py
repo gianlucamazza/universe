@@ -106,6 +106,14 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Observer.cnot12_involutive",
     ),
     "Wigner e l'amico non sono mai in disaccordo": ("Universe.Observer.chain_agree",),
+    "disfare l'amico restituisce la coerenza α β̄": (
+        "Universe.Observer.friend_undone",
+        "Universe.Observer.reduceSystem_product",
+    ),
+    "dopo la copia, disfare l'amico lascia il sistema diagonale": (
+        "Universe.Observer.copy_irreversible",
+    ),
+    "Wigner conserva il peso di Born": ("Universe.Observer.wigner_keeps_record",),
     "un unitario locale sull'apparato non cambia i pesi del sistema": (
         "Universe.Observer.no_signalling_any_0",
         "Universe.Observer.no_signalling_any_1",

@@ -6,7 +6,7 @@ Status: in progress.
 | Phase | State   | Goal                                                                 |
 | ----- | ------- | -------------------------------------------------------------------- |
 | 1     | done    | a chain: Wigner reads the friend, and that is reading the system     |
-| 2     | planned | the friend's measurement can be undone, until the record is copied   |
+| 2     | done    | the friend's measurement can be undone, until the record is copied   |
 | 3     | planned | the rational point: purity `1` when undone, `337/625` after the copy |
 | 4     | planned | no-signalling between three parties, for every three-qubit state     |
 | 5     | planned | docs, figure, release                                                |

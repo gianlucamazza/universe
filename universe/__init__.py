@@ -45,7 +45,12 @@ e `Universe.Observer.order_irrelevant`. Wigner legge l'amico con
 `cnot12`: la catena è lo stesso stato
 (`Universe.Observer.chain_pointers`, `Universe.Observer.chain_is_fanout`,
 `Universe.Observer.cnot12_involutive`) e l'accordo è
-`Universe.Observer.chain_agree`. Un unitario locale sull'apparato
+`Universe.Observer.chain_agree`. Disfare l'amico restituisce la coerenza
+α β̄ (`Universe.Observer.friend_undone`,
+`Universe.Observer.reduceSystem_product`). Dopo la copia il sistema
+resta diagonale (`Universe.Observer.copy_irreversible`) e Wigner
+conserva il peso di Born (`Universe.Observer.wigner_keeps_record`).
+Un unitario locale sull'apparato
 non cambia i pesi del sistema. Dopo `CNOT` con `|0⟩` i teoremi sono
 `Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
 Per ogni stato di due qubit sono `Universe.Observer.no_signalling_any_0`

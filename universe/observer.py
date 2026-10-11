@@ -17,6 +17,14 @@ restano ampiezze solo nelle celle 0 e 7.
 il bersaglio il bit basso. Scambia le celle 2↔3 e 6↔7. Dopo `cnot01`
 sullo stesso stato resta `α|000⟩ + β|111⟩`, come `cnot02 ∘ cnot01`.
 
+`reduced` su tre qubit, fattore `0` e destra `4`, è `reduceSystem`:
+traccia amico e Wigner. `cnot01` due volte restituisce `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`
+e la coerenza `α β̄` (`Universe.Observer.friend_undone`,
+`Universe.Observer.reduceSystem_product`). Dopo `cnot12` resta
+`α|000⟩ + β|101⟩`: il sistema è diagonale con i pesi di Born
+(`Universe.Observer.copy_irreversible`) e il marginale di Wigner è lo
+stesso peso (`Universe.Observer.wigner_keeps_record`).
+
 `no_signalling_gap` è `I ⊗ U` su uno stato di due qubit generico. `U` è
 `c I − i s H` nel quoziente. La differenza dei pesi del sistema ha resto
 zero. Lean lo prova per ogni stato, `Universe.Observer.no_signalling_any_0`

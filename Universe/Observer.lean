@@ -25,6 +25,12 @@ bersaglio sul bit basso, celle `2↔3` e `6↔7`. È un'involuzione.
 stato di `cnot02 ∘ cnot01`. I pesi di Born sono quelli di
 `observers_agree`: Wigner e l'amico non discordano.
 
+`reduceSystem` traccia amico e Wigner. Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` è `|ψ⟩⟨ψ|`.
+`cnot01` due volte restituisce quello stato e la coerenza `α conj(β)`.
+Dopo la copia `cnot12`, la stessa porta lascia `α|000⟩ + β|101⟩`: le
+entrate fuori diagonale sono il polinomio zero, la diagonale è
+`bornPair`, e il marginale di Wigner resta `bornPair`.
+
 `I ⊗ U` sull'apparato, dopo `CNOT` con `|0⟩`, non cambia il marginale
 del sistema. La differenza sta in `(gC, gN)`: i cofattori di `δ`
 moltiplicati per `|α|²` e per `|β|²`. Lo stesso conto vale per ogni
@@ -610,6 +616,98 @@ theorem chain_agree (ψ : Pair) :
       ⟨columnBorn ψ.a0, [], [], [], [], [], [], columnBorn ψ.a1⟩ := by
   rw [chain_is_fanout]
   exact observers_agree ψ
+
+/-! ### Disfare l'amico -/
+
+/-- Traccia parziale su amico e Wigner. L'indice è `4 * i + 2 * j + k`.
+
+L'entrata `(i, i')` somma `a · conj(a')` sui due bit tracciati. -/
+def reduceSystem (v : Oct) : Mat where
+  a00 := columnBorn v.a0 ++ columnBorn v.a1 ++ columnBorn v.a2 ++ columnBorn v.a3
+  a01 :=
+    pmul v.a0 (conjP v.a4) ++ pmul v.a1 (conjP v.a5) ++
+      pmul v.a2 (conjP v.a6) ++ pmul v.a3 (conjP v.a7)
+  a10 :=
+    pmul v.a4 (conjP v.a0) ++ pmul v.a5 (conjP v.a1) ++
+      pmul v.a6 (conjP v.a2) ++ pmul v.a7 (conjP v.a3)
+  a11 := columnBorn v.a4 ++ columnBorn v.a5 ++ columnBorn v.a6 ++ columnBorn v.a7
+
+/-- Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` il sistema ridotto è `|ψ⟩⟨ψ|`. -/
+theorem reduceSystem_product (ψ : Pair) :
+    matSame (reduceSystem (tensorLeft (tensorPair ψ ket0) ket0)) (outer ψ) := by
+  rw [tensor_idle_right]
+  simp only [tensorLeft, ket0, reduceSystem, outer, pmul_one, pmul_nil, columnBorn_nil,
+    conjP, List.append_nil]
+  exact ⟨polySame_refl _, polySame_refl _, polySame_refl _, polySame_refl _⟩
+
+/-- `cnot01` due volte restituisce `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`.
+
+La coerenza `α conj(β)` è di nuovo l'antidiagonale del sistema ridotto,
+come in `coherence_before`. -/
+theorem friend_undone (ψ : Pair) :
+    cnot01 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
+        tensorLeft (tensorPair ψ ket0) ket0 ∧
+      polySame
+        (reduceSystem (cnot01 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)))).a01
+        (pmul ψ.a0 (conjP ψ.a1)) := by
+  have hrestore :
+      cnot01 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
+        tensorLeft (tensorPair ψ ket0) ket0 := by
+    rw [tensor_idle_right]
+    simp only [tensorLeft, ket0, cnot01, pmul_one, pmul_nil]
+  refine ⟨hrestore, ?_⟩
+  rw [hrestore]
+  exact (reduceSystem_product ψ).2.1
+
+/-- Dopo `cnot12`, disfare l'amico lascia `α|000⟩ + β|101⟩`.
+
+Le due entrate fuori diagonale di `reduceSystem` sono il polinomio zero
+e la diagonale è `bornPair ψ`, come in `decoherence`. -/
+theorem copy_irreversible (ψ : Pair) :
+    cnot01 (cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0))) =
+        ⟨ψ.a0, [], [], [], [], ψ.a1, [], []⟩ ∧
+      polySame
+          (reduceSystem (cnot01 (cnot12 (cnot01
+            (tensorLeft (tensorPair ψ ket0) ket0))))).a01
+          [] ∧
+        polySame
+            (reduceSystem (cnot01 (cnot12 (cnot01
+              (tensorLeft (tensorPair ψ ket0) ket0))))).a10
+            [] ∧
+          pairSame
+              ⟨(reduceSystem (cnot01 (cnot12 (cnot01
+                  (tensorLeft (tensorPair ψ ket0) ket0))))).a00,
+                (reduceSystem (cnot01 (cnot12 (cnot01
+                  (tensorLeft (tensorPair ψ ket0) ket0))))).a11⟩
+              (bornPair ψ) := by
+  have hv :
+      cnot01 (cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0))) =
+        ⟨ψ.a0, [], [], [], [], ψ.a1, [], []⟩ := by
+    rw [chain_pointers]
+    rfl
+  refine ⟨hv, ?_, ?_, ?_⟩
+  all_goals
+    rw [hv]
+    simp only [reduceSystem, bornPair, columnBorn_nil, conjP, pmul_nil, pmul_nil_left,
+      List.append_nil, List.nil_append]
+  · exact polySame_refl _
+  · exact polySame_refl _
+  · exact pairSame_refl _
+
+/-- Marginale di Wigner, il bit basso. Somma sui bit di sistema e amico. -/
+def marginalWigner (v : Oct) : Pair where
+  a0 := columnBorn v.a0 ++ columnBorn v.a2 ++ columnBorn v.a4 ++ columnBorn v.a6
+  a1 := columnBorn v.a1 ++ columnBorn v.a3 ++ columnBorn v.a5 ++ columnBorn v.a7
+
+/-- Nello stato `α|000⟩ + β|101⟩` Wigner legge ancora `bornPair ψ`. -/
+theorem wigner_keeps_record (ψ : Pair) :
+    pairSame
+      (marginalWigner
+        (cnot01 (cnot12 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)))))
+      (bornPair ψ) := by
+  rw [(copy_irreversible ψ).1]
+  simp only [marginalWigner, bornPair, columnBorn_nil, List.append_nil, List.nil_append]
+  exact pairSame_refl _
 
 /-! ### L'apparato non segnala -/
 
