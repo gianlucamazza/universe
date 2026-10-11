@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img">
   <title>Map of the project: one universe, two independent certificates</title>
-  <desc>Top: the three ingredients of the universe, states X, law Φ, observation Obs. Obs is an axiom today; the observer plan derives it from an apparatus inside. Bottom: every law is checked twice, by a Python certificate with exact fractions and by a Lean 4 proof, neither generated from the other.</desc>
+  <desc>Top: the three ingredients of the universe, states X, law Φ, observation Obs. Obs is no longer an axiom: pointer_born derives it from an apparatus inside. Bottom: every law is checked twice, by a Python certificate with exact fractions and by a Lean 4 proof, neither generated from the other.</desc>
   <rect width="920" height="460" fill="#faf8f4"/>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -10,7 +10,7 @@
   <style>
     text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
     .box { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.4; }
-    .open { fill: #fffdf8; stroke: #8c3a2f; stroke-width: 1.4; stroke-dasharray: 6 4; }
+    .open { fill: #fffdf8; stroke: #8c3a2f; stroke-width: 1.4; }
     .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
     .link { stroke: #b8b0a2; stroke-width: 1.2; fill: none; }
     .sym { font-size: 28px; text-anchor: middle; }
@@ -36,8 +36,8 @@
   <text class="sub" x="760" y="148">Born weights |α|², |β|²</text>
   <path class="edge" d="M 290 114 H 328"/>
   <path class="edge" d="M 590 114 H 628"/>
-  <text class="sub accent" x="760" y="202" style="fill:#8c3a2f">axiom today → theorem in progress</text>
-  <text class="code" x="760" y="222">plans/observer-inside.md</text>
+  <text class="sub accent" x="760" y="202" style="fill:#8c3a2f">no longer an axiom: an apparatus reads it</text>
+  <text class="code" x="760" y="222">pointer_born</text>
 
   <path class="link" d="M 160 186 V 268 M 460 186 V 268 M 760 232 V 268"/>
   <line x1="36" y1="268" x2="884" y2="268" stroke="#1a1814" stroke-width="1.4"/>

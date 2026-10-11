@@ -19,7 +19,12 @@ Every fact is checked twice, independently:
 
 1. **One qubit in time.** It evolves without losing probability, and the measurement probabilities add up to 1. Done.
 2. **Several qubits together.** Two systems combine into one, and the order in which three are grouped does not matter. Done.
-3. **The observer inside.** Today measurement is an _axiom_: the model is told from outside what an observation returns. The current work, [`plans/observer-inside.md`](plans/observer-inside.md), replaces it with a second qubit, an _apparatus_, that interacts with the system. The goal is to _prove_ that the apparatus reads exactly the probabilities the axiom assumed, and that two apparatuses never disagree. The first step is done: the interaction (a `CNOT` gate) produces entanglement, a joint state that is not two separate states. The reduced state is done too: after that interaction the apparatus is diagonal, and the diagonal is those probabilities. At the rational point the system's purity is `337/625`.
+3. **The observer inside.** Measurement used to be an _axiom_: the model was told from outside what an observation returns. [`plans/observer-inside.md`](plans/observer-inside.md) replaces it with a second qubit, an _apparatus_, that interacts with the system through a `CNOT` gate. Proved so far:
+   - the interaction entangles system and apparatus: their joint state is no longer two separate states;
+   - the apparatus reads exactly the probabilities the axiom assumed, and the system, seen alone, loses its coherence;
+   - two apparatuses on the same system never disagree, whatever the order in which they look.
+
+   Next: showing that nothing done to an apparatus changes what the system does (no-signalling), and a research note on what this does and does not settle.
 
 The model does not simulate our universe, and it does not try to. It is a laboratory where the parts of a physical theory can be made exact one at a time.
 
@@ -52,7 +57,7 @@ python -m universe
 lake build
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 31 lines. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 32 lines. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs every gate: ruff, the unit tests in `tests/`, the certificate and `lake build`. `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare.
 
@@ -60,7 +65,7 @@ lake build
 
 The statements separate by the generators they use.
 
-In the free ring: `H† = H`, `|z|² = re(z)² + im(z)²` with rational coefficients, `⟨ψ|Π₀|ψ⟩ = |α|²`, `|0⟩ ⊗ |0⟩ = |00⟩`, the Kronecker identities with an idle `|0⟩`, `CNOT² = I`, the sum of the four Born weights, the vanishing of the product determinant, and `decoherence` together with `pointer_born`: the off-diagonals are zero and the diagonal is the Born pair.
+In the free ring: `H† = H`, `|z|² = re(z)² + im(z)²` with rational coefficients, `⟨ψ|Π₀|ψ⟩ = |α|²`, `|0⟩ ⊗ |0⟩ = |00⟩`, the Kronecker identities with an idle `|0⟩`, `CNOT² = I`, the sum of the four Born weights, the vanishing of the product determinant, `decoherence` together with `pointer_born` (the off-diagonals are zero and the diagonal is the Born pair), and `two_pointers`: on `α|000⟩ + β|111⟩` the Born weight of cells 1–6 is zero.
 
 In the ideal `(gC, gN)`, one defect `δ = gC + s² gN`: `U†U − I`, `UU† − I`, `det U − 1`, norm preservation for arbitrary amplitudes, and `P(0) + P(1) − 1` on evolved `|0⟩`. The amplitudes of `|0⟩` are `1` and `0`.
 
@@ -76,11 +81,15 @@ In the ideal `(gC, gN, gA)`: `ψ†(U†U)ψ − 1` on the generic state `(ar + 
 
 `reduceLeft` traces out the apparatus. Before `CNOT` the off-diagonal of the system is `α β̄`. After `CNOT` both off-diagonals are the zero polynomial and the diagonal is the Born pair, in the free ring. `pointer_born` reads the same weights on the apparatus after `Φ`, so `Obs` is that diagonal. At `c = 3/5`, `s = 4/5`, `n = e_x` the purity of the reduced system is `337/625`, below 1. `reduceLeft_diag`, `reduce_product`, `purity_before` and `purity_sphere` are proved in Lean only. The diagonal matches the existing marginal. A product state reduces to `‖φ‖² |ψ⟩⟨ψ|`. A pure projector has purity `‖ψ‖⁴`. On the amplitude sphere, `1 − purity − 2|α|²|β|²` lies in `(gA)`.
 
+`cnot01` swaps cells `4↔6` and `5↔7`. `cnot02` swaps cells `4↔5` and `6↔7`. On `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` either order is `α|000⟩ + β|111⟩`. The Born weight of cells 1–6 is the zero polynomial, so the two apparatuses never disagree. `tensor_assoc` carries the same three facts to the other parenthesization. All of this is in the free ring.
+
+![Two apparatuses on the same system: only 000 and 111 occur, so A and B never disagree](papers/figures/osservatori.svg)
+
 ![Decoherence: the system before and after CNOT, and the apparatus reading the Born weights](papers/figures/decoerenza.svg)
 
 ![CNOT couples the system to an apparatus: before it the amplitude grid is a product, after it the state is entangled](papers/figures/cnot.svg)
 
-The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 31.
+The two parenthesizations of three qubits are the same encoded state. The square, the eight cells, and the two rings of the certificate are drawn under Representations. The line remains one of the 32.
 
 `Universe.Dynamics.reduce_complete` is the converse for this `reduce`: membership in `(gC, gN)` means every coefficient of the remainder is zero. The statement is on `coeffOf`. Cofactors are a witness, and they are not unique. The rational point is the 3-4-5 triangle on the circle, so `9/25` and `16/25` are the squares of `3/5` and `4/5`. Those coefficients show which generator pays for which identity.
 
@@ -167,3 +176,4 @@ Three copies of that evolved `|0⟩` fill the eight cells. Each bit `0` contribu
 | Observer    | The apparatus reads `P(Φ\|ψ⟩)` on evolved `\|0⟩` and on the generic state                                        | certificate                                               | `Universe.Observer.pointer_born`                                                                                                                                                |
 | Observer    | At `c = 3/5`, `s = 4/5`, `n = e_x` the reduced purity is `337/625`, below 1                                     | certificate                                               | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                                                              |
 | Observer    | The reduced diagonal is the marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; purity of a projector is `‖ψ‖⁴`; on the sphere `1 − purity − 2\|α\|²\|β\|²` lies in `(gA)` | Lean only | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere` |
+| Observer    | Two apparatuses never disagree: either `CNOT` order on `\|ψ⟩ ⊗ \|0⟩ ⊗ \|0⟩` is `α\|000⟩ + β\|111⟩`, and cells 1–6 have weight zero | certificate, fresh ring `(p0r, p0i, p1r, p1i)` | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`, and the three `tensorRight` forms |

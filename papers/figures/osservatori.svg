@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 480" role="img">
+  <title>Two observers measure the same system and never disagree</title>
+  <desc>Left: the system Φ|0⟩ controls two apparatuses A and B, both starting in |0⟩. The result is α|000⟩ + β|111⟩. Middle: the eight Born weights at c = 3/5, s = 4/5, n = eₓ; only 000 and 111 are nonzero, 9/25 and 16/25. Right: the joint reading of A and B; the cells where they disagree are exactly zero.</desc>
+  <rect width="920" height="480" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .wire { stroke: #1a1814; stroke-width: 1.6; fill: none; }
+    .cell { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.2; }
+    .w { fill: #8c3a2f; }
+    .bar { fill: #1a1814; }
+    .base { stroke: #1a1814; stroke-width: 1.4; }
+    .head { font-size: 18px; }
+    .big { font-size: 21px; }
+    .val { font-size: 18px; text-anchor: middle; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <!-- circuit -->
+  <text class="head" x="36" y="44">two apparatuses</text>
+  <text class="big end" x="112" y="117">Φ|0⟩</text>
+  <text class="tiny muted end" x="112" y="136">system</text>
+  <text class="big end" x="112" y="187">|0⟩</text>
+  <text class="tiny muted end" x="112" y="206">A</text>
+  <text class="big end" x="112" y="257">|0⟩</text>
+  <text class="tiny muted end" x="112" y="276">B</text>
+  <line class="wire" x1="124" y1="110" x2="300" y2="110"/>
+  <line class="wire" x1="124" y1="180" x2="300" y2="180"/>
+  <line class="wire" x1="124" y1="250" x2="300" y2="250"/>
+  <line class="wire" x1="180" y1="110" x2="180" y2="194"/>
+  <circle cx="180" cy="110" r="6.5" fill="#1a1814"/>
+  <circle cx="180" cy="180" r="13" fill="#faf8f4" stroke="#1a1814" stroke-width="1.6"/>
+  <line class="wire" x1="167" y1="180" x2="193" y2="180"/>
+  <line class="wire" x1="246" y1="110" x2="246" y2="264"/>
+  <circle cx="246" cy="110" r="6.5" fill="#1a1814"/>
+  <circle cx="246" cy="250" r="13" fill="#faf8f4" stroke="#1a1814" stroke-width="1.6"/>
+  <line class="wire" x1="233" y1="250" x2="259" y2="250"/>
+  <text class="tiny muted mid" x="180" y="86">CNOT</text>
+  <text class="tiny muted mid" x="246" y="86">CNOT</text>
+  <text class="big mid" x="180" y="330">α|000⟩ + β|111⟩</text>
+  <text class="small muted mid" x="180" y="354">either order of the CNOTs</text>
+  <text class="lemma" x="180" y="378" text-anchor="middle">two_pointers</text>
+  <text class="lemma" x="180" y="398" text-anchor="middle">order_irrelevant</text>
+
+  <!-- eight cells -->
+  <text class="head" x="356" y="44">the eight outcomes</text>
+  <line class="base" x1="356" y1="290" x2="620" y2="290"/>
+  <rect class="bar" x="362" y="155" width="24" height="135"/>
+  <rect class="bar" x="590" y="50" width="24" height="240"/>
+  <g class="tiny mid">
+    <text x="374" y="310">000</text><text x="406" y="310">001</text><text x="438" y="310">010</text><text x="470" y="310">011</text>
+    <text x="502" y="310">100</text><text x="534" y="310">101</text><text x="566" y="310">110</text><text x="602" y="310">111</text>
+  </g>
+  <g class="tiny muted mid">
+    <text x="406" y="284">0</text><text x="438" y="284">0</text><text x="470" y="284">0</text>
+    <text x="502" y="284">0</text><text x="534" y="284">0</text><text x="566" y="284">0</text>
+  </g>
+  <text class="small mid" x="374" y="146">9/25</text>
+  <text class="small" x="540" y="68">16/25</text>
+  <text class="small muted" x="356" y="340">bits: system, A, B</text>
+
+  <!-- joint table -->
+  <text class="head" x="672" y="44">what A and B read</text>
+  <text class="tiny muted mid" x="730" y="88">B = 0</text>
+  <text class="tiny muted mid" x="820" y="88">B = 1</text>
+  <text class="tiny muted end" x="680" y="140">A = 0</text>
+  <text class="tiny muted end" x="680" y="230">A = 1</text>
+  <rect class="cell" x="686" y="96" width="90" height="90"/>
+  <rect class="cell" x="776" y="96" width="90" height="90"/>
+  <rect class="cell" x="686" y="186" width="90" height="90"/>
+  <rect class="cell" x="776" y="186" width="90" height="90"/>
+  <rect class="w" x="686" y="96" width="90" height="90" fill-opacity="0.198"/>
+  <rect class="w" x="776" y="186" width="90" height="90" fill-opacity="0.352"/>
+  <text class="val" x="731" y="147">9/25</text>
+  <text class="val" x="821" y="147">0</text>
+  <text class="val" x="731" y="237">0</text>
+  <text class="val" x="821" y="237">16/25</text>
+  <text class="small mid" x="776" y="310">P(A ≠ B) = 0, exactly</text>
+  <text class="lemma" x="776" y="334" text-anchor="middle">observers_agree</text>
+
+  <line x1="36" y1="420" x2="884" y2="420" stroke="#b8b0a2" stroke-width="1"/>
+  <text class="small" x="36" y="448">Two observers inside the universe always see the same outcome, for every state of the system.</text>
+  <text class="tiny muted" x="36" y="468">numbers at c = 3/5, s = 4/5, n = eₓ · α = 3/5, β = −4/5 i · shading ∝ Born weight</text>
+</svg>

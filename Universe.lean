@@ -53,6 +53,8 @@ dice che quel valore non è un prodotto di due vettori di `ℚ(i)`.
 l'antidiagonale nell'anello libero, e `pointer_born` ricava `Obs` come
 diagonale dell'apparato dopo `Φ`. `point_purity` valuta la purezza del
 sistema ridotto in `337/625`.
+`cnot01` e `cnot02` danno `α|000⟩ + β|111⟩`: i due apparati non sono mai
+in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
 -/
 import Universe.Composition
 import Universe.Dynamics

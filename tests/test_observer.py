@@ -4,8 +4,8 @@ from fractions import Fraction
 
 import pytest
 
-from universe.epistemology import norm_squared
-from universe.observer import cnot, determinant_2x2, purity, reduced
+from universe.epistemology import born, norm_squared
+from universe.observer import cnot, cnot01, cnot02, determinant_2x2, purity, reduced
 from universe.ontology import Operator, State, tensor_state
 from universe.ring import Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -118,3 +118,48 @@ def test_point_purity_is_mixed():
     value = purity(reduced(coupled, 0, 2, 2)).evaluate(point)
     assert value == g(Fraction(337, 625))
     assert Fraction(337, 625) < 1
+
+
+def test_three_qubit_cnots_swap_the_named_cells():
+    ring = Ring(())
+    one, zero = ring.one(), ring.zero()
+    basis = []
+    for index in range(8):
+        amplitudes = [zero] * 8
+        amplitudes[index] = one
+        basis.append(State(tuple(amplitudes)))
+    first, second = cnot01(ring), cnot02(ring)
+    eye = Operator.eye(ring, 8)
+    assert first.matmul(first).rows == eye.rows
+    assert second.matmul(second).rows == eye.rows
+    assert first.apply(basis[4]).amplitudes == basis[6].amplitudes
+    assert first.apply(basis[5]).amplitudes == basis[7].amplitudes
+    assert first.apply(basis[6]).amplitudes == basis[4].amplitudes
+    assert first.apply(basis[7]).amplitudes == basis[5].amplitudes
+    assert second.apply(basis[4]).amplitudes == basis[5].amplitudes
+    assert second.apply(basis[5]).amplitudes == basis[4].amplitudes
+    assert second.apply(basis[6]).amplitudes == basis[7].amplitudes
+    assert second.apply(basis[7]).amplitudes == basis[6].amplitudes
+
+
+def test_two_observers_agree_on_a_fresh_ring():
+    ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    imag = ring.constant(g(0, 1))
+    alpha = ring.var("p0r") + ring.var("p0i") * imag
+    beta = ring.var("p1r") + ring.var("p1i") * imag
+    psi = State((alpha, beta))
+    ket = State((ring.one(), ring.zero()))
+    zero = ring.zero()
+    prepared = tensor_state(tensor_state(psi, ket), ket)
+    prepared_right = tensor_state(psi, tensor_state(ket, ket))
+    first, second = cnot01(ring), cnot02(ring)
+    expected = (alpha, zero, zero, zero, zero, zero, zero, beta)
+    ghz = second.apply(first.apply(prepared))
+    assert ghz.amplitudes == expected
+    assert first.apply(second.apply(prepared)).amplitudes == expected
+    assert second.apply(first.apply(prepared_right)).amplitudes == expected
+    assert first.apply(second.apply(prepared_right)).amplitudes == expected
+    weights = born(ghz)
+    assert weights[0] == alpha.modulus_squared()
+    assert weights[7] == beta.modulus_squared()
+    assert all(weight.is_zero() for weight in weights[1:7])

@@ -8,6 +8,10 @@ Su un prodotto il determinante è zero. Nel punto razionale
 `reduced` è la traccia parziale. Il fattore `0` è `reduceLeft`, il fattore
 `1` è `reduceRight`. `purity` è la traccia di `ρ²`, come
 `Universe.Observer.purity`.
+
+`cnot01` è `cnot ⊗ I` sul primo apparato. `cnot02` è la stessa porta sul
+secondo, coniugata dallo scambio dei due apparati. Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`
+restano ampiezze solo nelle celle 0 e 7.
 """
 
 from __future__ import annotations
@@ -79,6 +83,48 @@ def reduced(state: State, factor: int, left: int, right: int) -> Operator:
             row.append(total)
         rows.append(row)
     return Operator.from_rows(rows)
+
+
+def _basis_permutation(ring: Ring, images: tuple[int, ...]) -> Operator:
+    """Manda il vettore di base `e_j` in `e_{images[j]}`."""
+    size = len(images)
+    one, zero = ring.one(), ring.zero()
+    rows = [[zero for _ in range(size)] for _ in range(size)]
+    for source, target in enumerate(images):
+        rows[target][source] = one
+    return Operator.from_rows(rows)
+
+
+def _swap_apparatuses(ring: Ring) -> Operator:
+    """Scambia i due apparati.
+
+    La cella `4 * i + 2 * j + k` va in `4 * i + 2 * k + j`.
+    """
+    images: list[int] = []
+    for index in range(8):
+        system, rest = divmod(index, 4)
+        first, second = divmod(rest, 2)
+        images.append(4 * system + 2 * second + first)
+    return _basis_permutation(ring, tuple(images))
+
+
+def cnot01(ring: Ring) -> Operator:
+    """CNOT fra il sistema e il primo apparato. È `cnot ⊗ I`.
+
+    L'indice è `4 * i + 2 * j + k`. Scambia le celle 4↔6 e 5↔7.
+    È `Universe.Observer.cnot01`.
+    """
+    return cnot(ring).tensor(Operator.eye(ring, 2))
+
+
+def cnot02(ring: Ring) -> Operator:
+    """CNOT fra il sistema e il secondo apparato.
+
+    Coniuga `cnot ⊗ I` con lo scambio dei due apparati. Scambia le celle
+    4↔5 e 6↔7. È `Universe.Observer.cnot02`.
+    """
+    swap = _swap_apparatuses(ring)
+    return swap.matmul(cnot01(ring)).matmul(swap)
 
 
 def purity(operator: Operator) -> Poly:

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 31 righe.
+"""Certificato eseguibile del primo universo. Stampa 32 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -33,7 +33,11 @@ stessi pesi su Φ|0⟩ e sullo stato generico
 (`Universe.Observer.pointer_born`). Nel punto la purezza è 337/625
 (`Universe.Observer.point_purity`). `Universe.Observer.reduceLeft_diag`,
 `Universe.Observer.reduce_product`, `Universe.Observer.purity_before` e
-`Universe.Observer.purity_sphere` restano solo in Lean.
+`Universe.Observer.purity_sphere` restano solo in Lean. Due apparati, in
+entrambi gli ordini e su entrambe le parentesizzazioni, danno
+α|000⟩ + β|111⟩: le celle 1–6 hanno peso zero
+(`Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`,
+`Universe.Observer.order_irrelevant`).
 """
 
 from __future__ import annotations
@@ -48,7 +52,7 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
-from universe.observer import cnot, determinant_2x2, purity, reduced
+from universe.observer import cnot, cnot01, cnot02, determinant_2x2, purity, reduced
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
 from universe.ring import ZERO_G, Gauss, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -391,6 +395,53 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "337/625 < 1, stato ridotto misto\nUniverse.Observer.point_purity"
         if purity_ok
         else f"purezza = {purity_value}",
+    )
+
+    agree_ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    agree_i = agree_ring.constant(g(0, 1))
+    agree_alpha = agree_ring.var("p0r") + agree_ring.var("p0i") * agree_i
+    agree_beta = agree_ring.var("p1r") + agree_ring.var("p1i") * agree_i
+    agree_psi = State((agree_alpha, agree_beta))
+    agree_ket = State((agree_ring.one(), agree_ring.zero()))
+    agree_zero = agree_ring.zero()
+    prepared_left = tensor_state(tensor_state(agree_psi, agree_ket), agree_ket)
+    prepared_right = tensor_state(agree_psi, tensor_state(agree_ket, agree_ket))
+    first_observer = cnot01(agree_ring)
+    second_observer = cnot02(agree_ring)
+    ghz = second_observer.apply(first_observer.apply(prepared_left))
+    expected_ghz = (
+        agree_alpha,
+        agree_zero,
+        agree_zero,
+        agree_zero,
+        agree_zero,
+        agree_zero,
+        agree_zero,
+        agree_beta,
+    )
+    ghz_weights = born(ghz)
+    agree_ok = (
+        ghz.amplitudes == expected_ghz
+        and first_observer.apply(second_observer.apply(prepared_left)).amplitudes
+        == expected_ghz
+        and second_observer.apply(first_observer.apply(prepared_right)).amplitudes
+        == expected_ghz
+        and first_observer.apply(second_observer.apply(prepared_right)).amplitudes
+        == expected_ghz
+        and ghz_weights[0] == agree_alpha.modulus_squared()
+        and ghz_weights[7] == agree_beta.modulus_squared()
+        and all(weight.is_zero() for weight in ghz_weights[1:7])
+    )
+    add(
+        "Osservatore",
+        "due osservatori non sono mai in disaccordo",
+        agree_ok,
+        "α|000⟩ + β|111⟩, celle 1–6 nulle\n"
+        "Universe.Observer.two_pointers, Universe.Observer.observers_agree,\n"
+        "Universe.Observer.order_irrelevant, Universe.Observer.two_pointers_right,\n"
+        "Universe.Observer.observers_agree_right, Universe.Observer.order_irrelevant_right"
+        if agree_ok
+        else "le due porte non coincidono",
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

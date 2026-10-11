@@ -12,6 +12,12 @@ polinomio zero e la diagonale è `bornPair`. `pointer_born` legge quegli
 stessi pesi sull'apparato: `Obs` è quel teorema. La purezza scende a
 `|α|⁴ + |β|⁴`. Sulla sfera il difetto ha cofattore `gA`. Nel punto vale
 `337/625`.
+
+Due apparati. `cnot01` e `cnot02` agiscono sul bit medio e sul bit basso.
+Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` entrambi gli ordini danno `α|000⟩ + β|111⟩`. I pesi
+di Born delle celle 1–6 sono il polinomio zero: i due apparati non sono
+mai in disaccordo. `tensor_assoc` porta gli stessi fatti sulla
+parentesizzazione destra. Tutto sta nell'anello libero.
 -/
 import Universe.Composition
 import Universe.Epistemology
@@ -649,5 +655,59 @@ theorem point_purity :
     simp [pointAlpha, pointBeta, pointC, pointS, Gauss.conj]
     ext <;> simp <;> grind
   · grind
+
+/-! ### Due osservatori -/
+
+/-- `CNOT` fra il sistema e il primo apparato. Scambia le celle `4↔6` e `5↔7`. -/
+def cnot01 (v : Oct) : Oct := ⟨v.a0, v.a1, v.a2, v.a3, v.a6, v.a7, v.a4, v.a5⟩
+
+/-- `CNOT` fra il sistema e il secondo apparato. Scambia le celle `4↔5` e `6↔7`. -/
+def cnot02 (v : Oct) : Oct := ⟨v.a0, v.a1, v.a2, v.a3, v.a5, v.a4, v.a7, v.a6⟩
+
+/-- `cnot02 ∘ cnot01` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` è `α|000⟩ + β|111⟩`. -/
+theorem two_pointers (ψ : Pair) :
+    cnot02 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) =
+      ⟨ψ.a0, [], [], [], [], [], [], ψ.a1⟩ := by
+  rw [tensor_idle_right]
+  simp only [tensorLeft, ket0, cnot01, cnot02, pmul_one, pmul_nil]
+
+/-- I due apparati non sono mai in disaccordo.
+
+Le celle in cui i due bit differiscono stanno fra 1 e 6, e ognuna ha
+peso zero. Le celle 0 e 7 portano `bornPair ψ`: o leggono entrambi 0,
+o leggono entrambi 1. -/
+theorem observers_agree (ψ : Pair) :
+    bornOct (cnot02 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0))) =
+      ⟨columnBorn ψ.a0, [], [], [], [], [], [], columnBorn ψ.a1⟩ := by
+  rw [two_pointers]
+  simp only [bornOct, columnBorn_nil]
+
+/-- I due `CNOT` danno lo stesso stato. L'ordine degli apparati non conta. -/
+theorem order_irrelevant (ψ : Pair) :
+    cnot01 (cnot02 (tensorLeft (tensorPair ψ ket0) ket0)) =
+      cnot02 (cnot01 (tensorLeft (tensorPair ψ ket0) ket0)) := by
+  rw [two_pointers, tensor_idle_right]
+  simp only [tensorLeft, ket0, cnot01, cnot02, pmul_one, pmul_nil]
+
+/-- La stessa forma di GHZ, costruita come `tensorRight`. `tensor_assoc` identifica le due ottuple. -/
+theorem two_pointers_right (ψ : Pair) :
+    cnot02 (cnot01 (tensorRight ψ (tensorPair ket0 ket0))) =
+      ⟨ψ.a0, [], [], [], [], [], [], ψ.a1⟩ := by
+  rw [← tensor_assoc]
+  exact two_pointers ψ
+
+/-- Lo stesso accordo, sulla parentesizzazione destra. -/
+theorem observers_agree_right (ψ : Pair) :
+    bornOct (cnot02 (cnot01 (tensorRight ψ (tensorPair ket0 ket0)))) =
+      ⟨columnBorn ψ.a0, [], [], [], [], [], [], columnBorn ψ.a1⟩ := by
+  rw [← tensor_assoc]
+  exact observers_agree ψ
+
+/-- Lo stesso ordine irrilevante, sulla parentesizzazione destra. -/
+theorem order_irrelevant_right (ψ : Pair) :
+    cnot01 (cnot02 (tensorRight ψ (tensorPair ket0 ket0))) =
+      cnot02 (cnot01 (tensorRight ψ (tensorPair ket0 ket0))) := by
+  rw [← tensor_assoc]
+  exact order_irrelevant ψ
 
 end Universe.Observer

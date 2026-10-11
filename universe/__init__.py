@@ -38,6 +38,10 @@ La traccia parziale dopo CNOT è diagonale: i pesi sono quelli di Born, e
 l'apparato li legge su Φ|ψ⟩. Nel punto razionale la purezza del sistema
 ridotto è 337/625. I teoremi sono `Universe.Observer.decoherence`,
 `Universe.Observer.pointer_born` e `Universe.Observer.point_purity`.
+Due apparati, accoppiati con CNOT in entrambi gli ordini, danno
+α|000⟩ + β|111⟩: le celle 1–6 hanno peso zero. I teoremi sono
+`Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`
+e `Universe.Observer.order_irrelevant`.
 
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """
