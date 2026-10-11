@@ -69,6 +69,9 @@ ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 `evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)`
 nell'ideale di `gN`: l'unica regola è `H² = I`. `compose_circle` mette
 `c² + s² − 1` in `(gC, gC2)`, e `gC2` resta fuori da `reduce`.
+`conj_evolution_rel` e `conj_born_rel` portano il cambio di base
+nell'ideale `(gC, gN)`. Con `V = U` sono `conj_evolution_law` e
+`conj_born_law`. `point_compose` valuta l'angolo composto con `evalAt2`.
 `Universe.Interaction` costruisce `G = |1⟩⟨1| ⊗ H`. `generator_cube` è
 `G³ = G`. `controlled_from_hamiltonian` è l'evoluzione controllata, e
 `cnot_point` la legge nel punto `c = 0`, `s = 1`, `n = e_x` come `CNOT`

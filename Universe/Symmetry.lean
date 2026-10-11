@@ -17,6 +17,10 @@ matrice dà `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩`, con pesi `1` e `0`.
 un cofattore di `gN`: `H² = I` è l'unica regola, il cerchio non entra.
 Se le due coppie stanno sul cerchio, ci sta anche il composto, nell'ideale
 `(gC, gC2)`. `gC2 = c2² + s2² − 1` resta fuori da `reduce`, come `gA`.
+Se `V†V − I` sta in `(gC, gN)`, `V (U ψ)` e `(V U V†) (V ψ)` differiscono
+per un elemento di quell'ideale, e così i pesi di Born. Con `V = U` sono
+`conj_evolution_law` e `conj_born_law`. `point_compose` legge l'angolo
+composto con `evalAt2`.
 -/
 import Universe.Composition
 import Universe.Evaluation
@@ -478,6 +482,203 @@ theorem conj_inverse (V : Mat) (φ : Pair)
     (h : matSame (matMul V (matDagger V)) matOne) :
     pairSame (applyMat V (applyMat (matDagger V) φ)) φ :=
   apply_cancel V (matDagger V) φ h
+
+/-- `A (B ψ)` e `ψ` differiscono per `(gC, gN)` quando `AB − I` ci sta. -/
+theorem apply_cancel_rel (A B : Mat) (ψ : Pair) (h : matRel (matMul A B) matOne) :
+    pairRel (applyMat A (applyMat B ψ)) ψ := by
+  have hstep : pairSame (applyMat A (applyMat B ψ)) (applyMat (matMul A B) ψ) :=
+    pairSame_symm (apply_assoc A B ψ.a0 ψ.a1)
+  have hunit : pairRel (applyMat (matMul A B) ψ) (applyMat matOne ψ) := apply_matRel h ψ
+  have hone : pairSame (applyMat matOne ψ) ψ := by
+    rw [applyMat_one]
+    exact pairSame_refl ψ
+  exact pairRel_polySame hstep.symm hone hunit
+
+/-- `V (U ψ)` e `(V U V†) (V ψ)` differiscono per un elemento di `(gC, gN)`
+quando `V† V − I` ci sta. -/
+theorem conj_evolution_rel (V U : Mat) (ψ : Pair)
+    (h : matRel (matMul (matDagger V) V) matOne) :
+    pairRel (applyMat V (applyMat U ψ))
+      (applyMat (matMul (matMul V U) (matDagger V)) (applyMat V ψ)) := by
+  have hback := apply_cancel_rel (matDagger V) V ψ h
+  have hmid := apply_pairRel (matMul V U) hback
+  have houter := apply_assoc (matMul V U) (matDagger V) (applyMat V ψ).a0 (applyMat V ψ).a1
+  have hinner := apply_assoc V U ψ.a0 ψ.a1
+  have hright :=
+    pairRel_polySame (pairSame.symm houter) (pairSame_refl (applyMat (matMul V U) ψ)) hmid
+  exact pairRel_symm (pairRel_trans hright (pairRel_of_pairSame hinner))
+
+/-- `|ξ⟩⟨ξ|`. -/
+def outer (ξ : Pair) : Mat where
+  a00 := pmul ξ.a0 (conjP ξ.a0)
+  a01 := pmul ξ.a0 (conjP ξ.a1)
+  a10 := pmul ξ.a1 (conjP ξ.a0)
+  a11 := pmul ξ.a1 (conjP ξ.a1)
+
+theorem outer_row (left bra0 bra1 ket0 ket1 : Poly) :
+    polySame (pmul (pmul left bra0) ket0 ++ pmul (pmul left bra1) ket1)
+      (pmul left (pmul bra0 ket0 ++ pmul bra1 ket1)) := by
+  intro t
+  rw [pmul_assoc, pmul_assoc]
+  exact (polySame.symm (polySame_mul_append_right left _ _)) t
+
+theorem outer_apply (ξ φ : Pair) :
+    polySame (applyMat (outer ξ) φ).a0 (pmul ξ.a0 (braket ξ φ)) ∧
+      polySame (applyMat (outer ξ) φ).a1 (pmul ξ.a1 (braket ξ φ)) := by
+  refine ⟨?_, ?_⟩
+  · rw [applyMat, outer, braket]
+    exact outer_row ξ.a0 (conjP ξ.a0) (conjP ξ.a1) φ.a0 φ.a1
+  · rw [applyMat, outer, braket]
+    exact outer_row ξ.a1 (conjP ξ.a0) (conjP ξ.a1) φ.a0 φ.a1
+
+/-- `conj(⟨ξ|φ⟩) = ⟨φ|ξ⟩`. -/
+theorem conj_braket (ξ φ : Pair) : polySame (conjP (braket ξ φ)) (braket φ ξ) := by
+  intro t
+  rw [show conjP (braket ξ φ) =
+      conjP (pmul (conjP ξ.a0) φ.a0 ++ pmul (conjP ξ.a1) φ.a1) from rfl,
+    conj_append, conj_pmul, conj_pmul, conjP_conjP, conjP_conjP,
+    show braket φ ξ = pmul (conjP φ.a0) ξ.a0 ++ pmul (conjP φ.a1) ξ.a1 from rfl]
+  exact polySame_append (polySame_mul_comm ξ.a0 (conjP φ.a0))
+    (polySame_mul_comm ξ.a1 (conjP φ.a1)) t
+
+/-- `⟨φ|( |ξ⟩⟨ξ| )|φ⟩ = ⟨φ|ξ⟩ ⟨ξ|φ⟩`. -/
+theorem sandwich_outer (ξ φ : Pair) :
+    polySame (sandwich (outer ξ) φ.a0 φ.a1) (pmul (braket φ ξ) (braket ξ φ)) := by
+  have hrows := outer_apply ξ φ
+  rw [sandwich_components (outer ξ) φ.a0 φ.a1]
+  refine polySame.trans
+      (polySame_append
+        (polySame_pmul_right (by simpa [applyMat_proj] using hrows.1) (conjP φ.a0))
+        (polySame_pmul_right (by simpa [applyMat_proj] using hrows.2) (conjP φ.a1))) ?_
+  intro t
+  rw [← pmul_assoc, ← pmul_assoc, ← pmul_append_left]
+  rfl
+
+/-- `|⟨ξ|φ⟩|² = ⟨φ|( |ξ⟩⟨ξ| )|φ⟩`. -/
+theorem born_as_sandwich (ξ φ : Pair) :
+    polySame (columnBorn (braket ξ φ)) (sandwich (outer ξ) φ.a0 φ.a1) :=
+  polySame.trans
+    (polySame.trans (by rw [columnBorn]; exact polySame_pmul_right (conj_braket ξ φ) (braket ξ φ))
+      (polySame_mul_comm (braket ξ φ) (braket φ ξ)))
+    (polySame.symm (sandwich_outer ξ φ))
+
+theorem mul_pi0 (V : Mat) : matMul V pi0 = ⟨V.a00, [], V.a10, []⟩ := by
+  apply Mat.ext
+  · rw [show (matMul V pi0).a00 = pmul V.a00 (single 1 Mono.one) ++ pmul V.a01 [] from rfl,
+      pmul_one, pmul_nil, List.append_nil]
+  · rw [show (matMul V pi0).a01 = pmul V.a00 [] ++ pmul V.a01 [] from rfl, pmul_nil, pmul_nil,
+      List.nil_append]
+  · rw [show (matMul V pi0).a10 = pmul V.a10 (single 1 Mono.one) ++ pmul V.a11 [] from rfl,
+      pmul_one, pmul_nil, List.append_nil]
+  · rw [show (matMul V pi0).a11 = pmul V.a10 [] ++ pmul V.a11 [] from rfl, pmul_nil, pmul_nil,
+      List.nil_append]
+
+/-- La colonna `0` di `V`, come `|v₀⟩⟨v₀|`, è `V Π₀ V†`. -/
+theorem col0_as_conj (V : Mat) :
+    outer (matColumn V 0) = matMul (matMul V pi0) (matDagger V) := by
+  rw [mul_pi0]
+  apply Mat.ext
+  · rw [show (outer (matColumn V 0)).a00 = pmul V.a00 (conjP V.a00) from rfl,
+      show (matMul ⟨V.a00, [], V.a10, []⟩ (matDagger V)).a00 =
+        pmul V.a00 (conjP V.a00) ++ pmul [] (conjP V.a01) from rfl,
+      pmul_nil_left, List.append_nil]
+  · rw [show (outer (matColumn V 0)).a01 = pmul V.a00 (conjP V.a10) from rfl,
+      show (matMul ⟨V.a00, [], V.a10, []⟩ (matDagger V)).a01 =
+        pmul V.a00 (conjP V.a10) ++ pmul [] (conjP V.a11) from rfl,
+      pmul_nil_left, List.append_nil]
+  · rw [show (outer (matColumn V 0)).a10 = pmul V.a10 (conjP V.a00) from rfl,
+      show (matMul ⟨V.a00, [], V.a10, []⟩ (matDagger V)).a10 =
+        pmul V.a10 (conjP V.a00) ++ pmul [] (conjP V.a01) from rfl,
+      pmul_nil_left, List.append_nil]
+  · rw [show (outer (matColumn V 0)).a11 = pmul V.a10 (conjP V.a10) from rfl,
+      show (matMul ⟨V.a00, [], V.a10, []⟩ (matDagger V)).a11 =
+        pmul V.a10 (conjP V.a10) ++ pmul [] (conjP V.a11) from rfl,
+      pmul_nil_left, List.append_nil]
+
+theorem mul_pi1 (V : Mat) : matMul V pi1 = ⟨[], V.a01, [], V.a11⟩ := by
+  apply Mat.ext
+  · rw [show (matMul V pi1).a00 = pmul V.a00 [] ++ pmul V.a01 [] from rfl, pmul_nil, pmul_nil,
+      List.nil_append]
+  · rw [show (matMul V pi1).a01 =
+        pmul V.a00 [] ++ pmul V.a01 (single 1 Mono.one) from rfl, pmul_nil, pmul_one,
+      List.nil_append]
+  · rw [show (matMul V pi1).a10 = pmul V.a10 [] ++ pmul V.a11 [] from rfl, pmul_nil, pmul_nil,
+      List.nil_append]
+  · rw [show (matMul V pi1).a11 =
+        pmul V.a10 [] ++ pmul V.a11 (single 1 Mono.one) from rfl, pmul_nil, pmul_one,
+      List.nil_append]
+
+/-- La colonna `1` di `V`, come `|v₁⟩⟨v₁|`, è `V Π₁ V†`. -/
+theorem col1_as_conj (V : Mat) :
+    outer (matColumn V 1) = matMul (matMul V pi1) (matDagger V) := by
+  rw [mul_pi1]
+  apply Mat.ext
+  · rw [show (outer (matColumn V 1)).a00 = pmul V.a01 (conjP V.a01) from rfl,
+      show (matMul ⟨[], V.a01, [], V.a11⟩ (matDagger V)).a00 =
+        pmul [] (conjP V.a00) ++ pmul V.a01 (conjP V.a01) from rfl,
+      pmul_nil_left, List.nil_append]
+  · rw [show (outer (matColumn V 1)).a01 = pmul V.a01 (conjP V.a11) from rfl,
+      show (matMul ⟨[], V.a01, [], V.a11⟩ (matDagger V)).a01 =
+        pmul [] (conjP V.a10) ++ pmul V.a01 (conjP V.a11) from rfl,
+      pmul_nil_left, List.nil_append]
+  · rw [show (outer (matColumn V 1)).a10 = pmul V.a11 (conjP V.a01) from rfl,
+      show (matMul ⟨[], V.a01, [], V.a11⟩ (matDagger V)).a10 =
+        pmul [] (conjP V.a00) ++ pmul V.a11 (conjP V.a01) from rfl,
+      pmul_nil_left, List.nil_append]
+  · rw [show (outer (matColumn V 1)).a11 = pmul V.a11 (conjP V.a11) from rfl,
+      show (matMul ⟨[], V.a01, [], V.a11⟩ (matDagger V)).a11 =
+        pmul [] (conjP V.a10) ++ pmul V.a11 (conjP V.a11) from rfl,
+      pmul_nil_left, List.nil_append]
+
+/-- `V† (V P V†) V` e `P` differiscono per `(gC, gN)` quando `V† V − I` ci sta. -/
+theorem proj_pull (V P K : Mat) (h : matRel (matMul (matDagger V) V) matOne)
+    (houter : K = matMul (matMul V P) (matDagger V)) :
+    matRel (matMul (matDagger V) (matMul K V)) P := by
+  rw [houter]
+  have hassoc := matRel_of_matSame (pull_assoc (matDagger V) V P)
+  have hL := matMul_left_rel (matMul_left_rel h P) (matMul (matDagger V) V)
+  have hR := matMul_right_rel (matMul matOne P) h
+  have hI : matMul (matMul matOne P) matOne = P := by
+    rw [matMul_one_right, matMul_one_left]
+  have hstep := matRel_trans hassoc (matRel_trans hL hR)
+  rw [hI] at hstep
+  exact hstep
+
+/-- I pesi di Born di `Vψ` nella base `V|k⟩` e quelli di `ψ` differiscono
+per un elemento di `(gC, gN)`, quando `V† V − I` ci sta. -/
+theorem conj_born_rel (V : Mat) (ψ : Pair)
+    (h : matRel (matMul (matDagger V) V) matOne) :
+    inIdeal (psub (columnBorn (braket (matColumn V 0) (applyMat V ψ))) (columnBorn ψ.a0)) ∧
+      inIdeal (psub (columnBorn (braket (matColumn V 1) (applyMat V ψ))) (columnBorn ψ.a1)) := by
+  refine ⟨?_, ?_⟩
+  · have hmat := proj_pull V pi0 (outer (matColumn V 0)) h (col0_as_conj V)
+    have hsand := sandwich_rel hmat ψ.a0 ψ.a1
+    have hleft :=
+      polySame.trans (born_as_sandwich (matColumn V 0) (applyMat V ψ))
+        (sandwich_conj (outer (matColumn V 0)) V ψ.a0 ψ.a1)
+    exact inIdeal_polySame (polySame_psub hleft (projector_born ψ.a0 ψ.a1).symm) hsand
+  · have hmat := proj_pull V pi1 (outer (matColumn V 1)) h (col1_as_conj V)
+    have hsand := sandwich_rel hmat ψ.a0 ψ.a1
+    have hleft :=
+      polySame.trans (born_as_sandwich (matColumn V 1) (applyMat V ψ))
+        (sandwich_conj (outer (matColumn V 1)) V ψ.a0 ψ.a1)
+    exact inIdeal_polySame (polySame_psub hleft (projector_born_1 ψ.a0 ψ.a1).symm) hsand
+
+/-- La legge simbolica: `V = U`, unitaria solo modulo `δ`. -/
+theorem conj_evolution_law (U : Mat) (ψ : Pair) :
+    pairRel (applyMat evolution (applyMat U ψ))
+      (applyMat (matMul (matMul evolution U) (matDagger evolution)) (applyMat evolution ψ)) :=
+  conj_evolution_rel evolution U ψ evolution_unitary
+
+/-- I pesi di Born della legge, con `V = U`. -/
+theorem conj_born_law (ψ : Pair) :
+    inIdeal
+        (psub (columnBorn (braket (matColumn evolution 0) (applyMat evolution ψ)))
+          (columnBorn ψ.a0)) ∧
+      inIdeal
+        (psub (columnBorn (braket (matColumn evolution 1) (applyMat evolution ψ)))
+          (columnBorn ψ.a1)) :=
+  conj_born_rel evolution ψ evolution_unitary
 
 /-! ### Il punto `c = 3/5`, `s = 4/5` come matrice -/
 
@@ -1181,5 +1382,102 @@ theorem compose_circle :
     refine polySame.trans (polySame_append (polySame_mul_comm gC c2s2Sq) (polySame_refl _)) ?_
     exact polySame_append (polySame_refl _) hunit
   exact polySame.trans hsq (polySame.trans hstep hcof)
+
+theorem evolution_a01_bin :
+    evolution.a01 = single (-Gauss.i) (s1.mul nx1) ++ single (-1) (s1.mul ny1) := by
+  have ha : evolution.a01 = pmul gamma h01 := by
+    unfold evolution lin
+    rfl
+  rw [ha, gamma, h01, pmul_two_singles, List.append_nil, Gauss.mul_one, minus_i_sq]
+
+theorem evolution_a11_bin :
+    evolution.a11 = single (1 : Gauss) c1 ++ single Gauss.i (s1.mul nz1) := by
+  have ha : evolution.a11 = cP ++ pmul gamma h11 := by
+    rw [show evolution.a11 = (lin cP gamma hamiltonian).a11 from rfl, lin_a11]
+    rfl
+  rw [ha, cP, gamma, show h11 = single (-1) nz1 from rfl, pmul_single_single, List.append_nil,
+    Gauss.mul_neg_one, Gauss.neg_neg]
+
+theorem evolution2_a00_bin :
+    evolution2.a00 = single (1 : Gauss) c2One ++ single (-Gauss.i) (s2One.mul nz1) := by
+  unfold evolution2 lin
+  rw [pmul_one, gamma2, hamiltonian, h00, pmul_single_single, Gauss.mul_one, List.append_nil, c2P]
+
+theorem evolution2_a10_bin :
+    evolution2.a10 =
+      single (-Gauss.i) (s2One.mul nx1) ++ single (1 : Gauss) (s2One.mul ny1) := by
+  have ha : evolution2.a10 = pmul gamma2 h10 := by
+    unfold evolution2 lin hamiltonian
+    rfl
+  rw [ha, gamma2, h10, pmul_two_singles, List.append_nil, Gauss.mul_one, minus_i_mul_i]
+
+/-- Nel punto, la prima riga di `U` è `3/5` e `−4/5 i`. -/
+theorem point_u_row0 :
+    evalAt2 pointC pointS 1 0 0 pointC pointS evolution.a00 = basisReal ∧
+      evalAt2 pointC pointS 1 0 0 pointC pointS evolution.a01 = basisImag := by
+  refine ⟨?_, ?_⟩
+  · rw [evolution_a00_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, c1, s1, nz1, Mono.mul, pointC, pointS,
+      basisReal, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+  · rw [evolution_a01_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, s1, nx1, ny1, Mono.mul, pointC, pointS,
+      basisImag, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+
+/-- Nel punto, la seconda riga di `U` è `−4/5 i` e `3/5`. -/
+theorem point_u_row1 :
+    evalAt2 pointC pointS 1 0 0 pointC pointS evolution.a10 = basisImag ∧
+      evalAt2 pointC pointS 1 0 0 pointC pointS evolution.a11 = basisReal := by
+  refine ⟨?_, ?_⟩
+  · rw [evolution_a10_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, s1, nx1, ny1, Mono.mul, pointC, pointS,
+      basisImag, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+  · rw [evolution_a11_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, c1, s1, nz1, Mono.mul, pointC, pointS,
+      basisReal, Gauss.re_i, Gauss.im_i] <;> grind
+
+/-- Nel punto, la prima colonna di `U(c₂, s₂)` è `3/5` e `−4/5 i`. -/
+theorem point_u2_col0 :
+    evalAt2 pointC pointS 1 0 0 pointC pointS evolution2.a00 = basisReal ∧
+      evalAt2 pointC pointS 1 0 0 pointC pointS evolution2.a10 = basisImag := by
+  refine ⟨?_, ?_⟩
+  · rw [evolution2_a00_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, c2One, s2One, nz1, Mono.mul, pointC, pointS,
+      basisReal, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+  · rw [evolution2_a10_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, s2One, nx1, ny1, Mono.mul, pointC, pointS,
+      basisImag, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i] <;> grind
+
+theorem basis_square : basisReal * basisReal + basisImag * basisImag = ⟨-(7 : Rat) / 25, 0⟩ := by
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+theorem basis_cross : basisImag * basisReal + basisReal * basisImag = ⟨0, -(24 : Rat) / 25⟩ := by
+  ext <;> simp [basisReal, basisImag, pointC, pointS] <;> grind
+
+/-- Nel punto `c = c₂ = 3/5`, `s = s₂ = 4/5`, `n = e_x`, l'angolo composto è
+`(−7/25, 24/25)` e `U U₂ |0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`. -/
+theorem point_compose :
+    evalAt2 pointC pointS 1 0 0 pointC pointS angleC = ⟨-(7 : Rat) / 25, 0⟩ ∧
+      evalAt2 pointC pointS 1 0 0 pointC pointS angleS = ⟨(24 : Rat) / 25, 0⟩ ∧
+        evalAt2 pointC pointS 1 0 0 pointC pointS
+            (applyMat (matMul evolution evolution2) ket0).a0 = ⟨-(7 : Rat) / 25, 0⟩ ∧
+          evalAt2 pointC pointS 1 0 0 pointC pointS
+              (applyMat (matMul evolution evolution2) ket0).a1 = ⟨0, -(24 : Rat) / 25⟩ := by
+  have hket0 : (applyMat (matMul evolution evolution2) ket0).a0 =
+      pmul evolution.a00 evolution2.a00 ++ pmul evolution.a01 evolution2.a10 := by
+    rw [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+  have hket1 : (applyMat (matMul evolution evolution2) ket0).a1 =
+      pmul evolution.a10 evolution2.a00 ++ pmul evolution.a11 evolution2.a10 := by
+    simp [applyMat, ket0, matMul, pmul_one, pmul_nil, List.append_nil]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [angleC_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, c1, c2One, s1, s2One, Mono.mul, pointC,
+      pointS, Gauss.re_neg, Gauss.im_neg] <;> grind
+  · rw [angleS_bin, evalAt2_append, evalAt2_single, evalAt2_single]
+    ext <;> simp [monoImage2, monoVal2, monoVal, powR, c1, c2One, s1, s2One, Mono.mul, pointC,
+      pointS] <;> grind
+  · rw [hket0, evalAt2_append, evalAt2_pmul, evalAt2_pmul, point_u_row0.1, point_u2_col0.1,
+      point_u_row0.2, point_u2_col0.2, basis_square]
+  · rw [hket1, evalAt2_append, evalAt2_pmul, evalAt2_pmul, point_u_row1.1, point_u2_col0.1,
+      point_u_row1.2, point_u2_col0.2, basis_cross]
 
 end Universe.Symmetry

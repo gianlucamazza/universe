@@ -56,6 +56,9 @@ e `Universe.Observer.no_signalling_any_1`; su `genericQuad`,
 lo stato `|0⟩` ha energia `0` lungo `e_x` e `1` lungo `e_z`, prima e
 dopo `Φ` (`Universe.Symmetry.point_energy_x`,
 `Universe.Symmetry.point_energy_z`).
+`Universe.Symmetry.conj_evolution_law` e `Universe.Symmetry.conj_born_law`
+portano il cambio di base su `V = U`, modulo `(gC, gN)`.
+`Universe.Symmetry.point_compose` valuta l'angolo composto.
 
 `G = |1⟩⟨1| ⊗ H` soddisfa `G³ = G`
 (`Universe.Interaction.generator_cube`), con i coefficienti di

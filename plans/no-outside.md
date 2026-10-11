@@ -1,7 +1,7 @@
 # Plan: nothing given from outside
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: phases 1–7 done; phase 8 closes the two limits they left.
+Status: complete. All eight phases are done and pushed.
 
 | Phase | State | Goal                                                                   |
 | ----- | ----- | ---------------------------------------------------------------------- |
@@ -12,7 +12,7 @@ Status: phases 1–7 done; phase 8 closes the two limits they left.
 | 5     | done  | a unitary change of basis is the same universe                         |
 | 6     | done  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                              |
 | 7     | done  | docs and figures                                                       |
-| 8     | next  | close the two limits: symbolic change of basis, composed angle in Lean |
+| 8     | done  | close the two limits: symbolic change of basis, composed angle in Lean |
 
 ## 1. Why
 

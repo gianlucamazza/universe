@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 52 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 54 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -74,11 +74,11 @@ Allora `evolution_unitary`, `evolution_unitary_rev` e `evolution_det` dicono che
 
 `U` commuta con `H` nel libero: `UH` e `HU` sono entrambi `c H − i s H²`, `Universe.Symmetry.evolution_commutes_hamiltonian`. Quindi `U†HU = U†UH`, e `energy_conserved` mette `⟨Uψ|H|Uψ⟩ − ⟨ψ|H|ψ⟩` in `(gC, gN)` per ogni coppia di ampiezze: l'energia è conservata, con gli stessi cofattori di `δ`. `point_energy_x` e `point_energy_z` valutano `⟨0|H|0⟩` nel punto: `0` lungo x, `1` lungo z, prima e dopo `Φ`.
 
-Il tempo si compone. `evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)` nell'ideale del solo `gN` (`inIdealN`): la legge di gruppo usa `H² = I` e non il cerchio. `compose_circle` mette `c² + s² − 1` in `(gC, gC2)` con cofattori `c₂² + s₂²` e `1` (`inIdealCircle`); `gC2 = c2² + s2² − 1` resta fuori da `reduce`, come `gA`. Il punto `(3/5, 4/5)` due volte è `(−7/25, 24/25)`, e `U²|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`: il valore è nel certificato Python, perché `evalAt` non legge `c2 s2`.
+Il tempo si compone. `evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)` nell'ideale del solo `gN` (`inIdealN`): la legge di gruppo usa `H² = I` e non il cerchio. `compose_circle` mette `c² + s² − 1` in `(gC, gC2)` con cofattori `c₂² + s₂²` e `1` (`inIdealCircle`); `gC2 = c2² + s2² − 1` resta fuori da `reduce`, come `gA`. Il punto `(3/5, 4/5)` due volte è `(−7/25, 24/25)`, e `U²|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`: `evalAt2`, che legge anche `c2 s2` e coincide con `evalAt` dove quei due esponenti sono nulli (`evalAt2_agrees`), dà lo stesso valore in Lean (`point_compose`).
 
 ![Il tempo si compone](figures/tempo.svg)
 
-Il principio d'identità del nucleo ha un caso base. Per ogni matrice `V` con `V†V = I` nel libero, `conj_evolution` dà `V(Uψ) = (VUV†)(Vψ)` e `conj_born` dà ai pesi di `Vψ` nella base `V|k⟩` i valori di `ψ`: la descrizione ruotata evolve e osserva come l'originale. `conj_inverse` ricava `VV† = I`. L'ipotesi è nel libero, quindi vale per unitari esatti come `U` nel punto (`point_conj_evolution`, `point_conj_born`: `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩`), non per la `U` simbolica, unitaria modulo `δ`.
+Il principio d'identità del nucleo ha un caso base. Per ogni matrice `V` con `V†V = I` nel libero, `conj_evolution` dà `V(Uψ) = (VUV†)(Vψ)` e `conj_born` dà ai pesi di `Vψ` nella base `V|k⟩` i valori di `ψ`: la descrizione ruotata evolve e osserva come l'originale. `conj_inverse` ricava `VV† = I`. Con `V†V = I` modulo `(gC, gN)` gli stessi enunciati valgono nell'ideale (`conj_evolution_rel`, `conj_born_rel`), e si applicano alla legge simbolica, `V = U` (`conj_evolution_law`, `conj_born_law`). Nel punto, `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩` (`point_conj_evolution`, `point_conj_born`).
 
 ## 4. L'osservazione
 

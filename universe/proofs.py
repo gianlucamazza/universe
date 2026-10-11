@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 52 righe.
+"""Certificato eseguibile del primo universo. Stampa 54 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -88,7 +88,9 @@ con `c1² = 1 − s1²` e la regola extra `c2² = 1 − s2²`
 (`Universe.Symmetry.compose_circle`): `gC2` sta fuori da `reduce`, come `gA`.
 Nel punto `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x` l'angolo composto è
 `−7/25`, `24/25` e `U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`. `evalAt` non legge
-`c2` e `s2`.
+`c2` e `s2`. `evalAt2` li legge: `Universe.Symmetry.point_compose`.
+Con `V = U` il resto di `V(Uψ) − (V U V†)(Vψ)` e dei pesi di Born è zero
+(`Universe.Symmetry.conj_evolution_law`, `Universe.Symmetry.conj_born_law`).
 """
 
 from __future__ import annotations
@@ -890,6 +892,26 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         f"pesi {_format_gauss(change.weights[0])}, {_format_gauss(change.weights[1])}",
     )
 
+    symbolic = _symbolic_conjugation(world)
+    add(
+        "Simmetria",
+        "V(Uψ) − (V U V†)(Vψ) sta in (gC, gN), con V = U",
+        symbolic.evolution,
+        "resto zero sulle ampiezze, stato generico\n"
+        "Universe.Symmetry.conj_evolution_rel, Universe.Symmetry.conj_evolution_law"
+        if symbolic.evolution
+        else "il trasporto simbolico non sta in (gC, gN)",
+    )
+    add(
+        "Simmetria",
+        "i pesi di Born di Vψ nella base V|k⟩ e quelli di ψ stanno in (gC, gN)",
+        symbolic.born,
+        "V = U, stato generico\n"
+        "Universe.Symmetry.conj_born_rel, Universe.Symmetry.conj_born_law"
+        if symbolic.born
+        else "i pesi simbolici non stanno in (gC, gN)",
+    )
+
     law = _time_composition()
     add(
         "Simmetria",
@@ -921,7 +943,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "nel punto, U|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩ con c = −7/25, s = 24/25",
         point_ok,
         "c₁ = c₂ = 3/5, s₁ = s₂ = 4/5, n = e_x; evalAt ignora c2 e s2\n"
-        "Universe.Symmetry.evolution_compose, Universe.Symmetry.compose_circle"
+        "Universe.Symmetry.evolution_compose, Universe.Symmetry.compose_circle, "
+        "Universe.Symmetry.point_compose"
         if point_ok
         else f"angolo {_format_gauss(law.angle[0])}, {_format_gauss(law.angle[1])}; "
         f"stato {_format_gauss(law.image[0])}, {_format_gauss(law.image[1])}",
@@ -939,6 +962,51 @@ class _BasisChange:
 
 def _origin_zero(left: Poly, right: Poly) -> bool:
     return (left - right).origin.is_zero()
+
+
+def _gap_zero(left: Poly, right: Poly) -> bool:
+    return (left - right).certification() is None
+
+
+@dataclass(frozen=True)
+class _SymbolicBasis:
+    evolution: bool
+    born: bool
+
+
+def _symbolic_conjugation(world: QubitUniverse) -> _SymbolicBasis:
+    """`V = U` sul quoziente: il resto di `V(Uψ) − (VUV†)(Vψ)` è zero.
+
+    I pesi di Born di `Vψ` nella base `V|k⟩` hanno lo stesso resto.
+    """
+    basis = world.U
+    state = world.generic()
+    transported = basis.apply(world.U.apply(state))
+    conjugated = basis.matmul(world.U).matmul(basis.dagger())
+    pulled = conjugated.apply(basis.apply(state))
+    evolution_ok = all(
+        _gap_zero(left, right)
+        for left, right in zip(transported.amplitudes, pulled.amplitudes, strict=True)
+    )
+    ring = state.ring
+    ket0 = State((ring.one(), ring.zero()))
+    ket1 = State((ring.zero(), ring.one()))
+    image = basis.apply(state)
+
+    def bracket(bra: State, ket: State) -> Poly:
+        total = ring.zero()
+        for left, right in zip(bra.amplitudes, ket.amplitudes, strict=True):
+            total = total + left.conj() * right
+        return total
+
+    weights = tuple(
+        bracket(basis.apply(ket), image).modulus_squared() for ket in (ket0, ket1)
+    )
+    born_ok = all(
+        _gap_zero(weight, amplitude.modulus_squared())
+        for weight, amplitude in zip(weights, state.amplitudes, strict=True)
+    )
+    return _SymbolicBasis(evolution_ok, born_ok)
 
 
 def _change_of_basis(world: QubitUniverse) -> _BasisChange:

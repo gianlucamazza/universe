@@ -189,6 +189,42 @@ theorem apply_pairSame (A : Mat) {ψ φ : Pair} (h : pairSame ψ φ) :
   ⟨polySame_append (polySame_pmul_right h.1 A.a00) (polySame_pmul_right h.2 A.a01),
     polySame_append (polySame_pmul_right h.1 A.a10) (polySame_pmul_right h.2 A.a11)⟩
 
+/-- Due stati le cui ampiezze differiscono per un elemento di `(gC, gN)`. -/
+def pairRel (ψ φ : Pair) : Prop :=
+  inIdeal (psub ψ.a0 φ.a0) ∧ inIdeal (psub ψ.a1 φ.a1)
+
+theorem pairRel_of_pairSame {ψ φ : Pair} (h : pairSame ψ φ) : pairRel ψ φ :=
+  ⟨inIdeal_of_polySame h.1, inIdeal_of_polySame h.2⟩
+
+theorem pairRel_symm {ψ φ : Pair} (h : pairRel ψ φ) : pairRel φ ψ := by
+  have swap (p q : Poly) (hp : inIdeal (psub p q)) : inIdeal (psub q p) := by
+    have hs : polySame (psub q p) (pneg (psub p q)) := by
+      intro t
+      rw [coeff_psub, coeff_pneg, coeff_psub, Gauss.neg_add, Gauss.neg_neg, Gauss.add_comm]
+    exact inIdeal_polySame hs (inIdeal_neg hp)
+  exact ⟨swap _ _ h.1, swap _ _ h.2⟩
+
+theorem pairRel_trans {ψ φ ρ : Pair} (h1 : pairRel ψ φ) (h2 : pairRel φ ρ) : pairRel ψ ρ :=
+  ⟨inIdeal_polySame (polySame_psub_trans _ _ _) (inIdeal_append h1.1 h2.1),
+    inIdeal_polySame (polySame_psub_trans _ _ _) (inIdeal_append h1.2 h2.2)⟩
+
+theorem pairRel_polySame {ψ ψ' φ φ' : Pair} (hψ : pairSame ψ ψ') (hφ : pairSame φ φ')
+    (h : pairRel ψ φ) : pairRel ψ' φ' :=
+  ⟨inIdeal_polySame (polySame.symm (polySame_psub hψ.1 hφ.1)) h.1,
+    inIdeal_polySame (polySame.symm (polySame_psub hψ.2 hφ.2)) h.2⟩
+
+/-- Applicare una matrice conserva la relazione d'ideale sulle entrate. -/
+theorem apply_matRel {A B : Mat} (h : matRel A B) (ψ : Pair) :
+    pairRel (applyMat A ψ) (applyMat B ψ) :=
+  ⟨inIdeal_dot_left A.a00 B.a00 A.a01 B.a01 ψ.a0 ψ.a1 h.1 h.2.1,
+    inIdeal_dot_left A.a10 B.a10 A.a11 B.a11 ψ.a0 ψ.a1 h.2.2.1 h.2.2.2⟩
+
+/-- Applicare la stessa matrice conserva la relazione d'ideale sullo stato. -/
+theorem apply_pairRel (A : Mat) {ψ φ : Pair} (h : pairRel ψ φ) :
+    pairRel (applyMat A ψ) (applyMat A φ) :=
+  ⟨inIdeal_dot_right A.a00 A.a01 ψ.a0 φ.a0 ψ.a1 φ.a1 h.1 h.2,
+    inIdeal_dot_right A.a10 A.a11 ψ.a0 φ.a0 ψ.a1 φ.a1 h.1 h.2⟩
+
 /-- Il fattore destro di `(p · x)` attraversa `p`. -/
 theorem slide_right (a p x : Poly) :
     polySame (pmul a (pmul p x)) (pmul p (pmul a x)) :=

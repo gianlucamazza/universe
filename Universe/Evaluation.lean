@@ -5,6 +5,8 @@ Valutazione nel punto.
 `eval_polySame` dice che due polinomi con gli stessi coefficienti hanno lo
 stesso valore. `eval_pmul` e `eval_conj` portano prodotto e coniugio sui
 valori di Gauss. `eval_scale` porta la scala, `eval_const` una costante.
+`evalAt2` sostituisce anche `c2` e `s2`. `evalAt2_pmul` è il prodotto.
+Su un polinomio senza quegli esponenti, `evalAt2_agrees` coincide con `evalAt`.
 `listEval` somma i coefficienti lungo un supporto senza ripetizioni;
 `eval_cover` lo identifica con `evalAt`. Lungo `n = e_x`, `eval_gN_axis_x`
 azzera `gN` e `eval_bracket_axis_x` legge `⟨0|U|0⟩ = c`. Se `(c, s)` sta
@@ -319,5 +321,121 @@ theorem eval_bracket_axis_x (c s : Rat) : evalAt c s 1 0 0 evolution.a00 = ⟨c,
   ext <;> simp <;> grind
 
 end
+
+/-! ### Sostituzione di `c2` e `s2` -/
+
+/-- Valore di un monomio, con anche `c2` e `s2`. -/
+def monoVal2 (c s nx ny nz c2 s2 : Rat) (m : Mono) : Rat :=
+  monoVal c s nx ny nz m * powR c2 m.c2 * powR s2 m.s2
+
+/-- Immagine di un coefficiente sotto `c, s, n, c2, s2`. -/
+def monoImage2 (c s nx ny nz c2 s2 : Rat) (z : Gauss) (m : Mono) : Gauss :=
+  ⟨z.re * monoVal2 c s nx ny nz c2 s2 m, z.im * monoVal2 c s nx ny nz c2 s2 m⟩
+
+/-- Valuta un polinomio sostituendo anche `c2` e `s2`. `evalAt` li ignora. -/
+def evalAt2 (c s nx ny nz c2 s2 : Rat) : Poly → Gauss
+  | [] => 0
+  | (a, m) :: rest =>
+      monoImage2 c s nx ny nz c2 s2 a m + evalAt2 c s nx ny nz c2 s2 rest
+
+theorem monoVal2_mul (c s nx ny nz c2 s2 : Rat) (m n : Mono) :
+    monoVal2 c s nx ny nz c2 s2 (m.mul n) =
+      monoVal2 c s nx ny nz c2 s2 m * monoVal2 c s nx ny nz c2 s2 n := by
+  simp only [monoVal2, monoVal, Mono.mul, powR_add]
+  grind
+
+theorem monoVal2_silent (c s nx ny nz c2 s2 : Rat) (m : Mono)
+    (h : m.c2 = 0 ∧ m.s2 = 0) :
+    monoVal2 c s nx ny nz c2 s2 m = monoVal c s nx ny nz m := by
+  simp [monoVal2, h.1, h.2, powR]
+
+theorem monoImage2_mul (c s nx ny nz c2 s2 : Rat) (a b : Gauss) (m n : Mono) :
+    monoImage2 c s nx ny nz c2 s2 (a * b) (m.mul n) =
+      monoImage2 c s nx ny nz c2 s2 a m * monoImage2 c s nx ny nz c2 s2 b n := by
+  simp only [monoImage2, monoVal2_mul, Gauss.re_mul, Gauss.im_mul]
+  ext <;> simp <;> grind
+
+theorem evalAt2_append (c s nx ny nz c2 s2 : Rat) (p q : Poly) :
+    evalAt2 c s nx ny nz c2 s2 (p ++ q) =
+      evalAt2 c s nx ny nz c2 s2 p + evalAt2 c s nx ny nz c2 s2 q := by
+  induction p with
+  | nil => simp [evalAt2, Gauss.zero_add]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      simp only [List.cons_append, evalAt2, ih]
+      rw [← Gauss.add_assoc]
+
+theorem evalAt2_single (c s nx ny nz c2 s2 : Rat) (a : Gauss) (m : Mono) :
+    evalAt2 c s nx ny nz c2 s2 (single a m) = monoImage2 c s nx ny nz c2 s2 a m := by
+  simp [evalAt2, single, monoImage2, Gauss.add_zero]
+
+theorem evalAt2_mulMono (c s nx ny nz c2 s2 : Rat) (a : Gauss) (m : Mono) (q : Poly) :
+    evalAt2 c s nx ny nz c2 s2 (mulMono a m q) =
+      monoImage2 c s nx ny nz c2 s2 a m * evalAt2 c s nx ny nz c2 s2 q := by
+  induction q with
+  | nil => simp [mulMono, evalAt2, Gauss.mul_zero]
+  | cons head rest ih =>
+    cases head with
+    | mk b n =>
+      simp only [mulMono, evalAt2, ih, monoImage2, monoVal2_mul, Gauss.mul_add, Gauss.re_mul,
+        Gauss.im_mul]
+      ext <;> simp <;> grind
+
+/-- `evalAt2` rispetta il prodotto. -/
+theorem evalAt2_pmul (c s nx ny nz c2 s2 : Rat) (p q : Poly) :
+    evalAt2 c s nx ny nz c2 s2 (pmul p q) =
+      evalAt2 c s nx ny nz c2 s2 p * evalAt2 c s nx ny nz c2 s2 q := by
+  induction p with
+  | nil => simp [pmul, Universe.Quotient.mul, evalAt2, Gauss.zero_mul]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show pmul ((a, m) :: rest) q = mulMono a m q ++ pmul rest q from rfl, evalAt2_append,
+        evalAt2_mulMono, ih]
+      rw [show evalAt2 c s nx ny nz c2 s2 ((a, m) :: rest) =
+        monoImage2 c s nx ny nz c2 s2 a m + evalAt2 c s nx ny nz c2 s2 rest from rfl,
+        Gauss.add_mul]
+
+theorem silent_single (a : Gauss) (m : Mono) (h : m.c2 = 0 ∧ m.s2 = 0) :
+    ∀ x ∈ single a m, x.2.c2 = 0 ∧ x.2.s2 = 0 := by
+  intro x hx
+  simp only [single, List.mem_cons, List.mem_nil_iff, or_false] at hx
+  rw [hx]
+  exact h
+
+theorem silent_append {p q : Poly}
+    (hp : ∀ x ∈ p, x.2.c2 = 0 ∧ x.2.s2 = 0)
+    (hq : ∀ x ∈ q, x.2.c2 = 0 ∧ x.2.s2 = 0) :
+    ∀ x ∈ p ++ q, x.2.c2 = 0 ∧ x.2.s2 = 0 := by
+  intro x hx
+  rw [List.mem_append] at hx
+  cases hx with
+  | inl hmem => exact hp x hmem
+  | inr hmem => exact hq x hmem
+
+/-- Senza esponenti `c2` e `s2`, le due valutazioni coincidono. -/
+theorem evalAt2_agrees (c s nx ny nz c2 s2 : Rat) (p : Poly)
+    (h : ∀ x ∈ p, x.2.c2 = 0 ∧ x.2.s2 = 0) :
+    evalAt2 c s nx ny nz c2 s2 p = evalAt c s nx ny nz p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      have hm := h (a, m) List.mem_cons_self
+      have hrest : ∀ x ∈ rest, x.2.c2 = 0 ∧ x.2.s2 = 0 :=
+        fun x hx => h x (List.mem_cons_of_mem _ hx)
+      rw [evalAt2, evalAt, ih hrest, monoImage2, monoVal2_silent c s nx ny nz c2 s2 m hm]
+
+/-- `gN` non contiene `c2` né `s2`: `evalAt2` lo legge come `evalAt`. -/
+theorem evalAt2_gN (c s c2 s2 : Rat) :
+    evalAt2 c s 1 0 0 c2 s2 gN = evalAt c s 1 0 0 gN := by
+  apply evalAt2_agrees
+  exact silent_append
+    (silent_append
+      (silent_append (silent_single _ _ ⟨rfl, rfl⟩) (silent_single _ _ ⟨rfl, rfl⟩))
+      (silent_single _ _ ⟨rfl, rfl⟩))
+    (silent_single _ _ ⟨rfl, rfl⟩)
 
 end Universe.Evaluation

@@ -230,6 +230,12 @@ theorem pmul_single_single (a b : Gauss) (m n : Mono) :
     pmul (single a m) (single b n) = single (a * b) (m.mul n) ++ [] := by
   simp [pmul, Universe.Quotient.mul, single, mulMono]
 
+/-- Prodotto di un monomio per una somma di due monomi. -/
+theorem pmul_two_singles (a b c : Gauss) (m n p : Mono) :
+    pmul (single a m) (single b n ++ single c p) =
+      (single (a * b) (m.mul n) ++ single (a * c) (m.mul p)) ++ [] := by
+  simp [pmul, Universe.Quotient.mul, single, mulMono]
+
 theorem scale_append (z : Gauss) (p q : Poly) : scale z (p ++ q) = scale z p ++ scale z q := by
   induction p with
   | nil => simp [scale, List.nil_append]
@@ -299,6 +305,13 @@ theorem conj_pmul (p q : Poly) : conjP (pmul p q) = pmul (conjP p) (conjP q) := 
     cases head with
     | mk a m =>
       simp only [conjP, pmul, Universe.Quotient.mul, conj_append, conj_mulMono, ih]
+
+theorem conjP_conjP (p : Poly) : conjP (conjP p) = p := by
+  induction p with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | mk a m => simp [conjP, ih, conj_conj]
 
 theorem conj_pneg (p : Poly) : conjP (pneg p) = pneg (conjP p) := by
   induction p with
@@ -1317,6 +1330,25 @@ theorem matSame_mul_right (M : Mat) {N N' : Mat} (h : matSame N N') :
     polySame_append (polySame_pmul_right h.2.1 M.a00) (polySame_pmul_right h.2.2.2 M.a01),
     polySame_append (polySame_pmul_right h.1 M.a10) (polySame_pmul_right h.2.2.1 M.a11),
     polySame_append (polySame_pmul_right h.2.1 M.a10) (polySame_pmul_right h.2.2.2 M.a11)⟩
+
+theorem matSame_mul_left {M M' : Mat} (h : matSame M M') (N : Mat) :
+    matSame (matMul M N) (matMul M' N) :=
+  ⟨polySame_append (polySame_pmul_left h.1 N.a00) (polySame_pmul_left h.2.1 N.a10),
+    polySame_append (polySame_pmul_left h.1 N.a01) (polySame_pmul_left h.2.1 N.a11),
+    polySame_append (polySame_pmul_left h.2.2.1 N.a00) (polySame_pmul_left h.2.2.2 N.a10),
+    polySame_append (polySame_pmul_left h.2.2.1 N.a01) (polySame_pmul_left h.2.2.2 N.a11)⟩
+
+/-- `A (((B C) A) B)` e `((A B) C) (A B)` hanno gli stessi coefficienti. -/
+theorem pull_assoc (A B C : Mat) :
+    matSame
+      (matMul A (matMul (matMul (matMul B C) A) B))
+      (matMul (matMul (matMul A B) C) (matMul A B)) := by
+  have h1 := matSame_symm (matSame_mul_assoc A (matMul (matMul B C) A) B)
+  have h2 := matSame_mul_left (matSame_symm (matSame_mul_assoc A (matMul B C) A)) B
+  have h3 :=
+    matSame_mul_left (matSame_mul_left (matSame_symm (matSame_mul_assoc A B C)) A) B
+  have h4 := matSame_mul_assoc (matMul (matMul A B) C) A B
+  exact matSame_trans h1 (matSame_trans h2 (matSame_trans h3 h4))
 
 theorem polySame_append_assoc (a b c : Poly) : polySame ((a ++ b) ++ c) (a ++ (b ++ c)) := by
   intro t

@@ -356,6 +356,21 @@ theorem projector_born (α β : Poly) :
     coeff_mul_append_right, coeffOf_append, pmul_nil, coeffOf_nil, Gauss.add_zero,
     columnBorn, coeff_mul_comm]
 
+/-- `Π₁ = diag(0, 1)`. -/
+def pi1 : Mat := ⟨[], [], [], single 1 Mono.one⟩
+
+/-- `⟨ψ|Π₁|ψ⟩ = |β|²` per ogni coppia di ampiezze. -/
+theorem projector_born_1 (α β : Poly) :
+    polySame (sandwich pi1 α β) (columnBorn β) := by
+  intro t
+  have h0 : pmul pi1.a00 α ++ pmul pi1.a01 β = [] := by
+    rw [pi1]
+    rfl
+  have h1 : pmul pi1.a10 α ++ pmul pi1.a11 β = β := by
+    rw [pi1, show pmul ([] : Poly) α = [] from rfl, one_pmul, List.nil_append]
+  rw [sandwich, h0, h1, show pmul (conjP α) ([] : Poly) = [] from pmul_nil _,
+    List.nil_append, columnBorn, coeff_mul_comm]
+
 /-! ### Sfera, con cofattore proprio -/
 
 def ar1 : Mono := {Mono.one with ar := 1}
