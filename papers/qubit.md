@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 55 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 56 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -206,7 +206,7 @@ Questo non dice quale esito avviene, né perché la base sia quella computaziona
 
 L'argomento, i vicoli ciechi e i tre candidati per il passo successivo sono in [`researches/osservatore.md`](../researches/osservatore.md).
 
-Il monomio di Lean ha quindici esponenti con nome: `c s nx ny nz` per la legge, otto per le ampiezze di due qubit, `c2 s2` per un secondo passo di tempo. La divisione legge solo `c` e `nx`, la valutazione solo i cinque della legge. Perché restano campi con nome e non un parametro è `researches/monomio.md`.
+Il monomio di Lean ha diciotto esponenti con nome: `c s nx ny nz` per la legge, otto per le ampiezze di due qubit, `c2 s2` per un secondo passo di tempo, `mx my mz` per un secondo asse. La divisione legge solo `c` e `nx`, la valutazione solo i cinque della legge. Perché restano campi con nome e non un parametro è `researches/monomio.md`.
 
 ## 8. Fuori da questa nota
 

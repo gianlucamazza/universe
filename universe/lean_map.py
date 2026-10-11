@@ -174,6 +174,9 @@ LEAN: dict[str, tuple[str, ...]] = {
     "U(c₁, s₁) U(c₂, s₂) − U(c, s) sta nell'ideale di gN": (
         "Universe.Symmetry.evolution_compose",
     ),
+    "U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ) nell'anello libero": (
+        "Universe.Symmetry.evolution_compose_axes",
+    ),
     "se le due coppie stanno sul cerchio, ci sta (c, s)": (
         "Universe.Symmetry.compose_circle",
     ),

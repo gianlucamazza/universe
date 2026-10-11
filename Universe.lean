@@ -67,7 +67,10 @@ sono il caso `genericQuad`.
 ampiezza. Nel punto razionale `⟨0|H|0⟩` vale `0` lungo `e_x` e `1` lungo
 `e_z`, prima e dopo `Φ` (`point_energy_x`, `point_energy_z`).
 `evolution_compose` mette `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)`
-nell'ideale di `gN`: l'unica regola è `H² = I`. `compose_circle` mette
+nell'ideale di `gN`: l'unica regola è `H² = I`. `evolution_compose_axes`
+mette `U(c₁, s₁, n) U(c₂, s₂, m)` uguale a `a I − i (b·σ)` nell'anello
+libero, e `compose_axes_same` ritrova la legge sullo stesso asse, modulo
+`gN`. `compose_circle` mette
 `c² + s² − 1` in `(gC, gC2)`, e `gC2` resta fuori da `reduce`.
 `conj_evolution_rel` e `conj_born_rel` portano il cambio di base
 nell'ideale `(gC, gN)`. Con `V = U` sono `conj_evolution_law` e

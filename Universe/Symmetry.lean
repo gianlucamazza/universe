@@ -15,6 +15,11 @@ matrice dà `V(U|0⟩) = −7/25 |0⟩ − 24/25 i |1⟩`, con pesi `1` e `0`.
 
 `U(c₁, s₁) U(c₂, s₂)` e `U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)` differiscono per
 un cofattore di `gN`: `H² = I` è l'unica regola, il cerchio non entra.
+`evolutionM` è `U(c₂, s₂, m)`. `evolution_compose_axes` dice che
+`U(c₁, s₁, n) U(c₂, s₂, m)` è `a I − i (b·σ)` nell'anello libero, con
+`a = c₁c₂ − s₁s₂ (n·m)` e `b = s₁c₂ n + c₁s₂ m + s₁s₂ (n×m)`.
+`compose_axes_same` ritrova la coppia di `evolution_compose` quando `m = n`,
+modulo `gN`.
 Se le due coppie stanno sul cerchio, ci sta anche il composto, nell'ideale
 `(gC, gC2)`. `gC2 = c2² + s2² − 1` resta fuori da `reduce`, come `gA`.
 Se `V†V − I` sta in `(gC, gN)`, `V (U ψ)` e `(V U V†) (V ψ)` differiscono
@@ -907,6 +912,16 @@ def angleS : Poly := pmul (single 1 s1) c2P ++ pmul cP s2P
 /-- `U(c₂, s₂) = c₂ I − i s₂ H`. -/
 def evolution2 : Mat := lin c2P gamma2 hamiltonian
 
+def mx1 : Mono := {Mono.one with mx := 1}
+
+def my1 : Mono := {Mono.one with my := 1}
+
+def mz1 : Mono := {Mono.one with mz := 1}
+
+/-- `U(c₂, s₂, m) = c₂ I − i s₂ (m·σ)`, sull'asse `(mx, my, mz)`. -/
+def evolutionM : Mat :=
+  lin c2P gamma2 (axisMat (single 1 mx1) (single 1 my1) (single 1 mz1))
+
 /-- `U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)`. -/
 def evolutionAdd : Mat :=
   lin angleC (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian
@@ -1479,5 +1494,630 @@ theorem point_compose :
       point_u_row0.2, point_u2_col0.2, basis_square]
   · rw [hket1, evalAt2_append, evalAt2_pmul, evalAt2_pmul, point_u_row1.1, point_u2_col0.1,
       point_u_row1.2, point_u2_col0.2, basis_cross]
+
+/-! ### Composizione su due assi -/
+
+def nAxis : Triple := ⟨single 1 nx1, single 1 ny1, single 1 nz1⟩
+
+def mAxis : Triple := ⟨single 1 mx1, single 1 my1, single 1 mz1⟩
+
+def s1c2P : Poly := pmul (single 1 s1) c2P
+
+def c1s2P : Poly := pmul cP s2P
+
+def s1s2P : Poly := pmul (single 1 s1) s2P
+
+/-- `a = c₁c₂ − s₁s₂ (n·m)`. -/
+def axesA : Poly := psub (pmul cP c2P) (pmul s1s2P (dot nAxis mAxis))
+
+/-- `b = s₁c₂ n + c₁s₂ m + s₁s₂ (n×m)`. -/
+def axesB : Triple where
+  x := pmul s1c2P nAxis.x ++ pmul c1s2P mAxis.x ++ pmul s1s2P (cross nAxis mAxis).x
+  y := pmul s1c2P nAxis.y ++ pmul c1s2P mAxis.y ++ pmul s1s2P (cross nAxis mAxis).y
+  z := pmul s1c2P nAxis.z ++ pmul c1s2P mAxis.z ++ pmul s1s2P (cross nAxis mAxis).z
+
+theorem matAdd_comm (M N : Mat) : matSame (matAdd M N) (matAdd N M) :=
+  ⟨polySame_append_comm _ _, polySame_append_comm _ _, polySame_append_comm _ _,
+    polySame_append_comm _ _⟩
+
+theorem matAdd_assoc (M N P : Mat) :
+    matSame (matAdd (matAdd M N) P) (matAdd M (matAdd N P)) :=
+  ⟨polySame_append_assoc _ _ _, polySame_append_assoc _ _ _, polySame_append_assoc _ _ _,
+    polySame_append_assoc _ _ _⟩
+
+theorem matAdd_same {A A' B B' : Mat} (hA : matSame A A') (hB : matSame B B') :
+    matSame (matAdd A B) (matAdd A' B') :=
+  ⟨polySame_append hA.1 hB.1, polySame_append hA.2.1 hB.2.1, polySame_append hA.2.2.1 hB.2.2.1,
+    polySame_append hA.2.2.2 hB.2.2.2⟩
+
+theorem matAdd_same_left {M M' : Mat} (h : matSame M M') (N : Mat) :
+    matSame (matAdd M N) (matAdd M' N) :=
+  matAdd_same h (matSame_refl N)
+
+theorem matAdd_same_right (M : Mat) {N N' : Mat} (h : matSame N N') :
+    matSame (matAdd M N) (matAdd M N') :=
+  matAdd_same (matSame_refl M) h
+
+theorem matScale_same (k : Poly) {M N : Mat} (h : matSame M N) :
+    matSame (matScale k M) (matScale k N) :=
+  ⟨polySame_pmul_right h.1 k, polySame_pmul_right h.2.1 k, polySame_pmul_right h.2.2.1 k,
+    polySame_pmul_right h.2.2.2 k⟩
+
+theorem matScale_left {k k' : Poly} (h : polySame k k') (M : Mat) :
+    matSame (matScale k M) (matScale k' M) :=
+  ⟨polySame_pmul_left h M.a00, polySame_pmul_left h M.a01, polySame_pmul_left h M.a10,
+    polySame_pmul_left h M.a11⟩
+
+theorem matScale_add (k : Poly) (A B : Mat) :
+    matSame (matScale k (matAdd A B)) (matAdd (matScale k A) (matScale k B)) :=
+  ⟨polySame_mul_append_right k A.a00 B.a00, polySame_mul_append_right k A.a01 B.a01,
+    polySame_mul_append_right k A.a10 B.a10, polySame_mul_append_right k A.a11 B.a11⟩
+
+theorem matScale_assoc (k q : Poly) (M : Mat) :
+    matScale k (matScale q M) = matScale (pmul k q) M := by
+  apply Mat.ext
+  · rw [show (matScale k (matScale q M)).a00 = pmul k (pmul q M.a00) from rfl,
+      show (matScale (pmul k q) M).a00 = pmul (pmul k q) M.a00 from rfl, pmul_assoc]
+  · rw [show (matScale k (matScale q M)).a01 = pmul k (pmul q M.a01) from rfl,
+      show (matScale (pmul k q) M).a01 = pmul (pmul k q) M.a01 from rfl, pmul_assoc]
+  · rw [show (matScale k (matScale q M)).a10 = pmul k (pmul q M.a10) from rfl,
+      show (matScale (pmul k q) M).a10 = pmul (pmul k q) M.a10 from rfl, pmul_assoc]
+  · rw [show (matScale k (matScale q M)).a11 = pmul k (pmul q M.a11) from rfl,
+      show (matScale (pmul k q) M).a11 = pmul (pmul k q) M.a11 from rfl, pmul_assoc]
+
+/-- `((A+B)+C) + (D+F)` e `(A+D) + ((B+C)+F)` hanno gli stessi coefficienti. -/
+theorem regroup (A B C D F : Mat) :
+    matSame (matAdd (matAdd (matAdd A B) C) (matAdd D F))
+      (matAdd (matAdd A D) (matAdd (matAdd B C) F)) := by
+  refine matSame_trans (matSame_symm (matAdd_assoc (matAdd (matAdd A B) C) D F)) ?_
+  refine matSame_trans (matAdd_same_left (matAdd_assoc (matAdd A B) C D) F) ?_
+  refine matSame_trans
+      (matAdd_same_left (matAdd_same_right (matAdd A B) (matAdd_comm C D)) F) ?_
+  refine matSame_trans (matAdd_same_left (matSame_symm (matAdd_assoc (matAdd A B) D C)) F) ?_
+  refine matSame_trans (matAdd_same_left (matAdd_same_left (matAdd_assoc A B D) C) F) ?_
+  refine matSame_trans
+      (matAdd_same_left (matAdd_same_left (matAdd_same_right A (matAdd_comm B D)) C) F) ?_
+  refine matSame_trans
+      (matAdd_same_left (matAdd_same_left (matSame_symm (matAdd_assoc A D B)) C) F) ?_
+  refine matSame_trans (matAdd_assoc (matAdd (matAdd A D) B) C F) ?_
+  refine matSame_trans (matAdd_assoc (matAdd A D) B (matAdd C F)) ?_
+  exact matAdd_same_right (matAdd A D) (matSame_symm (matAdd_assoc B C F))
+
+theorem matScale_sum_one (p q : Poly) :
+    matSame (matAdd (matScale p matOne) (matScale q matOne)) (matScale (p ++ q) matOne) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [show (matAdd (matScale p matOne) (matScale q matOne)).a00 =
+        pmul p (single 1 Mono.one) ++ pmul q (single 1 Mono.one) from rfl,
+      show (matScale (p ++ q) matOne).a00 = pmul (p ++ q) (single 1 Mono.one) from rfl,
+      pmul_one, pmul_one, pmul_one]
+    exact polySame_refl _
+  · rw [show (matAdd (matScale p matOne) (matScale q matOne)).a01 =
+        pmul p [] ++ pmul q [] from rfl,
+      show (matScale (p ++ q) matOne).a01 = pmul (p ++ q) [] from rfl, pmul_nil, pmul_nil,
+      pmul_nil, List.nil_append]
+    exact polySame_refl _
+  · rw [show (matAdd (matScale p matOne) (matScale q matOne)).a10 =
+        pmul p [] ++ pmul q [] from rfl,
+      show (matScale (p ++ q) matOne).a10 = pmul (p ++ q) [] from rfl, pmul_nil, pmul_nil,
+      pmul_nil, List.nil_append]
+    exact polySame_refl _
+  · rw [show (matAdd (matScale p matOne) (matScale q matOne)).a11 =
+        pmul p (single 1 Mono.one) ++ pmul q (single 1 Mono.one) from rfl,
+      show (matScale (p ++ q) matOne).a11 = pmul (p ++ q) (single 1 Mono.one) from rfl,
+      pmul_one, pmul_one, pmul_one]
+    exact polySame_refl _
+
+theorem lin_split (p q : Poly) (H : Mat) :
+    matSame (lin p q H) (matAdd (matScale p matOne) (matScale q H)) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [lin_a00, show (matAdd (matScale p matOne) (matScale q H)).a00 =
+      pmul p (single 1 Mono.one) ++ pmul q H.a00 from rfl, pmul_one]
+    exact polySame_refl _
+  · rw [show (lin p q H).a01 = pmul q H.a01 from rfl,
+      show (matAdd (matScale p matOne) (matScale q H)).a01 = pmul p [] ++ pmul q H.a01 from rfl,
+      pmul_nil, List.nil_append]
+    exact polySame_refl _
+  · rw [show (lin p q H).a10 = pmul q H.a10 from rfl,
+      show (matAdd (matScale p matOne) (matScale q H)).a10 = pmul p [] ++ pmul q H.a10 from rfl,
+      pmul_nil, List.nil_append]
+    exact polySame_refl _
+  · rw [lin_a11, show (matAdd (matScale p matOne) (matScale q H)).a11 =
+      pmul p (single 1 Mono.one) ++ pmul q H.a11 from rfl, pmul_one]
+    exact polySame_refl _
+
+theorem lin_scale (p q k : Poly) (H : Mat) : lin p q (matScale k H) = lin p (pmul q k) H := by
+  apply Mat.ext
+  · rw [lin_a00, lin_a00, show (matScale k H).a00 = pmul k H.a00 from rfl, ← pmul_assoc]
+  · rw [show (lin p q (matScale k H)).a01 = pmul q (matScale k H).a01 from rfl,
+      show (matScale k H).a01 = pmul k H.a01 from rfl,
+      show (lin p (pmul q k) H).a01 = pmul (pmul q k) H.a01 from rfl, ← pmul_assoc]
+  · rw [show (lin p q (matScale k H)).a10 = pmul q (matScale k H).a10 from rfl,
+      show (matScale k H).a10 = pmul k H.a10 from rfl,
+      show (lin p (pmul q k) H).a10 = pmul (pmul q k) H.a10 from rfl, ← pmul_assoc]
+  · rw [lin_a11, lin_a11, show (matScale k H).a11 = pmul k H.a11 from rfl, ← pmul_assoc]
+
+theorem lin_on_same (p q : Poly) {H K : Mat} (h : matSame H K) : matSame (lin p q H) (lin p q K) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · intro t
+    rw [lin_a00, lin_a00, coeffOf_append, coeffOf_append, polySame_pmul_right h.1 q t]
+  · intro t
+    rw [show (lin p q H).a01 = pmul q H.a01 from rfl,
+      show (lin p q K).a01 = pmul q K.a01 from rfl, polySame_pmul_right h.2.1 q t]
+  · intro t
+    rw [show (lin p q H).a10 = pmul q H.a10 from rfl,
+      show (lin p q K).a10 = pmul q K.a10 from rfl, polySame_pmul_right h.2.2.1 q t]
+  · intro t
+    rw [lin_a11, lin_a11, coeffOf_append, coeffOf_append, polySame_pmul_right h.2.2.2 q t]
+
+theorem axisMat_scale (k x y z : Poly) :
+    matSame (axisMat (pmul k x) (pmul k y) (pmul k z)) (matScale k (axisMat x y z)) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [axisMat_a00, show (matScale k (axisMat x y z)).a00 = pmul k (axisMat x y z).a00 from rfl,
+      axisMat_a00]
+    exact polySame_refl _
+  · rw [axisMat_a01, show (matScale k (axisMat x y z)).a01 = pmul k (axisMat x y z).a01 from rfl,
+      axisMat_a01]
+    refine polySame.trans (polySame_append (polySame_refl _) ?_)
+        (polySame.symm (polySame_mul_append_right k x (scale (-Gauss.i) y)))
+    rw [scale_pmul_right]
+    exact polySame_refl _
+  · rw [axisMat_a10, show (matScale k (axisMat x y z)).a10 = pmul k (axisMat x y z).a10 from rfl,
+      axisMat_a10]
+    refine polySame.trans (polySame_append (polySame_refl _) ?_)
+        (polySame.symm (polySame_mul_append_right k x (scale Gauss.i y)))
+    rw [scale_pmul_right]
+    exact polySame_refl _
+  · rw [axisMat_a11, show (matScale k (axisMat x y z)).a11 = pmul k (axisMat x y z).a11 from rfl,
+      axisMat_a11, pmul_pneg_right]
+    exact polySame_refl _
+
+theorem axisMat_add (x x' y y' z z' : Poly) :
+    matSame (axisMat (x ++ x') (y ++ y') (z ++ z'))
+      (matAdd (axisMat x y z) (axisMat x' y' z')) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [axisMat_a00, show (matAdd (axisMat x y z) (axisMat x' y' z')).a00 =
+      (axisMat x y z).a00 ++ (axisMat x' y' z').a00 from rfl, axisMat_a00, axisMat_a00]
+    exact polySame_refl _
+  · rw [axisMat_a01, scale_append, show (matAdd (axisMat x y z) (axisMat x' y' z')).a01 =
+      (axisMat x y z).a01 ++ (axisMat x' y' z').a01 from rfl, axisMat_a01, axisMat_a01]
+    exact polySame_append4_mid x x' (scale (-Gauss.i) y) (scale (-Gauss.i) y')
+  · rw [axisMat_a10, scale_append, show (matAdd (axisMat x y z) (axisMat x' y' z')).a10 =
+      (axisMat x y z).a10 ++ (axisMat x' y' z').a10 from rfl, axisMat_a10, axisMat_a10]
+    exact polySame_append4_mid x x' (scale Gauss.i y) (scale Gauss.i y')
+  · rw [axisMat_a11, pneg_append, show (matAdd (axisMat x y z) (axisMat x' y' z')).a11 =
+      (axisMat x y z).a11 ++ (axisMat x' y' z').a11 from rfl, axisMat_a11, axisMat_a11]
+    exact polySame_refl _
+
+theorem axisMat_poly {x x' y y' z z' : Poly} (hx : polySame x x') (hy : polySame y y')
+    (hz : polySame z z') : matSame (axisMat x y z) (axisMat x' y' z') := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [axisMat_a00, axisMat_a00]
+    exact hz
+  · rw [axisMat_a01, axisMat_a01]
+    intro t
+    rw [coeffOf_append, coeffOf_append, hx t, coeff_scale, coeff_scale, hy t]
+  · rw [axisMat_a10, axisMat_a10]
+    intro t
+    rw [coeffOf_append, coeffOf_append, hx t, coeff_scale, coeff_scale, hy t]
+  · rw [axisMat_a11, axisMat_a11]
+    intro t
+    rw [coeff_pneg, coeff_pneg, hz t]
+
+theorem polySame_join5 (a b c d e : Poly) :
+    polySame ((((a ++ b) ++ c) ++ d) ++ e) (((a ++ b) ++ c) ++ (d ++ e)) :=
+  polySame_append_assoc ((a ++ b) ++ c) d e
+
+theorem polySame_join4 (a b c d : Poly) :
+    polySame (((a ++ b) ++ c) ++ d) ((a ++ b) ++ (c ++ d)) :=
+  polySame_append_assoc (a ++ b) c d
+
+theorem polySame_swap4 (a b c d : Poly) :
+    polySame (((a ++ b) ++ c) ++ d) ((a ++ b) ++ (d ++ c)) :=
+  polySame.trans (polySame_join4 a b c d) (polySame_append (polySame_refl _) (polySame_append_comm c d))
+
+theorem polySame_swap5 (a b c d e : Poly) :
+    polySame ((((a ++ b) ++ c) ++ d) ++ e) (((a ++ b) ++ c) ++ (e ++ d)) :=
+  polySame.trans (polySame_join5 a b c d e)
+    (polySame_append (polySame_refl _) (polySame_append_comm d e))
+
+/-- `(p I + q H)(r I + u K)` è `pr I + pu K + qr H + qu (HK)`, nell'anello libero. -/
+theorem lin_mul_axes (p q r u : Poly) (H K : Mat) :
+    matSame (matMul (lin p q H) (lin r u K))
+      (matAdd
+        (matAdd (matAdd (matScale (pmul p r) matOne) (matScale (pmul p u) K))
+          (matScale (pmul q r) H))
+        (matScale (pmul q u) (matMul H K))) := by
+  let S :=
+    matAdd
+      (matAdd (matAdd (matScale (pmul p r) matOne) (matScale (pmul p u) K))
+        (matScale (pmul q r) H))
+      (matScale (pmul q u) (matMul H K))
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · have hexp : polySame (matMul (lin p q H) (lin r u K)).a00
+        (pmul p r ++ pmul (pmul p u) K.a00 ++ pmul (pmul q r) H.a00 ++
+          pmul (pmul q u) (pmul H.a00 K.a00) ++ pmul (pmul q u) (pmul H.a01 K.a10)) := by
+      rw [show (matMul (lin p q H) (lin r u K)).a00 =
+          pmul (lin p q H).a00 (lin r u K).a00 ++ pmul (lin p q H).a01 (lin r u K).a10 from rfl,
+        lin_a00, lin_a00, show (lin p q H).a01 = pmul q H.a01 from rfl,
+        show (lin r u K).a10 = pmul u K.a10 from rfl]
+      exact lin_diag_expand p q r u H.a00 H.a01 K.a00 K.a10
+    refine polySame.trans hexp ?_
+    refine polySame.trans (polySame_join5 (pmul p r) (pmul (pmul p u) K.a00)
+        (pmul (pmul q r) H.a00) (pmul (pmul q u) (pmul H.a00 K.a00))
+        (pmul (pmul q u) (pmul H.a01 K.a10))) ?_
+    refine polySame.trans (polySame_append (polySame_refl _)
+        (polySame.symm (polySame_mul_append_right (pmul q u) (pmul H.a00 K.a00)
+          (pmul H.a01 K.a10)))) ?_
+    rw [show S.a00 = (((matScale (pmul p r) matOne).a00 ++ (matScale (pmul p u) K).a00) ++
+          (matScale (pmul q r) H).a00) ++ (matScale (pmul q u) (matMul H K)).a00 from rfl,
+      show (matScale (pmul p r) matOne).a00 = pmul (pmul p r) (single 1 Mono.one) from rfl, pmul_one,
+      show (matScale (pmul p u) K).a00 = pmul (pmul p u) K.a00 from rfl,
+      show (matScale (pmul q r) H).a00 = pmul (pmul q r) H.a00 from rfl,
+      show (matScale (pmul q u) (matMul H K)).a00 = pmul (pmul q u) (matMul H K).a00 from rfl,
+      show (matMul H K).a00 = pmul H.a00 K.a00 ++ pmul H.a01 K.a10 from rfl]
+    exact polySame_refl _
+  · have hexp : polySame (matMul (lin p q H) (lin r u K)).a01
+        (pmul (pmul p u) K.a01 ++ pmul (pmul q r) H.a01 ++
+          pmul (pmul q u) (pmul H.a00 K.a01) ++ pmul (pmul q u) (pmul H.a01 K.a11)) := by
+      rw [show (matMul (lin p q H) (lin r u K)).a01 =
+          pmul (lin p q H).a00 (lin r u K).a01 ++ pmul (lin p q H).a01 (lin r u K).a11 from rfl,
+        lin_a00, show (lin p q H).a01 = pmul q H.a01 from rfl,
+        show (lin r u K).a01 = pmul u K.a01 from rfl, lin_a11]
+      exact lin_off_expand p q r u H.a00 K.a01 H.a01 K.a11
+    refine polySame.trans hexp ?_
+    refine polySame.trans (polySame_join4 (pmul (pmul p u) K.a01) (pmul (pmul q r) H.a01)
+        (pmul (pmul q u) (pmul H.a00 K.a01)) (pmul (pmul q u) (pmul H.a01 K.a11))) ?_
+    refine polySame.trans (polySame_append (polySame_refl _)
+        (polySame.symm (polySame_mul_append_right (pmul q u) (pmul H.a00 K.a01)
+          (pmul H.a01 K.a11)))) ?_
+    rw [show S.a01 = (((matScale (pmul p r) matOne).a01 ++ (matScale (pmul p u) K).a01) ++
+          (matScale (pmul q r) H).a01) ++ (matScale (pmul q u) (matMul H K)).a01 from rfl,
+      show (matScale (pmul p r) matOne).a01 = pmul (pmul p r) [] from rfl, pmul_nil, List.nil_append,
+      show (matScale (pmul p u) K).a01 = pmul (pmul p u) K.a01 from rfl,
+      show (matScale (pmul q r) H).a01 = pmul (pmul q r) H.a01 from rfl,
+      show (matScale (pmul q u) (matMul H K)).a01 = pmul (pmul q u) (matMul H K).a01 from rfl,
+      show (matMul H K).a01 = pmul H.a00 K.a01 ++ pmul H.a01 K.a11 from rfl]
+    exact polySame_refl _
+  · have hswap : polySame (matMul (lin p q H) (lin r u K)).a10
+        (pmul (lin p q H).a11 (lin r u K).a10 ++ pmul (lin p q H).a10 (lin r u K).a00) := by
+      rw [show (matMul (lin p q H) (lin r u K)).a10 =
+          pmul (lin p q H).a10 (lin r u K).a00 ++ pmul (lin p q H).a11 (lin r u K).a10 from rfl]
+      exact polySame_append_comm _ _
+    have hexp : polySame
+        (pmul (lin p q H).a11 (lin r u K).a10 ++ pmul (lin p q H).a10 (lin r u K).a00)
+        (pmul (pmul p u) K.a10 ++ pmul (pmul q r) H.a10 ++
+          pmul (pmul q u) (pmul H.a11 K.a10) ++ pmul (pmul q u) (pmul H.a10 K.a00)) := by
+      rw [lin_a11, show (lin r u K).a10 = pmul u K.a10 from rfl,
+        show (lin p q H).a10 = pmul q H.a10 from rfl, lin_a00]
+      exact lin_off_expand p q r u H.a11 K.a10 H.a10 K.a00
+    refine polySame.trans (polySame.trans hswap hexp) ?_
+    refine polySame.trans (polySame_swap4 (pmul (pmul p u) K.a10) (pmul (pmul q r) H.a10)
+        (pmul (pmul q u) (pmul H.a11 K.a10)) (pmul (pmul q u) (pmul H.a10 K.a00))) ?_
+    refine polySame.trans (polySame_append (polySame_refl _)
+        (polySame.symm (polySame_mul_append_right (pmul q u) (pmul H.a10 K.a00)
+          (pmul H.a11 K.a10)))) ?_
+    rw [show S.a10 = (((matScale (pmul p r) matOne).a10 ++ (matScale (pmul p u) K).a10) ++
+          (matScale (pmul q r) H).a10) ++ (matScale (pmul q u) (matMul H K)).a10 from rfl,
+      show (matScale (pmul p r) matOne).a10 = pmul (pmul p r) [] from rfl, pmul_nil, List.nil_append,
+      show (matScale (pmul p u) K).a10 = pmul (pmul p u) K.a10 from rfl,
+      show (matScale (pmul q r) H).a10 = pmul (pmul q r) H.a10 from rfl,
+      show (matScale (pmul q u) (matMul H K)).a10 = pmul (pmul q u) (matMul H K).a10 from rfl,
+      show (matMul H K).a10 = pmul H.a10 K.a00 ++ pmul H.a11 K.a10 from rfl]
+    exact polySame_refl _
+  · have hswap : polySame (matMul (lin p q H) (lin r u K)).a11
+        (pmul (lin p q H).a11 (lin r u K).a11 ++ pmul (lin p q H).a10 (lin r u K).a01) := by
+      rw [show (matMul (lin p q H) (lin r u K)).a11 =
+          pmul (lin p q H).a10 (lin r u K).a01 ++ pmul (lin p q H).a11 (lin r u K).a11 from rfl]
+      exact polySame_append_comm _ _
+    have hexp : polySame
+        (pmul (lin p q H).a11 (lin r u K).a11 ++ pmul (lin p q H).a10 (lin r u K).a01)
+        (pmul p r ++ pmul (pmul p u) K.a11 ++ pmul (pmul q r) H.a11 ++
+          pmul (pmul q u) (pmul H.a11 K.a11) ++ pmul (pmul q u) (pmul H.a10 K.a01)) := by
+      rw [lin_a11, show (lin r u K).a01 = pmul u K.a01 from rfl,
+        show (lin p q H).a10 = pmul q H.a10 from rfl, lin_a11]
+      exact lin_diag_expand p q r u H.a11 H.a10 K.a11 K.a01
+    refine polySame.trans (polySame.trans hswap hexp) ?_
+    refine polySame.trans (polySame_swap5 (pmul p r) (pmul (pmul p u) K.a11)
+        (pmul (pmul q r) H.a11) (pmul (pmul q u) (pmul H.a11 K.a11))
+        (pmul (pmul q u) (pmul H.a10 K.a01))) ?_
+    refine polySame.trans (polySame_append (polySame_refl _)
+        (polySame.symm (polySame_mul_append_right (pmul q u) (pmul H.a10 K.a01)
+          (pmul H.a11 K.a11)))) ?_
+    rw [show S.a11 = (((matScale (pmul p r) matOne).a11 ++ (matScale (pmul p u) K).a11) ++
+          (matScale (pmul q r) H).a11) ++ (matScale (pmul q u) (matMul H K)).a11 from rfl,
+      show (matScale (pmul p r) matOne).a11 = pmul (pmul p r) (single 1 Mono.one) from rfl, pmul_one,
+      show (matScale (pmul p u) K).a11 = pmul (pmul p u) K.a11 from rfl,
+      show (matScale (pmul q r) H).a11 = pmul (pmul q r) H.a11 from rfl,
+      show (matScale (pmul q u) (matMul H K)).a11 = pmul (pmul q u) (matMul H K).a11 from rfl,
+      show (matMul H K).a11 = pmul H.a10 K.a01 ++ pmul H.a11 K.a11 from rfl]
+    exact polySame_refl _
+
+theorem matScale_mono (z : Gauss) (m : Mono) (M : Mat) :
+    matSame (matScale (single z m) M)
+      (matScale (single z Mono.one) (matScale (single (1 : Gauss) m) M)) := by
+  have entry (p : Poly) : polySame (pmul (single z m) p)
+      (pmul (single z Mono.one) (pmul (single (1 : Gauss) m) p)) := by
+    intro t
+    rw [← pmul_assoc, pmul_single_single, Gauss.mul_one, Mono.one_mul, pmul_append_left,
+      pmul_nil_left, coeffOf_append, coeffOf_nil, Gauss.add_zero]
+  exact ⟨entry M.a00, entry M.a01, entry M.a10, entry M.a11⟩
+
+theorem scaled_on (k : Poly) (mono : Mono) (p : Poly) (hk : k = single (1 : Gauss) mono ++ []) :
+    polySame (pmul k p) (pmul (single (1 : Gauss) mono) p) := by
+  rw [hk, pmul_append_left, pmul_nil_left]
+  exact polySame_append_nil _
+
+/-- Un fattore `−i · monomio` esce da un asse, e il monomio rientra nelle componenti. -/
+theorem limb (coeff : Poly) (mono : Mono) (k x y w : Poly) (M : Mat)
+    (hcoeff : polySame coeff (single (-Gauss.i) mono)) (hM : matSame M (axisMat x y w))
+    (hx : polySame (pmul k x) (pmul (single (1 : Gauss) mono) x))
+    (hy : polySame (pmul k y) (pmul (single (1 : Gauss) mono) y))
+    (hz : polySame (pmul k w) (pmul (single (1 : Gauss) mono) w)) :
+    matSame (matScale coeff M)
+      (matScale (single (-Gauss.i) Mono.one) (axisMat (pmul k x) (pmul k y) (pmul k w))) := by
+  refine matSame_trans (matScale_left hcoeff M) ?_
+  refine matSame_trans (matScale_same (single (-Gauss.i) mono) hM) ?_
+  refine matSame_trans (matScale_mono (-Gauss.i) mono (axisMat x y w)) ?_
+  refine matSame_trans
+      (matScale_same _ (matSame_symm (axisMat_scale (single (1 : Gauss) mono) x y w))) ?_
+  exact matScale_same _ (matSame_symm (axisMat_poly hx hy hz))
+
+theorem pu_coeff : polySame (pmul cP gamma2) (single (-Gauss.i) (c1.mul s2One)) := by
+  rw [cP, gamma2, pmul_single_single, Gauss.one_mul]
+  exact polySame_append_nil _
+
+theorem qr_coeff : polySame (pmul gamma c2P) (single (-Gauss.i) (s1.mul c2One)) := by
+  rw [gamma, c2P, pmul_single_single, Gauss.mul_one]
+  exact polySame_append_nil _
+
+theorem c1s2P_bin : c1s2P = single (1 : Gauss) (c1.mul s2One) ++ [] := by
+  rw [c1s2P, cP, s2P, pmul_single_single, Gauss.one_mul]
+
+theorem s1c2P_bin : s1c2P = single (1 : Gauss) (s1.mul c2One) ++ [] := by
+  rw [s1c2P, c2P, pmul_single_single, Gauss.mul_one]
+
+theorem s1s2P_bin : s1s2P = single (1 : Gauss) (s1.mul s2One) ++ [] := by
+  rw [s1s2P, s2P, pmul_single_single, Gauss.mul_one]
+
+theorem qui_coeff :
+    polySame (pmul (pmul gamma gamma2) (single Gauss.i Mono.one))
+      (single (-Gauss.i) (s1.mul s2One)) := by
+  rw [gamma_square, pmul_append_left, pmul_nil_left, pmul_single_single, Mono.mul_one,
+    Gauss.neg_one_mul]
+  exact polySame.trans (polySame_append_nil _) (polySame_append_nil _)
+
+theorem gamma_prod_neg (p : Poly) :
+    polySame (pmul (pmul gamma gamma2) p) (pneg (pmul s1s2P p)) := by
+  rw [gamma_square, s1s2P_bin]
+  intro t
+  rw [pmul_append_left, pmul_nil_left, pmul_append_left, pmul_nil_left, pneg_append,
+    show pneg ([] : Poly) = [] from rfl, coeffOf_append, coeffOf_nil, Gauss.add_zero,
+    coeffOf_append, coeffOf_nil, Gauss.add_zero, ← scale_neg_one, scale_pmul_left,
+    show scale (-1) (single (1 : Gauss) (s1.mul s2One)) =
+      single ((-1) * 1) (s1.mul s2One) from rfl,
+    Gauss.mul_one]
+
+theorem axesA_parts :
+    polySame axesA (pmul cP c2P ++ pmul (pmul gamma gamma2) (dot nAxis mAxis)) := by
+  rw [axesA, psub]
+  exact polySame_append (polySame_refl _) (polySame.symm (gamma_prod_neg (dot nAxis mAxis)))
+
+theorem axesB_add :
+    matSame
+      (matAdd
+        (matAdd
+          (axisMat (pmul s1c2P nAxis.x) (pmul s1c2P nAxis.y) (pmul s1c2P nAxis.z))
+          (axisMat (pmul c1s2P mAxis.x) (pmul c1s2P mAxis.y) (pmul c1s2P mAxis.z)))
+        (axisMat (pmul s1s2P (cross nAxis mAxis).x) (pmul s1s2P (cross nAxis mAxis).y)
+          (pmul s1s2P (cross nAxis mAxis).z)))
+      (axisMat axesB.x axesB.y axesB.z) := by
+  have htail :=
+    axisMat_add (pmul c1s2P mAxis.x) (pmul s1s2P (cross nAxis mAxis).x) (pmul c1s2P mAxis.y)
+      (pmul s1s2P (cross nAxis mAxis).y) (pmul c1s2P mAxis.z) (pmul s1s2P (cross nAxis mAxis).z)
+  have hsum :=
+    axisMat_add (pmul s1c2P nAxis.x)
+      (pmul c1s2P mAxis.x ++ pmul s1s2P (cross nAxis mAxis).x) (pmul s1c2P nAxis.y)
+      (pmul c1s2P mAxis.y ++ pmul s1s2P (cross nAxis mAxis).y) (pmul s1c2P nAxis.z)
+      (pmul c1s2P mAxis.z ++ pmul s1s2P (cross nAxis mAxis).z)
+  refine matSame_trans (matAdd_assoc _ _ _) ?_
+  refine matSame_trans (matAdd_same_right _ (matSame_symm htail)) ?_
+  refine matSame_trans (matSame_symm hsum) ?_
+  exact axisMat_poly (polySame_append_assoc _ _ _) (polySame_append_assoc _ _ _)
+      (polySame_append_assoc _ _ _)
+
+/-- `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, nell'anello libero. -/
+theorem evolution_compose_axes :
+    matSame (matMul evolution evolutionM)
+      (lin axesA (single (-Gauss.i) Mono.one) (axisMat axesB.x axesB.y axesB.z)) := by
+  have hstart : matSame (matMul evolution evolutionM)
+      (matMul (lin cP gamma (axisMat nAxis.x nAxis.y nAxis.z))
+        (lin c2P gamma2 (axisMat mAxis.x mAxis.y mAxis.z))) := by
+    rw [show evolution = lin cP gamma hamiltonian from rfl, hamiltonian_axis,
+      show evolutionM = lin c2P gamma2 (axisMat mAxis.x mAxis.y mAxis.z) from rfl]
+    exact matSame_refl _
+  have hmul :=
+    lin_mul_axes cP gamma c2P gamma2 (axisMat nAxis.x nAxis.y nAxis.z)
+      (axisMat mAxis.x mAxis.y mAxis.z)
+  have hpauli := pauli_product nAxis.x nAxis.y nAxis.z mAxis.x mAxis.y mAxis.z
+  have hfourth : matSame
+      (matScale (pmul gamma gamma2)
+        (matMul (axisMat nAxis.x nAxis.y nAxis.z) (axisMat mAxis.x mAxis.y mAxis.z)))
+      (matAdd (matScale (pmul (pmul gamma gamma2) (dot nAxis mAxis)) matOne)
+        (matScale (pmul (pmul gamma gamma2) (single Gauss.i Mono.one))
+          (axisMat (cross nAxis mAxis).x (cross nAxis mAxis).y (cross nAxis mAxis).z))) := by
+    refine matSame_trans (matScale_same _ hpauli) ?_
+    refine matSame_trans (matScale_same _ (lin_split (dot nAxis mAxis) (single Gauss.i Mono.one)
+        (axisMat (cross nAxis mAxis).x (cross nAxis mAxis).y (cross nAxis mAxis).z))) ?_
+    refine matSame_trans (matScale_add _ _ _) ?_
+    rw [matScale_assoc, matScale_assoc]
+    exact matSame_refl _
+  have hfive := matSame_trans (matSame_trans hstart hmul) (matAdd_same_right _ hfourth)
+  let A := matScale (pmul cP c2P) matOne
+  let B := matScale (pmul cP gamma2) (axisMat mAxis.x mAxis.y mAxis.z)
+  let C := matScale (pmul gamma c2P) (axisMat nAxis.x nAxis.y nAxis.z)
+  let D := matScale (pmul (pmul gamma gamma2) (dot nAxis mAxis)) matOne
+  let F :=
+    matScale (pmul (pmul gamma gamma2) (single Gauss.i Mono.one))
+      (axisMat (cross nAxis mAxis).x (cross nAxis mAxis).y (cross nAxis mAxis).z)
+  have hreg : matSame (matMul evolution evolutionM)
+      (matAdd (matAdd A D) (matAdd (matAdd B C) F)) :=
+    matSame_trans hfive (regroup A B C D F)
+  have hn :=
+    limb (pmul gamma c2P) (s1.mul c2One) s1c2P nAxis.x nAxis.y nAxis.z
+      (axisMat nAxis.x nAxis.y nAxis.z) qr_coeff (matSame_refl _)
+      (scaled_on s1c2P (s1.mul c2One) nAxis.x s1c2P_bin)
+      (scaled_on s1c2P (s1.mul c2One) nAxis.y s1c2P_bin)
+      (scaled_on s1c2P (s1.mul c2One) nAxis.z s1c2P_bin)
+  have hm :=
+    limb (pmul cP gamma2) (c1.mul s2One) c1s2P mAxis.x mAxis.y mAxis.z
+      (axisMat mAxis.x mAxis.y mAxis.z) pu_coeff (matSame_refl _)
+      (scaled_on c1s2P (c1.mul s2One) mAxis.x c1s2P_bin)
+      (scaled_on c1s2P (c1.mul s2One) mAxis.y c1s2P_bin)
+      (scaled_on c1s2P (c1.mul s2One) mAxis.z c1s2P_bin)
+  have hf :=
+    limb (pmul (pmul gamma gamma2) (single Gauss.i Mono.one)) (s1.mul s2One) s1s2P
+      (cross nAxis mAxis).x (cross nAxis mAxis).y (cross nAxis mAxis).z
+      (axisMat (cross nAxis mAxis).x (cross nAxis mAxis).y (cross nAxis mAxis).z) qui_coeff
+      (matSame_refl _)
+      (scaled_on s1s2P (s1.mul s2One) (cross nAxis mAxis).x s1s2P_bin)
+      (scaled_on s1s2P (s1.mul s2One) (cross nAxis mAxis).y s1s2P_bin)
+      (scaled_on s1s2P (s1.mul s2One) (cross nAxis mAxis).z s1s2P_bin)
+  have hvec : matSame (matAdd (matAdd C B) F)
+      (matScale (single (-Gauss.i) Mono.one) (axisMat axesB.x axesB.y axesB.z)) := by
+    refine matSame_trans (matAdd_same (matAdd_same hn hm) hf) ?_
+    refine matSame_trans (matAdd_same_left (matSame_symm (matScale_add _ _ _)) _) ?_
+    refine matSame_trans (matSame_symm (matScale_add _ _ _)) ?_
+    exact matScale_same _ axesB_add
+  have hscal : matSame (matAdd A D) (matScale axesA matOne) :=
+    matSame_trans (matScale_sum_one _ _) (matScale_left (polySame.symm axesA_parts) _)
+  refine matSame_trans (matSame_trans hreg
+      (matAdd_same hscal (matSame_trans (matAdd_same_left (matAdd_comm B C) F) hvec))) ?_
+  exact matSame_symm (lin_split axesA (single (-Gauss.i) Mono.one)
+      (axisMat axesB.x axesB.y axesB.z))
+
+/-! ### Lo stesso asse, modulo `gN` -/
+
+def axesASame : Poly := psub (pmul cP c2P) (pmul s1s2P (dot nAxis nAxis))
+
+def axesBSame : Triple where
+  x := pmul s1c2P nAxis.x ++ pmul c1s2P nAxis.x ++ pmul s1s2P (cross nAxis nAxis).x
+  y := pmul s1c2P nAxis.y ++ pmul c1s2P nAxis.y ++ pmul s1s2P (cross nAxis nAxis).y
+  z := pmul s1c2P nAxis.z ++ pmul c1s2P nAxis.z ++ pmul s1s2P (cross nAxis nAxis).z
+
+theorem cross_vanish (p q : Poly) (h : polySame p q) : polySame (psub p q) [] := by
+  intro t
+  rw [coeff_psub, h t, Gauss.add_neg_cancel, coeffOf_nil]
+
+theorem cross_self (n : Triple) :
+    polySame (cross n n).x [] ∧ polySame (cross n n).y [] ∧ polySame (cross n n).z [] :=
+  ⟨cross_vanish _ _ (polySame_mul_comm n.y n.z), cross_vanish _ _ (polySame_mul_comm n.z n.x),
+    cross_vanish _ _ (polySame_mul_comm n.x n.y)⟩
+
+theorem b_same (v w : Poly) (hw : polySame w []) :
+    polySame (pmul s1c2P v ++ pmul c1s2P v ++ pmul s1s2P w) (pmul angleS v) := by
+  rw [show angleS = s1c2P ++ c1s2P from rfl, pmul_append_left]
+  refine polySame.trans (polySame_append (polySame_refl _) (polySame_pmul_right hw s1s2P)) ?_
+  rw [pmul_nil]
+  exact polySame_append_nil _
+
+theorem dot_self_axis : polySame (dot nAxis nAxis) axisSq := by
+  rw [dot, nAxis, axisSq, pmul_single_single, pmul_single_single, pmul_single_single, nx1_sq,
+    ny1_sq, nz1_sq, Gauss.one_mul]
+  exact polySame_append (polySame_append (polySame_append_nil _) (polySame_append_nil _))
+      (polySame_append_nil _)
+
+theorem dot_self_tail : polySame (psub (dot nAxis nAxis) (single 1 Mono.one)) gN :=
+  polySame.trans (polySame_psub dot_self_axis (polySame_refl _))
+    (polySame.trans (polySame_psub_one axisSq) (by intro t; rw [axis_tail]))
+
+theorem polySame_psub_flip (a b : Poly) : polySame (psub a b) (pneg (psub b a)) := by
+  intro t
+  rw [coeff_psub, coeff_pneg, coeff_psub, Gauss.neg_add, Gauss.neg_neg, Gauss.add_comm]
+
+theorem psub_scale_defect (a k d : Poly) :
+    polySame (psub (psub a (pmul k d)) (psub a k))
+      (pmul k (psub (single (1 : Gauss) Mono.one) d)) := by
+  intro t
+  rw [coeff_psub, coeff_psub, coeff_psub, (polySame_mul_psub_right k (single 1 Mono.one) d) t,
+    coeff_psub, pmul_one]
+  let x := coeffOf a t
+  let y := coeffOf (pmul k d) t
+  let z := coeffOf k t
+  calc
+    (x + -y) + -(x + -z) = (x + -y) + (-x + z) := by rw [Gauss.neg_add, Gauss.neg_neg]
+    _ = x + (-y + (-x + z)) := by rw [Gauss.add_assoc]
+    _ = x + ((-y + -x) + z) := by rw [← Gauss.add_assoc (-y) (-x) z]
+    _ = x + ((-x + -y) + z) := by rw [Gauss.add_comm (-y) (-x)]
+    _ = x + (-x + (-y + z)) := by rw [Gauss.add_assoc (-x) (-y) z]
+    _ = (x + -x) + (-y + z) := by rw [← Gauss.add_assoc x (-x) (-y + z)]
+    _ = z + -y := by rw [Gauss.add_neg_cancel, Gauss.zero_add, Gauss.add_comm]
+
+theorem axesA_same_gap : inIdealN (psub axesASame angleC) := by
+  have hform : polySame (psub axesASame angleC)
+      (pmul s1s2P (psub (single 1 Mono.one) (dot nAxis nAxis))) := by
+    rw [axesASame, show angleC = psub (pmul cP c2P) s1s2P from rfl]
+    exact psub_scale_defect (pmul cP c2P) s1s2P (dot nAxis nAxis)
+  have hflip : polySame (psub (single 1 Mono.one) (dot nAxis nAxis)) (pneg gN) :=
+    polySame.trans (polySame_psub_flip _ _) (polySame_pneg dot_self_tail)
+  refine ⟨pneg s1s2P, ?_⟩
+  refine polySame.trans hform (polySame.trans (polySame_pmul_right hflip s1s2P) ?_)
+  intro t
+  rw [pmul_pneg_right, pneg_pmul]
+
+theorem polySame_cancel_right (a b c : Poly) :
+    polySame (psub (a ++ c) (b ++ c)) (psub a b) := by
+  intro t
+  rw [coeff_psub, coeff_psub, coeffOf_append, coeffOf_append]
+  ext <;> simp <;> grind
+
+/-- Con `m = n`, `a I − i (b·σ)` è `U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)`, modulo `gN`. -/
+theorem compose_axes_same :
+    matRelN
+      (lin axesASame (single (-Gauss.i) Mono.one)
+        (axisMat axesBSame.x axesBSame.y axesBSame.z))
+      evolutionAdd := by
+  have hcross := cross_self nAxis
+  have haxis : matSame (axisMat axesBSame.x axesBSame.y axesBSame.z)
+      (matScale angleS hamiltonian) := by
+    refine matSame_trans (axisMat_poly (b_same nAxis.x (cross nAxis nAxis).x hcross.1)
+        (b_same nAxis.y (cross nAxis nAxis).y hcross.2.1)
+        (b_same nAxis.z (cross nAxis nAxis).z hcross.2.2)) ?_
+    refine matSame_trans (axisMat_scale angleS nAxis.x nAxis.y nAxis.z) ?_
+    refine matScale_same angleS ?_
+    rw [show nAxis.x = single 1 nx1 from rfl, show nAxis.y = single 1 ny1 from rfl,
+      show nAxis.z = single 1 nz1 from rfl, ← hamiltonian_axis]
+    exact matSame_refl _
+  have hlin : matSame
+      (lin axesASame (single (-Gauss.i) Mono.one)
+        (axisMat axesBSame.x axesBSame.y axesBSame.z))
+      (lin axesASame (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian) := by
+    refine matSame_trans (lin_on_same _ _ haxis) ?_
+    rw [lin_scale]
+    exact matSame_refl _
+  have hclosed : evolutionAdd =
+      lin angleC (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian := rfl
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · exact inIdealN_polySame (polySame_psub hlin.1 (polySame_refl _))
+      (inIdealN_polySame (by
+        rw [hclosed, lin_a00, lin_a00]
+        exact polySame_cancel_right _ _ _) axesA_same_gap)
+  · exact inIdealN_polySame (polySame_psub hlin.2.1 (polySame_refl _))
+      (inIdealN_polySame (by
+        rw [hclosed, show (lin axesASame (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian).a01 =
+            pmul (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian.a01 from rfl,
+          show (lin angleC (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian).a01 =
+            pmul (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian.a01 from rfl]
+        exact polySame_add_neg _) inIdealN_zero)
+  · exact inIdealN_polySame (polySame_psub hlin.2.2.1 (polySame_refl _))
+      (inIdealN_polySame (by
+        rw [hclosed, show (lin axesASame (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian).a10 =
+            pmul (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian.a10 from rfl,
+          show (lin angleC (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian).a10 =
+            pmul (pmul (single (-Gauss.i) Mono.one) angleS) hamiltonian.a10 from rfl]
+        exact polySame_add_neg _) inIdealN_zero)
+  · exact inIdealN_polySame (polySame_psub hlin.2.2.2 (polySame_refl _))
+      (inIdealN_polySame (by
+        rw [hclosed, lin_a11, lin_a11]
+        exact polySame_cancel_right _ _ _) axesA_same_gap)
 
 end Universe.Symmetry

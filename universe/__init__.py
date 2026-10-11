@@ -59,6 +59,8 @@ dopo `Φ` (`Universe.Symmetry.point_energy_x`,
 `Universe.Symmetry.conj_evolution_law` e `Universe.Symmetry.conj_born_law`
 portano il cambio di base su `V = U`, modulo `(gC, gN)`.
 `Universe.Symmetry.point_compose` valuta l'angolo composto.
+`Universe.Symmetry.evolution_compose_axes` è il prodotto su due assi,
+`a I − i (b·σ)`, nell'anello libero.
 
 `G = |1⟩⟨1| ⊗ H` soddisfa `G³ = G`
 (`Universe.Interaction.generator_cube`), con i coefficienti di

@@ -6,7 +6,7 @@ Status: in progress.
 | Phase | State   | Goal                                                                |
 | ----- | ------- | ------------------------------------------------------------------- |
 | 1     | done    | the Pauli product `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ`, free ring     |
-| 2     | planned | `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, free ring              |
+| 2     | done    | `U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)`, free ring              |
 | 3     | planned | the product stays unitary: `a² + \|b\|² − 1` in `(gC, gN, gC2, gM)` |
 | 4     | planned | the rational point, and two rotations that do not commute           |
 | 5     | planned | docs, figure, release                                               |
@@ -33,6 +33,10 @@ The algebra, checked by the orchestrator:
   `UₘUₙ|0⟩ = (9/25 − 12/25 i)|0⟩ + (16/25 − 12/25 i)|1⟩`. The Born weights are `9/25` and
   `16/25` in both orders: the order shows in the phase of `|1⟩`, not in the weights on this
   state.
+
+Phase 2 note: `evolution_compose_axes` took about 500 lines of Lean, over the ~400
+go/no-go, and `compose_axes_same` about 126, over ~100. Both are proved in full, so the
+fallbacks were not needed.
 
 ## 2. Ground rules
 

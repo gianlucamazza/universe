@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 55 righe.
+"""Certificato eseguibile del primo universo. Stampa 56 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -84,7 +84,10 @@ Nel punto `V(U|0⟩)` vale `−7/25` e `−24/25 i`, con pesi `1` e `0`
 (`Universe.Symmetry.point_conj_evolution`, `Universe.Symmetry.point_conj_born`).
 `U(c₁, s₁) U(c₂, s₂) − U(c₁c₂ − s₁s₂, s₁c₂ + c₁s₂)` ha resto zero
 nell'ideale di `gN` solo, sull'anello fresco `(c1, s1, c2, s2, nx, ny, nz)`
-(`Universe.Symmetry.evolution_compose`). Senza quadrati il resto non è zero,
+(`Universe.Symmetry.evolution_compose`). Su due assi,
+`U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ)` ha origine zero sull'anello
+`(c1, s1, c2, s2, nx, ny, nz, mx, my, mz)`, senza regole
+(`Universe.Symmetry.evolution_compose_axes`). Senza quadrati il resto non è zero,
 e il quadrato di `c1` da solo non paga la legge. `c² + s² − 1` ha resto zero
 con `c1² = 1 − s1²` e la regola extra `c2² = 1 − s2²`
 (`Universe.Symmetry.compose_circle`): `gC2` sta fuori da `reduce`, come `gA`.
@@ -937,6 +940,17 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if time_law.group
         else "la legge di gruppo non sta in (gN)",
     )
+    axes_gap = _axes_composition(Ring((*_LAW, "mx", "my", "mz")))
+    axes_free = _free_zero(axes_gap) and _first_certificate(axes_gap) is None
+    add(
+        "Simmetria",
+        "U(c₁, s₁, n) U(c₂, s₂, m) = a I − i (b·σ) nell'anello libero",
+        axes_free,
+        "anello (c1, s1, c2, s2, nx, ny, nz, mx, my, mz), senza regole\n"
+        "Universe.Symmetry.evolution_compose_axes"
+        if axes_free
+        else "il prodotto su due assi non è zero nell'anello libero",
+    )
     add(
         "Simmetria",
         "se le due coppie stanno sul cerchio, ci sta (c, s)",
@@ -1156,6 +1170,23 @@ def _composition(ring: Ring) -> tuple[Operator, Poly, Poly, Operator]:
     sine = symbol["s1"] * symbol["c2"] + symbol["c1"] * symbol["s2"]
     closed = _evolution_cs(cosine, sine, generator)
     return first.matmul(second) - closed, cosine, sine, closed
+
+
+def _axes_composition(ring: Ring) -> Operator:
+    """`U(c₁, s₁, n) U(c₂, s₂, m) − (a I − i (b·σ))`, su `_LAW` più `mx my mz`."""
+    c1, s1, c2, s2, nx, ny, nz, mx, my, mz = (
+        ring.var(name) for name in (*_LAW, "mx", "my", "mz")
+    )
+    first = _evolution_cs(c1, s1, _axis_hamiltonian(ring, nx, ny, nz))
+    second = _evolution_cs(c2, s2, _axis_hamiltonian(ring, mx, my, mz))
+    a = c1 * c2 - s1 * s2 * (nx * mx + ny * my + nz * mz)
+    b = _axis_hamiltonian(
+        ring,
+        s1 * c2 * nx + c1 * s2 * mx + s1 * s2 * (ny * mz - nz * my),
+        s1 * c2 * ny + c1 * s2 * my + s1 * s2 * (nz * mx - nx * mz),
+        s1 * c2 * nz + c1 * s2 * mz + s1 * s2 * (nx * my - ny * mx),
+    )
+    return first.matmul(second) - _evolution_cs(a, ring.one(), b)
 
 
 def _certified(operator: Operator) -> bool:

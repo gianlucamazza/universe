@@ -71,7 +71,7 @@ lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 55 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 56 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs every gate of CI locally: ruff (pinned 0.17.0, recommended rule set), mypy on `universe/`, prettier on the Markdown, the unit tests in `tests/`, the certificate, and `lake build --wfail` (warnings fail the build; `autoImplicit` is off). Three tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines, and `tests/test_lean_map.py` fails unless every certificate line is mapped, in `universe/lean_map.py`, to Lean theorems that exist. GitHub Actions runs the same gates on every push, with actions pinned by commit SHA and kept current by Dependabot.
 
@@ -94,7 +94,7 @@ The README is in English. The notes in `papers/` and `researches/`, the docstrin
 
 The universe is the triple `(X, Φ, Obs)`. `X` is a finite-dimensional state space. `Φ` is `exp(−i φ n·σ)`, written in closed form as `U = c I − i s H` with `H = n·σ`; `c` and `s` stay symbols, bound only by `c² + s² = 1` and `|n| = 1`. `expCoeff_hamiltonian` is what licenses that closed form: `H² = I`, so the series of `exp` collapses to cosine and sine. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
 
-A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial over a monomial of fifteen named exponents (`c s nx ny nz` for the law, eight for the amplitudes of two qubits, `c2 s2` for a second time step), and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
+A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial over a monomial of eighteen named exponents (`c s nx ny nz` for the law, eight for the amplitudes of two qubits, `c2 s2` for a second time step, `mx my mz` for a second axis), and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
 
 The statements separate by the rules they need:
 
