@@ -5,7 +5,15 @@ from fractions import Fraction
 import pytest
 
 from universe.epistemology import born, norm_squared
-from universe.observer import cnot, cnot01, cnot02, determinant_2x2, purity, reduced
+from universe.observer import (
+    cnot,
+    cnot01,
+    cnot02,
+    determinant_2x2,
+    no_signalling_gap,
+    purity,
+    reduced,
+)
 from universe.ontology import Operator, State, tensor_state
 from universe.ring import Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -163,3 +171,9 @@ def test_two_observers_agree_on_a_fresh_ring():
     assert weights[0] == alpha.modulus_squared()
     assert weights[7] == beta.modulus_squared()
     assert all(weight.is_zero() for weight in weights[1:7])
+
+
+def test_local_unitary_on_a_generic_state_does_not_signal():
+    gap0, gap1 = no_signalling_gap()
+    assert gap0.certification() is None
+    assert gap1.certification() is None

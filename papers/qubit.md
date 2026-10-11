@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 32 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 33 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -178,9 +178,13 @@ Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto a
 
 ![Due apparati sullo stesso sistema](figures/osservatori.svg)
 
-La ripartizione è questa. Tutto sta nel libero, tranne `purity_sphere`, che usa `gA`. Il certificato Python esegue `CNOT`, il determinante, la decoerenza, `pointer_born`, la purezza nel punto e i due osservatori. `reduceLeft_diag`, `reduce_product`, `purity_before` e `purity_sphere` sono solo in Lean.
+Un unitario locale sull'apparato non cambia i pesi del sistema. `no_signalling_0` e `no_signalling_1` prendono `w = CNOT(|ψ⟩ ⊗ |0⟩)` e confrontano `marginalLeft (applyIU evolution w)` con `marginalLeft w`. Ogni componente della differenza sta in `(gC, gN)`. `evolution_column_00` e `evolution_column_11` trasportano `evolution_unitary` sull'ordine `z · conj(z)`: le due norme di colonna meno `1` sono `δ`. `born_column_defect` moltiplica quel difetto per `|α|²` o `|β|²`. L'apparato parte da `|0⟩`, quindi le ampiezze non nulle stanno solo nelle celle 0 e 3: bastano i nove esponenti.
 
-Questo non dice quale esito avviene, né perché la base sia quella computazionale: la base è scelta da `CNOT`. Dice che, dentro il modello, i pesi di Born sono ciò che un sottosistema registra, e che due registrazioni coincidono.
+Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`. Quella generalità non entra nel monomio di Lean. La riga del README registra lo scarto, come `kronecker_ui_gen` registra `|φ⟩ = |0⟩`.
+
+La ripartizione è questa. Nel libero stanno `CNOT`, il determinante, la decoerenza, `pointer_born` e l'accordo dei due apparati. In `(gC, gN)` sta il no-signalling, con i cofattori di `δ`. `purity_sphere` usa `gA`. Il certificato Python esegue `CNOT`, il determinante, la decoerenza, `pointer_born`, la purezza nel punto, i due osservatori e il no-signalling sullo stato generico. `reduceLeft_diag`, `reduce_product`, `purity_before` e `purity_sphere` sono solo in Lean.
+
+Questo non dice quale esito avviene, né perché la base sia quella computazionale: la base è scelta da `CNOT`. Dice che, dentro il modello, i pesi di Born sono ciò che un sottosistema registra, che due registrazioni coincidono, e che un unitario locale sull'apparato non li cambia.
 
 ## 8. Fuori da questa nota
 

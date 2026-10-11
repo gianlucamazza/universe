@@ -12,12 +12,19 @@ Su un prodotto il determinante è zero. Nel punto razionale
 `cnot01` è `cnot ⊗ I` sul primo apparato. `cnot02` è la stessa porta sul
 secondo, coniugata dallo scambio dei due apparati. Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`
 restano ampiezze solo nelle celle 0 e 7.
+
+`no_signalling_gap` è `I ⊗ U` su uno stato di due qubit generico. `U` è
+`c I − i s H` nel quoziente. La differenza dei pesi del sistema ha resto
+zero. Lean prova lo stesso fatto solo per `CNOT(|ψ⟩ ⊗ |0⟩)`:
+`Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
 """
 
 from __future__ import annotations
 
+from universe.dynamics import evolution, hamiltonian
+from universe.epistemology import marginal
 from universe.ontology import Operator, State, tensor_index
-from universe.ring import Poly, Ring
+from universe.ring import Poly, Ring, Scalars, g
 
 
 def cnot(ring: Ring) -> Operator:
@@ -134,3 +141,55 @@ def purity(operator: Operator) -> Poly:
     for index in range(operator.n):
         total = total + square.rows[index][index]
     return total
+
+
+def no_signalling_gap() -> tuple[Poly, Poly]:
+    """Differenza dei pesi del sistema, prima e dopo `I ⊗ U`.
+
+    Le quattro ampiezze sono indeterminate, su
+    `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`.
+    `U = c I − i s H` usa le regole `c²` e `nx²`. `ar`, `ai`, `br`, `bi`
+    non servono: lo stato porta le proprie ampiezze. Lean non ha otto
+    reali liberi. `Universe.Observer.no_signalling_0` e
+    `Universe.Observer.no_signalling_1` fissano lo stato a
+    `CNOT(|ψ⟩ ⊗ |0⟩)`, con ampiezze solo nelle celle 0 e 3.
+    """
+    names = (
+        "c",
+        "s",
+        "nx",
+        "ny",
+        "nz",
+        "a0r",
+        "a0i",
+        "a1r",
+        "a1i",
+        "a2r",
+        "a2i",
+        "a3r",
+        "a3i",
+    )
+    ring = Ring(names)
+    symbol = {name: ring.var(name) for name in names}
+    one = ring.one()
+    ring.set_square("c", one - symbol["s"] ** 2)
+    ring.set_square("nx", one - symbol["ny"] ** 2 - symbol["nz"] ** 2)
+    zero = ring.zero()
+    scalars = Scalars(
+        ring=ring,
+        c=symbol["c"],
+        s=symbol["s"],
+        nx=symbol["nx"],
+        ny=symbol["ny"],
+        nz=symbol["nz"],
+        ar=zero,
+        ai=zero,
+        br=zero,
+        bi=zero,
+    )
+    imag = ring.constant(g(0, 1))
+    state = State(tuple(symbol[f"a{k}r"] + symbol[f"a{k}i"] * imag for k in range(4)))
+    local = Operator.eye(ring, 2).tensor(evolution(scalars, hamiltonian(scalars)))
+    before = marginal(state, 0, 2, 2)
+    after = marginal(local.apply(state), 0, 2, 2)
+    return after[0] - before[0], after[1] - before[1]

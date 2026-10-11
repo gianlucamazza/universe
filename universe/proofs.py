@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 32 righe.
+"""Certificato eseguibile del primo universo. Stampa 33 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -37,7 +37,11 @@ stessi pesi su Φ|0⟩ e sullo stato generico
 entrambi gli ordini e su entrambe le parentesizzazioni, danno
 α|000⟩ + β|111⟩: le celle 1–6 hanno peso zero
 (`Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`,
-`Universe.Observer.order_irrelevant`).
+`Universe.Observer.order_irrelevant`). Un unitario locale sull'apparato
+non cambia i due pesi del sistema. Il conto sta sull'anello
+`(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`: lo stato è
+generico. Lean lo prova per `CNOT(|ψ⟩ ⊗ |0⟩)`,
+`Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
 """
 
 from __future__ import annotations
@@ -52,7 +56,15 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
-from universe.observer import cnot, cnot01, cnot02, determinant_2x2, purity, reduced
+from universe.observer import (
+    cnot,
+    cnot01,
+    cnot02,
+    determinant_2x2,
+    no_signalling_gap,
+    purity,
+    reduced,
+)
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
 from universe.ring import ZERO_G, Gauss, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -442,6 +454,20 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Observer.observers_agree_right, Universe.Observer.order_irrelevant_right"
         if agree_ok
         else "le due porte non coincidono",
+    )
+
+    gap0, gap1 = no_signalling_gap()
+    gap0_reason = gap0.certification()
+    gap1_reason = gap1.certification()
+    signal_ok = gap0_reason is None and gap1_reason is None
+    add(
+        "Osservatore",
+        "un unitario locale sull'apparato non cambia i pesi del sistema",
+        signal_ok,
+        "stato generico, anello (c, s, nx, ny, nz, a0r, …, a3i)\n"
+        "Universe.Observer.no_signalling_0, Universe.Observer.no_signalling_1"
+        if signal_ok
+        else (gap0_reason or gap1_reason or ""),
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

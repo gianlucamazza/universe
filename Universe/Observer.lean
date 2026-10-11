@@ -18,6 +18,10 @@ Su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩` entrambi gli ordini danno `α|000⟩ + β|111⟩
 di Born delle celle 1–6 sono il polinomio zero: i due apparati non sono
 mai in disaccordo. `tensor_assoc` porta gli stessi fatti sulla
 parentesizzazione destra. Tutto sta nell'anello libero.
+
+`I ⊗ U` sull'apparato, dopo `CNOT` con `|0⟩`, non cambia il marginale
+del sistema. La differenza sta in `(gC, gN)`: i cofattori di `δ`
+moltiplicati per `|α|²` e per `|β|²`.
 -/
 import Universe.Composition
 import Universe.Epistemology
@@ -548,5 +552,99 @@ theorem order_irrelevant_right (ψ : Pair) :
       cnot02 (cnot01 (tensorRight ψ (tensorPair ket0 ket0))) := by
   rw [← tensor_assoc]
   exact order_irrelevant ψ
+
+/-! ### L'apparato non segnala -/
+
+/-- `|u₀ α|² + |u₁ α|² − |α|²` ha i coefficienti di `|α|² · (|u₀|² + |u₁|² − 1)`.
+
+L'ordine del modulo è `z · conj(z)`. L'identità sta nell'anello libero. -/
+theorem born_column_defect (u0 u1 α : Poly) :
+    polySame
+      (psub (columnBorn (pmul u0 α) ++ columnBorn (pmul u1 α)) (columnBorn α))
+      (pmul (columnBorn α)
+        (psub (columnBorn u0 ++ columnBorn u1) (single 1 Mono.one))) := by
+  have hsum :
+      polySame (columnBorn (pmul u0 α) ++ columnBorn (pmul u1 α))
+        (pmul (columnBorn α) (columnBorn u0) ++ pmul (columnBorn α) (columnBorn u1)) :=
+    polySame_append (columnBorn_pmul u0 α) (columnBorn_pmul u1 α)
+  have hdist :
+      polySame (pmul (columnBorn α) (columnBorn u0 ++ columnBorn u1))
+        (pmul (columnBorn α) (columnBorn u0) ++ pmul (columnBorn α) (columnBorn u1)) :=
+    polySame_mul_append_right (columnBorn α) (columnBorn u0) (columnBorn u1)
+  have hscaled :
+      polySame (columnBorn (pmul u0 α) ++ columnBorn (pmul u1 α))
+        (pmul (columnBorn α) (columnBorn u0 ++ columnBorn u1)) :=
+    polySame.trans hsum (polySame.symm hdist)
+  have hone : polySame (columnBorn α) (pmul (columnBorn α) (single 1 Mono.one)) := by
+    rw [pmul_one]
+    exact polySame_refl _
+  exact polySame.trans (polySame_psub hscaled hone)
+    (polySame.symm (polySame_mul_psub_right (columnBorn α)
+      (columnBorn u0 ++ columnBorn u1) (single 1 Mono.one)))
+
+/-- La prima colonna di `U` ha norma `1` modulo `δ`, nell'ordine `z · conj(z)`. -/
+theorem evolution_column_00 :
+    polySame
+      (psub (columnBorn evolution.a00 ++ columnBorn evolution.a10) (single 1 Mono.one))
+      unitaryDefect := by
+  refine polySame.trans ?_ evolution_unitary_00
+  refine polySame_psub ?_ (polySame_refl _)
+  rw [uu_a00]
+  exact polySame_append (columnBorn_comm evolution.a00) (columnBorn_comm evolution.a10)
+
+/-- La seconda colonna di `U` ha norma `1` modulo `δ`, nello stesso ordine. -/
+theorem evolution_column_11 :
+    polySame
+      (psub (columnBorn evolution.a01 ++ columnBorn evolution.a11) (single 1 Mono.one))
+      unitaryDefect := by
+  have h11 :
+      (matMul (matDagger evolution) evolution).a11 =
+        pmul (conjP evolution.a01) evolution.a01 ++
+          pmul (conjP evolution.a11) evolution.a11 := rfl
+  refine polySame.trans ?_ evolution_unitary_11
+  refine polySame_psub ?_ (polySame_refl _)
+  rw [h11]
+  exact polySame_append (columnBorn_comm evolution.a01) (columnBorn_comm evolution.a11)
+
+/-- `I ⊗ U` sull'apparato non cambia `P(0)` del sistema.
+
+`w` è `CNOT(|ψ⟩ ⊗ |0⟩)`. La differenza dei marginali sinistri sta in
+`(gC, gN)`: i cofattori sono quelli di `δ`, moltiplicati a sinistra per `|α|²`. -/
+theorem no_signalling_0 (ψ : Pair) :
+    inIdeal
+      (psub (marginalLeft (applyIU evolution (applyCNOT (tensorPair ψ ket0)))).a0
+        (marginalLeft (applyCNOT (tensorPair ψ ket0))).a0) := by
+  have hstate : applyCNOT (tensorPair ψ ket0) = ⟨ψ.a0, [], [], ψ.a1⟩ := cnot_ket0 ψ
+  rw [hstate]
+  have hiu :
+      applyIU evolution ⟨ψ.a0, [], [], ψ.a1⟩ =
+        ⟨pmul evolution.a00 ψ.a0, pmul evolution.a10 ψ.a0,
+          pmul evolution.a01 ψ.a1, pmul evolution.a11 ψ.a1⟩ := by
+    simp only [applyIU, pmul_nil, List.append_nil, List.nil_append]
+  rw [hiu]
+  simp only [marginalLeft, columnBorn_nil, List.append_nil, List.nil_append]
+  exact inIdeal_polySame (born_column_defect evolution.a00 evolution.a10 ψ.a0)
+    (inIdeal_mul_left (columnBorn ψ.a0)
+      (inIdeal_polySame evolution_column_00 unitary_ideal))
+
+/-- `I ⊗ U` sull'apparato non cambia `P(1)` del sistema.
+
+Stesso ideale di `no_signalling_0`. Il cofattore sinistro è `|β|²`. -/
+theorem no_signalling_1 (ψ : Pair) :
+    inIdeal
+      (psub (marginalLeft (applyIU evolution (applyCNOT (tensorPair ψ ket0)))).a1
+        (marginalLeft (applyCNOT (tensorPair ψ ket0))).a1) := by
+  have hstate : applyCNOT (tensorPair ψ ket0) = ⟨ψ.a0, [], [], ψ.a1⟩ := cnot_ket0 ψ
+  rw [hstate]
+  have hiu :
+      applyIU evolution ⟨ψ.a0, [], [], ψ.a1⟩ =
+        ⟨pmul evolution.a00 ψ.a0, pmul evolution.a10 ψ.a0,
+          pmul evolution.a01 ψ.a1, pmul evolution.a11 ψ.a1⟩ := by
+    simp only [applyIU, pmul_nil, List.append_nil, List.nil_append]
+  rw [hiu]
+  simp only [marginalLeft, columnBorn_nil, List.append_nil, List.nil_append]
+  exact inIdeal_polySame (born_column_defect evolution.a01 evolution.a11 ψ.a1)
+    (inIdeal_mul_left (columnBorn ψ.a1)
+      (inIdeal_polySame evolution_column_11 unitary_ideal))
 
 end Universe.Observer
