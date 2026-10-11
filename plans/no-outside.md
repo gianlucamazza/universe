@@ -1,14 +1,14 @@
 # Plan: nothing given from outside
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress; phases 1–3 done.
+Status: in progress; phases 1–4 done.
 
 | Phase | State | Goal                                                                  |
 | ----- | ----- | --------------------------------------------------------------------- |
 | 1     | done  | energy is conserved                                                   |
 | 2     | done  | the interaction comes from a Hamiltonian; `CNOT` is one of its points |
 | 3     | done  | partial measurement: coherence shrinks by `⟨0\|U\|0⟩`                 |
-| 4     | open  | reading the pointer: the conditional state and repeatability          |
+| 4     | done  | reading the pointer: the conditional state and repeatability          |
 | 5     | open  | a unitary change of basis is the same universe                        |
 | 6     | open  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                             |
 | 7     | open  | docs and figures                                                      |

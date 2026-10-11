@@ -12,6 +12,9 @@ Tre qubit. `tensor_assoc` identifica le due parentesizzazioni come la stessa
 ottupla. `tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore.
 `tensor_assoc_obs` identifica i moduli quadri delle otto celle.
 
+`condition k` è lo stato del sistema, non normalizzato, quando l'apparato
+legge `k`. La sua norma è la componente di `marginalRight`.
+
 `genericQuad` ha le quattro ampiezze `ar + i ai`, `br + i bi`,
 `a2r + i a2i`, `a3r + i a3i`.
 -/
@@ -121,6 +124,16 @@ def marginalRight (v : Quad) : Pair where
   a0 := columnBorn v.a0 ++ columnBorn v.a2
   a1 := columnBorn v.a1 ++ columnBorn v.a3
 
+/-- Stato del sistema, non normalizzato, quando l'apparato legge `k`.
+
+L'indice è `2 * i + k`. Proiettare l'apparato su `|k⟩` tiene le due
+ampiezze del sistema con quel bit: `0` tiene `a0` e `a2`, `1` tiene
+`a1` e `a3`. -/
+def condition (k : Fin 2) (v : Quad) : Pair :=
+  match k with
+  | 0 => ⟨v.a0, v.a2⟩
+  | 1 => ⟨v.a1, v.a3⟩
+
 theorem columnBorn_nil : columnBorn [] = [] := by
   simp [columnBorn, pmul, Universe.Quotient.mul]
 
@@ -203,6 +216,15 @@ theorem marginal_scale_col (x p q : Poly) :
 
 /-- `‖φ‖²` nell'ordine `z · conj(z)`. -/
 def normPair (φ : Pair) : Poly := columnBorn φ.a0 ++ columnBorn φ.a1
+
+/-- La norma dello stato condizionato è il peso di Born dell'apparato.
+
+`condition 0` pesa quanto `marginalRight.a0`, `condition 1` quanto
+`marginalRight.a1`. L'uguaglianza è di liste, per ogni `Quad`. -/
+theorem condition_norm (v : Quad) :
+    normPair (condition 0 v) = (marginalRight v).a0 ∧
+      normPair (condition 1 v) = (marginalRight v).a1 := by
+  constructor <;> rfl
 
 def scalePair (μ : Poly) (ψ : Pair) : Pair where
   a0 := pmul μ ψ.a0

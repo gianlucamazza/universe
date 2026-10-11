@@ -65,7 +65,7 @@ lake build                # the Lean proofs
 ./check.sh                # every gate, as in CI
 ```
 
-`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 42 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
+`python -m universe` exits 0 only when every algebraic identity has remainder zero and the free-ring cofactors rebuild the original polynomial. It prints 46 lines, each marked `[dimostrato]`. `lake build` typechecks the library `Universe`.
 
 `./check.sh` runs ruff, the unit tests in `tests/`, the certificate and `lake build`. Two tests guard the documentation: `tests/test_lean_citations.py` fails when Python or the docs cite a `Universe.*` name that Lean does not declare, and `tests/test_doc_counts.py` fails when a doc quotes the wrong number of certificate lines. GitHub Actions runs the same gates on every push, plus a prettier check of the Markdown.
 
@@ -154,6 +154,8 @@ Three copies of evolved `|0⟩` at the rational point fill the eight cells: each
 
 ![Partial measurement: the coupling comes from a Hamiltonian, and its angle sets how much the system decoheres](papers/figures/misura-parziale.svg)
 
+**Reading the pointer.** What is the system after the apparatus has been read? Projecting the apparatus on `|k⟩` (`condition`) leaves `(α, 0)` for `k = 0` and `(0, β)` for `k = 1`, with norms equal to the Born pair (`luders`). The update rule, the textbook "collapse", is a theorem here. A second apparatus coupled to the conditioned system reads the same outcome with the same weight and the other with weight zero (`repeatable`).
+
 **Two observers.** With a second apparatus, either order of the two `CNOT` gates gives `α|000⟩ + β|111⟩`. The Born weight of every cell where the two pointers differ is the zero polynomial (`observers_agree`).
 
 ![Two apparatuses on the same system: only 000 and 111 occur, so A and B never disagree](papers/figures/osservatori.svg)
@@ -223,6 +225,7 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 | Purity `337/625` at the rational point                                                                               | certificate                          | `Universe.Observer.point_purity`, `Universe.Observer.purity_after`                                                                                                                                    |
 | Reduced diagonal = marginal; a product reduces to `‖φ‖² \|ψ⟩⟨ψ\|`; `1 − purity − 2\|α\|²\|β\|²` in `(gA)`            | Lean only                            | `Universe.Observer.reduceLeft_diag`, `Universe.Observer.reduce_product`, `Universe.Observer.purity_before`, `Universe.Observer.purity_sphere`                                                         |
 | Two apparatuses never disagree, in either order                                                                      | certificate                          | `Universe.Observer.two_pointers`, `Universe.Observer.observers_agree`, `Universe.Observer.order_irrelevant`                                                                                           |
+| Reading the pointer leaves `(α, 0)` or `(0, β)`, with the Born weights; a second reading repeats it                  | certificate                          | `Universe.Composition.condition_norm`, `Universe.Interaction.luders`, `Universe.Interaction.repeatable`, `Universe.Interaction.point_luders`, `Universe.Interaction.point_repeatable`                 |
 | Evolving the apparatus leaves the system's weights unchanged, any two-qubit state                                    | certificate, generic two-qubit state | `Universe.Observer.no_signalling_any_0`, `Universe.Observer.no_signalling_any_1`, `Universe.Observer.no_signalling_gen_0`, `Universe.Observer.no_signalling_gen_1`                                    |
 
 ## Further reading

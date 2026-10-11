@@ -75,6 +75,9 @@ l'antidiagonale `α β̄ · conj(⟨0|U|0⟩)` nell'anello libero, con
 `⟨0|U|0⟩ = c − i s nz`, e `partial_diagonal` mette la diagonale su
 `bornPair` modulo `(gC, gN)`. I tre punti lungo `e_x` sono
 `point_partial_idle`, `point_partial_mid` e `point_partial_flip`.
+`luders` è la lettura del puntatore dopo `CNOT`: `(α, 0)` e `(0, β)`,
+con norme `bornPair`. `repeatable` ripete l'esito su un apparato fresco.
+Nel punto le norme sono `9/25` e `16/25`.
 -/
 import Universe.Composition
 import Universe.Dynamics

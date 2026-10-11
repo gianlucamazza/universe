@@ -70,6 +70,12 @@ Born modulo `(gC, gN)` (`Universe.Interaction.partial_diagonal`). I tre
 punti lungo `e_x` sono `Universe.Interaction.point_partial_idle`,
 `Universe.Interaction.point_partial_mid` e
 `Universe.Interaction.point_partial_flip`.
+`Universe.Interaction.luders` è la lettura del puntatore dopo `CNOT`:
+`(α, 0)` e `(0, β)`, con norme i pesi di Born.
+`Universe.Interaction.repeatable` ripete l'esito su un apparato fresco.
+Nel punto le norme sono `9/25` e `16/25`
+(`Universe.Interaction.point_luders`,
+`Universe.Interaction.point_repeatable`).
 
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """

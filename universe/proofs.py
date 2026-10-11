@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 42 righe.
+"""Certificato eseguibile del primo universo. Stampa 46 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -66,6 +66,12 @@ punti `(1, 0)`, `(3/5, 4/5)` e `(0, 1)`
 (`Universe.Interaction.point_partial_idle`,
 `Universe.Interaction.point_partial_mid`,
 `Universe.Interaction.point_partial_flip`).
+Dopo `CNOT` la lettura del puntatore è `(α, 0)` o `(0, β)`, con norme
+i pesi di Born (`Universe.Composition.condition`,
+`Universe.Interaction.luders`). Un secondo `CNOT` su un apparato fresco
+ripete l'esito e azzera l'altro (`Universe.Interaction.repeatable`).
+Nel punto `c = 3/5`, `s = 4/5`, `n = e_x` le norme sono `9/25` e `16/25`
+(`Universe.Interaction.point_luders`, `Universe.Interaction.point_repeatable`).
 """
 
 from __future__ import annotations
@@ -83,10 +89,12 @@ from universe.epistemology import (
 from universe.interaction import (
     closed_generator,
     coherence_factor,
+    condition,
     controlled,
     generator,
     partial_reduced,
     projector_one,
+    reread,
 )
 from universe.observer import (
     cnot,
@@ -745,6 +753,91 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Interaction.point_partial_flip"
         if points_hold
         else "\n".join(point_rows),
+    )
+
+    system = world.generic()
+    zero = system.ring.zero()
+    alpha, beta = system.amplitudes
+    coupled = cnot(system.ring).apply(tensor_state(system, world.ground()))
+    read0 = condition(coupled, 0)
+    read1 = condition(coupled, 1)
+    born_weights = born(system)
+    luders_ok = (
+        read0.amplitudes == (alpha, zero)
+        and read1.amplitudes == (zero, beta)
+        and norm_squared(read0) == born_weights[0]
+        and norm_squared(read1) == born_weights[1]
+    )
+    add(
+        "Interazione",
+        "dopo CNOT, la lettura 0 è (α, 0) e la lettura 1 è (0, β)",
+        luders_ok,
+        "le norme sono i pesi di Born, anello libero\n"
+        "Universe.Composition.condition, Universe.Interaction.luders"
+        if luders_ok
+        else f"0 = {read0.amplitudes}; 1 = {read1.amplitudes}",
+    )
+    second0 = marginal(reread(system, 0), 1, 2, 2)
+    second1 = marginal(reread(system, 1), 1, 2, 2)
+    repeat_ok = (
+        second0[0] == norm_squared(read0)
+        and second0[1] == zero
+        and second1[1] == norm_squared(read1)
+        and second1[0] == zero
+    )
+    add(
+        "Interazione",
+        "una seconda lettura ripete l'esito e azzera l'altro",
+        repeat_ok,
+        "il peso è la norma dello stato condizionato\nUniverse.Interaction.repeatable"
+        if repeat_ok
+        else f"0 → {second0}; 1 → {second1}",
+    )
+    evolved = world.evolve(world.ground())
+    sample = {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    pointed = cnot(evolved.ring).apply(tensor_state(evolved, world.ground()))
+    pointed0 = condition(pointed, 0)
+    pointed1 = condition(pointed, 1)
+    got0 = tuple(amplitude.evaluate(sample) for amplitude in pointed0.amplitudes)
+    got1 = tuple(amplitude.evaluate(sample) for amplitude in pointed1.amplitudes)
+    norm0 = norm_squared(pointed0).evaluate(sample)
+    norm1 = norm_squared(pointed1).evaluate(sample)
+    point_luders_ok = (
+        got0 == (g(Fraction(3, 5)), g(0))
+        and got1 == (g(0), g(0, Fraction(-4, 5)))
+        and norm0 == g(Fraction(9, 25))
+        and norm1 == g(Fraction(16, 25))
+    )
+    add(
+        "Interazione",
+        "nel punto, lo stato condizionato è 3/5|0⟩ e −4/5 i|1⟩",
+        point_luders_ok,
+        "norme 9/25 e 16/25\nUniverse.Interaction.point_luders"
+        if point_luders_ok
+        else f"0 = {got0}, norma {norm0}; 1 = {got1}, norma {norm1}",
+    )
+    again0 = marginal(reread(evolved, 0), 1, 2, 2)
+    again1 = marginal(reread(evolved, 1), 1, 2, 2)
+    point_repeat_ok = (
+        again0[0].evaluate(sample) == g(Fraction(9, 25))
+        and again0[1].evaluate(sample) == g(0)
+        and again1[0].evaluate(sample) == g(0)
+        and again1[1].evaluate(sample) == g(Fraction(16, 25))
+    )
+    add(
+        "Interazione",
+        "nel punto, la seconda lettura ripete 9/25 e 16/25",
+        point_repeat_ok,
+        "l'altro esito pesa 0\nUniverse.Interaction.point_repeatable"
+        if point_repeat_ok
+        else f"0 → ({again0[0].evaluate(sample)}, {again0[1].evaluate(sample)}); "
+        f"1 → ({again1[0].evaluate(sample)}, {again1[1].evaluate(sample)})",
     )
     return proven
 

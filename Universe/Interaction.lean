@@ -18,6 +18,13 @@ Con l'apparato in `|0⟩` lo stato è `α|00⟩ + β|1⟩⊗(U|0⟩)`.
 `partial_diagonal` mette la diagonale su `bornPair`, modulo `(gC, gN)`:
 è la norma di colonna di `U`. `ψ` valutato in `3/5`, `−4/5 i` e il
 coupling lungo `e_x` danno i tre punti `(1, 0)`, `(3/5, 4/5)` e `(0, 1)`.
+
+La lettura del puntatore è `condition`: lo stato del sistema, non
+normalizzato, quando l'apparato è su `|k⟩`. Dopo `CNOT` su `|ψ⟩ ⊗ |0⟩`,
+`luders` dà `(α, 0)` e `(0, β)`, con norme `bornPair`. `repeatable`
+applica un secondo `CNOT` a un apparato fresco: l'esito `k` pesa quanto
+la norma e l'altro esito pesa zero. Nel punto `c = 3/5`, `s = 4/5`,
+`n = e_x` le norme sono `9/25` e `16/25`.
 -/
 import Universe.Observer
 import Universe.Series
@@ -693,5 +700,116 @@ theorem point_partial_flip :
     ext <;> simp <;> grind
   · rw [h.2]
     ext <;> simp <;> grind
+
+/-! ### Lettura del puntatore -/
+
+/-- Secondo `CNOT`, apparato fresco in `|0⟩`, sullo stato già condizionato. -/
+def reread (k : Fin 2) (ψ : Pair) : Quad :=
+  applyCNOT (tensorPair (condition k (applyCNOT (tensorPair ψ ket0))) ket0)
+
+/-- Dopo `CNOT` su `|ψ⟩ ⊗ |0⟩` la lettura è la regola di Lüders.
+
+`condition 0` è `(α, 0)` e `condition 1` è `(0, β)`. Le norme sono
+`bornPair ψ`: il peso dell'esito è il peso di Born del sistema.
+L'aggiornamento è questo teorema, nell'anello libero. -/
+theorem luders (ψ : Pair) :
+    condition 0 (applyCNOT (tensorPair ψ ket0)) = ⟨ψ.a0, []⟩ ∧
+      condition 1 (applyCNOT (tensorPair ψ ket0)) = ⟨[], ψ.a1⟩ ∧
+        pairSame ⟨normPair (condition 0 (applyCNOT (tensorPair ψ ket0))),
+            normPair (condition 1 (applyCNOT (tensorPair ψ ket0)))⟩
+          (bornPair ψ) := by
+  rw [cnot_ket0]
+  refine ⟨rfl, rfl, ?_⟩
+  simp only [condition, normPair, bornPair, columnBorn_nil, List.append_nil, List.nil_append]
+  exact ⟨polySame_refl _, polySame_refl _⟩
+
+/-- Una seconda lettura, su un apparato fresco, ripete l'esito.
+
+`CNOT` applicato a `condition k` con l'apparato in `|0⟩` dà, sul
+puntatore, peso uguale alla norma di quello stato per l'esito `k` e
+peso zero per l'altro. -/
+theorem repeatable (ψ : Pair) :
+    (polySame (marginalRight (reread 0 ψ)).a0
+        (normPair (condition 0 (applyCNOT (tensorPair ψ ket0)))) ∧
+      polySame (marginalRight (reread 0 ψ)).a1 []) ∧
+      (polySame (marginalRight (reread 1 ψ)).a1
+          (normPair (condition 1 (applyCNOT (tensorPair ψ ket0)))) ∧
+        polySame (marginalRight (reread 1 ψ)).a0 []) := by
+  unfold reread
+  rw [cnot_ket0]
+  simp only [condition]
+  rw [tensor_idle_right, tensor_idle_right]
+  simp only [applyCNOT, marginalRight, normPair, columnBorn_nil, List.append_nil,
+    List.nil_append]
+  exact ⟨⟨polySame_refl _, polySame_refl _⟩, ⟨polySame_refl _, polySame_refl _⟩⟩
+
+/-- Nel punto `c = 3/5`, `s = 4/5`, `n = e_x` lo stato condizionato è
+`3/5 |0⟩` oppure `−4/5 i |1⟩`. Le norme sono `9/25` e `16/25`. -/
+theorem point_luders :
+    evalAt pointC pointS 1 0 0
+        (specPoly keepX
+          (condition 0 (applyCNOT (tensorPair (applyMat evolution ket0) ket0))).a0) =
+      pointAlpha ∧
+      evalAt pointC pointS 1 0 0
+          (specPoly keepX
+            (condition 0 (applyCNOT (tensorPair (applyMat evolution ket0) ket0))).a1) = 0 ∧
+        evalAt pointC pointS 1 0 0
+            (specPoly keepX
+              (condition 1 (applyCNOT (tensorPair (applyMat evolution ket0) ket0))).a0) = 0 ∧
+          evalAt pointC pointS 1 0 0
+              (specPoly keepX
+                (condition 1 (applyCNOT (tensorPair (applyMat evolution ket0) ket0))).a1) =
+            pointBeta ∧
+            evalAt pointC pointS 1 0 0
+                (specPoly keepX
+                  (normPair
+                    (condition 0 (applyCNOT (tensorPair (applyMat evolution ket0) ket0))))) =
+              ⟨(9 : Rat) / 25, 0⟩ ∧
+              evalAt pointC pointS 1 0 0
+                  (specPoly keepX
+                    (normPair
+                      (condition 1
+                        (applyCNOT (tensorPair (applyMat evolution ket0) ket0))))) =
+                ⟨(16 : Rat) / 25, 0⟩ := by
+  have hket : applyMat evolution ket0 = ⟨evolution.a00, evolution.a10⟩ := by
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  have hv : applyCNOT (tensorPair (applyMat evolution ket0) ket0) =
+      ⟨evolution.a00, [], [], evolution.a10⟩ := by
+    rw [cnot_ket0, hket]
+  simp only [hv, condition, normPair, columnBorn_nil, List.append_nil, List.nil_append]
+  refine ⟨point_alpha, ?_, ?_, point_beta, ?_, ?_⟩
+  · simp [specPoly, evalAt]
+  · simp [specPoly, evalAt]
+  · rw [eval_polySame (spec_columnBorn keepX_mul evolution.a00)]
+    exact point_prob0
+  · rw [eval_polySame (spec_columnBorn keepX_mul evolution.a10)]
+    exact point_prob1
+
+/-- Nello stesso punto la seconda lettura pesa `9/25` o `16/25`.
+L'altro esito pesa `0`. -/
+theorem point_repeatable :
+    evalAt pointC pointS 1 0 0
+        (specPoly keepX (marginalRight (reread 0 (applyMat evolution ket0))).a0) =
+      ⟨(9 : Rat) / 25, 0⟩ ∧
+      evalAt pointC pointS 1 0 0
+          (specPoly keepX (marginalRight (reread 0 (applyMat evolution ket0))).a1) = 0 ∧
+        evalAt pointC pointS 1 0 0
+            (specPoly keepX (marginalRight (reread 1 (applyMat evolution ket0))).a0) = 0 ∧
+          evalAt pointC pointS 1 0 0
+              (specPoly keepX (marginalRight (reread 1 (applyMat evolution ket0))).a1) =
+            ⟨(16 : Rat) / 25, 0⟩ := by
+  have hket : applyMat evolution ket0 = ⟨evolution.a00, evolution.a10⟩ := by
+    simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+  unfold reread
+  rw [cnot_ket0, hket]
+  simp only [condition, tensor_idle_right, applyCNOT, marginalRight, columnBorn_nil,
+    List.append_nil, List.nil_append]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [eval_polySame (spec_columnBorn keepX_mul evolution.a00)]
+    exact point_prob0
+  · simp [specPoly, evalAt]
+  · simp [specPoly, evalAt]
+  · rw [eval_polySame (spec_columnBorn keepX_mul evolution.a10)]
+    exact point_prob1
 
 end Universe.Interaction

@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 42 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 46 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -181,6 +181,8 @@ L'interazione non è scritta a mano. `Universe.Interaction` prende il generatore
 Con l'evoluzione controllata come accoppiamento, lo stato è `α|0⟩|0⟩ + β|1⟩ U|0⟩`. `partial_coherence` dice che la coerenza del sistema è `α β̄ · conj(⟨0|U|0⟩)` nel libero, con `⟨0|U|0⟩ = c − i s nz`; `partial_diagonal` che la diagonale resta la coppia di Born modulo `(gC, gN)`. Lungo x, per `ψ = Φ|0⟩` nel punto, `partial_reading` dà coerenza `(12/25 i)·c` e purezza `337/625 + (288/625)·c²`: `1`, `11017/15625` e `337/625` in `c = 1`, `3/5`, `0`. La misura ha gradi; quella perfetta è un punto.
 
 ![Misura parziale: l'accoppiamento viene da un'Hamiltoniana](figures/misura-parziale.svg)
+
+Leggere il puntatore. `condition k` proietta l'apparato su `|k⟩` e restituisce lo stato non normalizzato del sistema; `condition_norm` dà la sua norma per ogni `Quad`. `luders` dice che dopo `CNOT` su `|ψ⟩ ⊗ |0⟩` le due letture lasciano `(α, 0)` e `(0, β)`, con norme `bornPair ψ`: la regola di aggiornamento è un teorema. `repeatable` accoppia un secondo apparato allo stato condizionato: legge lo stesso esito con lo stesso peso, e l'altro con peso zero. `point_luders` e `point_repeatable` sono i valori nel punto, `3/5|0⟩` e `−4/5 i|1⟩` con pesi `9/25` e `16/25`.
 
 Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto al bit basso. `two_pointers` dà `α|000⟩ + β|111⟩` su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`. `observers_agree` dice che i pesi delle celle 1–6, dove i due puntatori differiscono, sono il polinomio zero. `order_irrelevant` scambia l'ordine dei due `CNOT`. Le versioni `_right` passano per `tensor_assoc`.
 

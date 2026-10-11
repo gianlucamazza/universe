@@ -15,12 +15,18 @@ L'antidiagonale del sistema ridotto è `α β̄ · conj(⟨0|U|0⟩)`, con
 `⟨0|U|0⟩ = c − i s nz` (`Universe.Interaction.partial_coherence`).
 La diagonale è il peso di Born, modulo `(gC, gN)`
 (`Universe.Interaction.partial_diagonal`).
+
+`condition` proietta l'apparato su `|k⟩` e rende lo stato del sistema,
+non normalizzato (`Universe.Composition.condition`). Dopo `CNOT` la
+lettura è `(α, 0)` o `(0, β)` (`Universe.Interaction.luders`). Un
+secondo `CNOT` su un apparato fresco ripete l'esito
+(`Universe.Interaction.reread`, `Universe.Interaction.repeatable`).
 """
 
 from __future__ import annotations
 
 from universe.dynamics import hamiltonian
-from universe.observer import reduced
+from universe.observer import cnot, reduced
 from universe.ontology import Operator, State, tensor_state
 from universe.ring import Poly, Scalars, g
 
@@ -83,6 +89,33 @@ def coherence_factor(operator: Operator, psi: State) -> Poly:
     alpha, beta = psi.amplitudes
     bracket = operator.rows[0][0]
     return alpha * beta.conj() * bracket.conj()
+
+
+def condition(state: State, outcome: int) -> State:
+    """Stato del sistema, non normalizzato, quando l'apparato legge `outcome`.
+
+    L'indice è `2 * i + k`. È `Universe.Composition.condition`.
+    """
+    if state.dim != 4:
+        raise ValueError("la lettura chiede quattro ampiezze")
+    if outcome not in (0, 1):
+        raise ValueError("esito fuori dalla base")
+    amp0, amp1, amp2, amp3 = state.amplitudes
+    if outcome == 0:
+        return State((amp0, amp2))
+    return State((amp1, amp3))
+
+
+def reread(psi: State, outcome: int) -> State:
+    """Secondo `CNOT` su un apparato fresco in `|0⟩`.
+
+    Prima si condiziona `CNOT(|ψ⟩ ⊗ |0⟩)` sull'esito `outcome`. È
+    `Universe.Interaction.reread`.
+    """
+    idle = State((psi.ring.one(), psi.ring.zero()))
+    coupled = cnot(psi.ring).apply(tensor_state(psi, idle))
+    fresh = State((psi.ring.one(), psi.ring.zero()))
+    return cnot(psi.ring).apply(tensor_state(condition(coupled, outcome), fresh))
 
 
 def closed_generator(scalars: Scalars, generated: Operator) -> Operator:
