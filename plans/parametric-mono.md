@@ -1,12 +1,12 @@
 # Plan: a wider Lean monomial
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: proposed. Baseline: `v0.1.0`, `./check.sh` green, certificate prints 33 lines.
+Status: in progress; phase 1 done (`66984b1`). Baseline: `v0.1.0`, `./check.sh` green, certificate prints 33 lines.
 
 | Phase | State | Goal                                                                  |
 | ----- | ----- | --------------------------------------------------------------------- |
-| 1     | next  | widen `Mono` from 9 to 13 exponents; no statement changes             |
-| 2     | open  | no-signalling and reduced states on a generic two-qubit state in Lean |
+| 1     | done  | widen `Mono` from 9 to 13 exponents; no statement changes             |
+| 2     | next  | no-signalling and reduced states on a generic two-qubit state in Lean |
 | 3     | open  | exploratory: spectator exponents as a parameter, with go/no-go        |
 | 4     | open  | docs, figures, research note                                          |
 

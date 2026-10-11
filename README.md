@@ -221,7 +221,8 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 - [`researches/associazione.md`](researches/associazione.md): the three-qubit associativity.
 - [`researches/osservatore.md`](researches/osservatore.md): what the observer construction settles, and what it does not.
 - [`plans/observer-inside.md`](plans/observer-inside.md): the plan that built the observer, phase by phase.
-- [`plans/parametric-mono.md`](plans/parametric-mono.md): the next plan, a wider Lean monomial.
+- [`plans/parametric-mono.md`](plans/parametric-mono.md): a wider Lean monomial.
+- [`plans/no-outside.md`](plans/no-outside.md): removing what the model still takes from outside: the interaction, perfect measurement, time composition, conservation, change of basis.
 
 ## License
 
