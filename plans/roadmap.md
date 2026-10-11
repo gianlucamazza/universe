@@ -26,14 +26,14 @@ section 8.
 
 ## 2. Milestones
 
-| Milestone | Release  | Plan                       | Kind        | Done when                                            |
-| --------- | -------- | -------------------------- | ----------- | ---------------------------------------------------- |
-| M1        | `v0.5.0` | `plans/wigner.md`          | code        | phases 4–5 done                                      |
-| M2        | `v0.6.0` | `plans/n-qubits.md`        | code        | criterion 1                                          |
-| M3        | `v0.7.0` | `plans/continuous-time.md` | exploratory | criterion 2, or a no-go note in `researches/`        |
-| M4        | `v0.8.0` | `plans/bridge.md`          | code        | criterion 3                                          |
-| M5        | `v0.9.0` | none                       | notes       | criterion 4                                          |
-| M6        | `v1.0.0` | none                       | release     | criteria 1–5, `papers/qubit.md` rewritten as a whole |
+| Milestone | State   | Release  | Plan                       | Kind        | Done when                                            |
+| --------- | ------- | -------- | -------------------------- | ----------- | ---------------------------------------------------- |
+| M1        | done    | `v0.5.0` | `plans/wigner.md`          | code        | phases 4–5 done                                      |
+| M2        | planned | `v0.6.0` | `plans/n-qubits.md`        | code        | criterion 1                                          |
+| M3        | planned | `v0.7.0` | `plans/continuous-time.md` | exploratory | criterion 2, or a no-go note in `researches/`        |
+| M4        | planned | `v0.8.0` | `plans/bridge.md`          | code        | criterion 3                                          |
+| M5        | done    | `v0.5.0` | none                       | notes       | criterion 4                                          |
+| M6        | planned | `v1.0.0` | none                       | release     | criteria 1–5, `papers/qubit.md` rewritten as a whole |
 
 Each plan is written only when the previous milestone is released, so that it starts from the
 code as it is.

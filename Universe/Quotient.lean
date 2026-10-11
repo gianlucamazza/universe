@@ -3,7 +3,8 @@ Quoziente a due quadrati, con cofattori.
 
 Un polinomio è una lista di termini
 `coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi a2r^a2r a2i^a2i a3r^a3r a3i^a3i c2^c2 s2^s2 mx^mx my^my mz^mz`.
-`a2r a2i a3r a3i c2 s2 mx my mz` sono spettatori: `reduce` e `monoVal` non li leggono.
+`ar ai br bi a2r a2i a3r a3i c2 s2 mx my mz` non entrano in `reduce` né in `monoVal`;
+`monoVal2` legge anche `c2 s2`, `monoVal3` anche `mx my mz`.
 `reduce` sbuccia solo `c²` e `nx²`. `gA` è il terzo generatore, la sfera delle
 ampiezze, e non entra in `reduce`.
 - `c² = (1 − s²) + (c² + s² − 1)`

@@ -1,15 +1,15 @@
 # Plan: Wigner's friend
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress.
+Status: complete. All five phases are done and pushed.
 
-| Phase | State   | Goal                                                                 |
-| ----- | ------- | -------------------------------------------------------------------- |
-| 1     | done    | a chain: Wigner reads the friend, and that is reading the system     |
-| 2     | done    | the friend's measurement can be undone, until the record is copied   |
-| 3     | done    | the rational point: purity `1` when undone, `337/625` after the copy |
-| 4     | done    | no-signalling between three parties, for every three-qubit state     |
-| 5     | planned | docs, figure, release                                                |
+| Phase | State | Goal                                                                 |
+| ----- | ----- | -------------------------------------------------------------------- |
+| 1     | done  | a chain: Wigner reads the friend, and that is reading the system     |
+| 2     | done  | the friend's measurement can be undone, until the record is copied   |
+| 3     | done  | the rational point: purity `1` when undone, `337/625` after the copy |
+| 4     | done  | no-signalling between three parties, for every three-qubit state     |
+| 5     | done  | docs, figure, release                                                |
 
 ## 1. Why
 

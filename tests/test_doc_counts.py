@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PATTERNS = (
     re.compile(r"prints (\d+) lines"),
     re.compile(r"one of the (\d+)\b"),
-    re.compile(r"stampa (\d+) (?:righe|identità)"),
+    re.compile(r"[Ss]tampa (\d+) (?:righe|identità)"),
     re.compile(r"stampa `(\d+)/(\d+)`"),
 )
 
@@ -19,6 +19,7 @@ def _docs() -> list[Path]:
         ROOT / "README.md",
         *ROOT.glob("papers/*.md"),
         *ROOT.glob("researches/*.md"),
+        ROOT / "universe/proofs.py",
     ]
 
 

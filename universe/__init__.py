@@ -23,6 +23,8 @@ fermo. Nell'ideale (gC, gN) sta un solo difetto, δ = gC + s² gN: U†U, UU†,
 det U − 1, la norma per ampiezze arbitrarie, e P(0)+P(1)−1 su Φ|0⟩.
 Nell'ideale (gC, gN, gA) sta ψ†(U†U)ψ − 1 sullo stato generico. gA è la
 sfera delle ampiezze e resta accanto a reduce, che sbuccia solo c² e nx².
+La composizione dei tempi sta in (gN); il cerchio composto in (gC, gC2);
+la norma del prodotto su due assi in (gC, gN, gC2, gM).
 Se p sta in (gC, gN), Universe.Dynamics.reduce_complete dice che ogni
 coefficiente del resto di reduce è zero. I cofattori sono un testimone.
 La nota è papers/qubit.md. L'argomento della divisione è

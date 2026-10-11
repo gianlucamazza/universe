@@ -1,6 +1,7 @@
 /-
 Kernel formale. Il corrispondente eseguibile sta nel pacchetto Python `universe`.
-Le identità si ripartiscono in libero, ideale `(gC, gN)` e ideale `(gC, gN, gA)`.
+Le identità si ripartiscono in libero, ideale `(gC, gN)`, ideale `(gC, gN, gA)`,
+ideale `(gN)`, `(gC, gC2)` e `(gC, gN, gC2, gM)`.
 La nota è `papers/qubit.md`.
 
 `Universe.Ring` è lo scalare `ℚ(i)`.

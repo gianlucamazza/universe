@@ -35,7 +35,7 @@ Il certificato eseguibile stampa 68 identità. Il testo formale non è un'estraz
 Lo scalare è `ℚ(i)`, `Universe.Ring`. Un polinomio è una lista di termini
 
 ```
-coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi.
+coefficiente · c^c s^s nx^nx ny^ny nz^nz ar^ar ai^ai br^br bi^bi a2r^a2r a2i^a2i a3r^a3r a3i^a3i c2^c2 s2^s2 mx^mx my^my mz^mz.
 ```
 
 Due generatori del quoziente, con cofattori nell'anello libero:
@@ -198,6 +198,10 @@ Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto a
 
 ![Due apparati sullo stesso sistema](figures/osservatori.svg)
 
+L'amico di Wigner. `cnot12` agisce dal bit medio al bit basso: Wigner legge l'amico. `chain_pointers` e `chain_is_fanout` danno, su `|ψ⟩ ⊗ |0⟩ ⊗ |0⟩`, lo stesso stato di `two_pointers`; `chain_agree` è l'accordo. `reduceSystem` è la traccia parziale su amico e Wigner, e `reduceSystem_product` la riporta a `|ψ⟩⟨ψ|` su un prodotto. `friend_undone`: `cnot01` due volte restituisce lo stato e la coerenza `α β̄`. `copy_irreversible`: dopo `cnot12` lo stesso `cnot01` lascia `α|000⟩ + β|101⟩`, i due termini fuori diagonale sono il polinomio zero e la diagonale è `bornPair ψ`; `wigner_keeps_record` dice che Wigner legge ancora quella coppia. Nel punto, `point_undone` dà coerenza `12/25 i` e purezza `1`, `point_copied` coerenza `0`, purezza `337/625` e pesi `9/25`, `16/25`. `no_signalling_wigner` e `no_signalling_friend` valgono per ogni `v : Oct`: il marginale del sistema è una somma di due norme di un qubit. Tutto sta nel libero tranne il no-signalling, in `(gC, gN)`. Che cosa questo dica sulla misura è `researches/misura.md`.
+
+![L'amico di Wigner: disfare l'amico restituisce la coerenza prima della copia, non dopo](figures/wigner.svg)
+
 Un unitario locale sull'apparato non cambia i pesi del sistema, per ogni stato di due qubit. `no_signalling_any_0` e `no_signalling_any_1` confrontano `marginalLeft (applyIU evolution v)` con `marginalLeft v` per ogni `v : Quad`. L'argomento è una riga: `I ⊗ U` agisce su ciascun blocco `(a₀, a₁)` e `(a₂, a₃)` come `U` su un qubit, quindi ogni componente della differenza è `‖Uγ‖² − ‖γ‖²`, che `literal_evolution_norm` mette in `(gC, gN)`. `no_signalling_gen_0` e `no_signalling_gen_1` sono il caso `genericQuad`, le cui quattro celle usano gli otto esponenti delle ampiezze di `Mono`. `no_signalling_0` e `no_signalling_1` sono il caso `CNOT(|ψ⟩ ⊗ |0⟩)`.
 
 Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`, e cita `no_signalling_gen_0` e `no_signalling_gen_1`.
@@ -210,8 +214,8 @@ Questo non dice quale esito avviene, né perché la base sia quella computaziona
 
 L'argomento, i vicoli ciechi e i tre candidati per il passo successivo sono in [`researches/osservatore.md`](../researches/osservatore.md).
 
-Il monomio di Lean ha diciotto esponenti con nome: `c s nx ny nz` per la legge, otto per le ampiezze di due qubit, `c2 s2` per un secondo passo di tempo, `mx my mz` per un secondo asse. La divisione legge solo `c` e `nx`, la valutazione solo i cinque della legge. Perché restano campi con nome e non un parametro è `researches/monomio.md`.
+Il monomio di Lean ha diciotto esponenti con nome: `c s nx ny nz` per la legge, otto per le ampiezze di due qubit, `c2 s2` per un secondo passo di tempo, `mx my mz` per un secondo asse. La divisione legge solo `c` e `nx`. `evalAt` legge i cinque della legge, `evalAt2` anche `c2 s2`, `evalAt3` anche `mx my mz`. Perché restano campi con nome e non un parametro è `researches/monomio.md`.
 
 ## 8. Fuori da questa nota
 
-Un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
+Fuori dalla 1.0 (`plans/roadmap.md`): un secondo universo fisico, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean. Il tempo continuo è la tappa M3. I limiti del nucleo (l'esito singolo, l'origine della regola di Born, lo spazio, i campi, la gravità) sono in `researches/misura.md`, `researches/born.md` e `researches/distanza.md`.

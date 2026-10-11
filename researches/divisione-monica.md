@@ -39,7 +39,7 @@ I cofattori non sono unici. `gN · gC + (−gC) · gN` ha tutti i coefficienti z
 
 ## Fuori da questo argomento
 
-`gA` e `inIdeal3` non entrano in `reduce`. Restano fuori anche un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
+`gA` e `inIdeal3` non entrano in `reduce`. Restano fuori anche un secondo universo fisico, il tempo continuo oltre la tappa M3 di `plans/roadmap.md`, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
 
 ## Verifica
 

@@ -58,7 +58,7 @@ u₀ · ((x₀ · y) · z) + u₁ · ((x₁ · y) · z) = ((u₀ · x₀ + u₁ 
 
 ## Fuori da questo argomento
 
-`gA` e `inIdeal` restano com'erano. `reduce` sbuccia ancora solo `c²` e `nx²`. Restano fuori anche un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
+`gA` e `inIdeal` restano com'erano. `reduce` sbuccia ancora solo `c²` e `nx²`. Restano fuori anche un secondo universo fisico, il tempo continuo oltre la tappa M3 di `plans/roadmap.md`, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.
 
 ## Verifica
 
