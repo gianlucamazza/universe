@@ -34,6 +34,10 @@ quindi CNOT(Φ|0⟩ ⊗ |0⟩) non è un prodotto. I teoremi sono
 `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`,
 `Universe.Observer.product_det`, `Universe.Observer.entangled_det`,
 `Universe.Observer.point_entangled` e `Universe.Observer.point_not_product`.
+La traccia parziale dopo CNOT è diagonale: i pesi sono quelli di Born, e
+l'apparato li legge su Φ|ψ⟩. Nel punto razionale la purezza del sistema
+ridotto è 337/625. I teoremi sono `Universe.Observer.decoherence`,
+`Universe.Observer.pointer_born` e `Universe.Observer.point_purity`.
 
 Il primo mondo è un qubit. I teoremi si eseguono con `python -m universe`.
 """

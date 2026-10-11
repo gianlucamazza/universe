@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 28 righe.
+"""Certificato eseguibile del primo universo. Stampa 31 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -26,6 +26,14 @@ di CNOT(Φ|0⟩ ⊗ |0⟩) nel punto c = 3/5, s = 4/5, n = e_x. I nomi sono
 `Universe.Observer.cnot_involutive`, `Universe.Observer.cnot_norm`,
 `Universe.Observer.product_det`, `Universe.Observer.entangled_det`,
 `Universe.Observer.point_entangled` e `Universe.Observer.point_not_product`.
+Dopo CNOT la traccia parziale del sistema ha antidiagonale zero e
+diagonale di Born (`Universe.Observer.decoherence`); prima, l'entrata
+è α β̄ (`Universe.Observer.coherence_before`). L'apparato legge gli
+stessi pesi su Φ|0⟩ e sullo stato generico
+(`Universe.Observer.pointer_born`). Nel punto la purezza è 337/625
+(`Universe.Observer.point_purity`). `Universe.Observer.reduceLeft_diag`,
+`Universe.Observer.reduce_product`, `Universe.Observer.purity_before` e
+`Universe.Observer.purity_sphere` restano solo in Lean.
 """
 
 from __future__ import annotations
@@ -40,7 +48,7 @@ from universe.epistemology import (
     marginal,
     norm_squared,
 )
-from universe.observer import cnot, determinant_2x2
+from universe.observer import cnot, determinant_2x2, purity, reduced
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
 from universe.ring import ZERO_G, Gauss, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -328,6 +336,61 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Observer.point_entangled, Universe.Observer.point_not_product"
         if point_ok
         else f"det = {det_point}",
+    )
+
+    coh_ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    coh_i = coh_ring.constant(g(0, 1))
+    alpha = coh_ring.var("p0r") + coh_ring.var("p0i") * coh_i
+    beta = coh_ring.var("p1r") + coh_ring.var("p1i") * coh_i
+    psi_coh = State((alpha, beta))
+    ket = State((coh_ring.one(), coh_ring.zero()))
+    product = tensor_state(psi_coh, ket)
+    before = reduced(product, 0, 2, 2)
+    after = reduced(cnot(coh_ring).apply(product), 0, 2, 2)
+    weights = born(psi_coh)
+    decoherence_ok = (
+        before.rows[0][1] == alpha * beta.conj()
+        and after.rows[0][1].is_zero()
+        and after.rows[1][0].is_zero()
+        and after.rows[0][0] == weights[0]
+        and after.rows[1][1] == weights[1]
+    )
+    add(
+        "Osservatore",
+        "dopo CNOT il sistema ridotto è diagonale, con i pesi di Born",
+        decoherence_ok,
+        "prima, l'antidiagonale è α β̄\n"
+        "Universe.Observer.decoherence, Universe.Observer.coherence_before",
+    )
+
+    def _pointer(state: State) -> bool:
+        idle = State((state.ring.one(), state.ring.zero()))
+        apparatus = reduced(cnot(state.ring).apply(tensor_state(state, idle)), 1, 2, 2)
+        diagonal = born(state)
+        return (
+            apparatus.rows[0][1].is_zero()
+            and apparatus.rows[1][0].is_zero()
+            and apparatus.rows[0][0] == diagonal[0]
+            and apparatus.rows[1][1] == diagonal[1]
+        )
+
+    pointer_ok = _pointer(ground) and _pointer(phi)
+    add(
+        "Osservatore",
+        "l'apparato legge P(Φ|ψ⟩) su |0⟩ e sullo stato generico",
+        pointer_ok,
+        "Obs è la diagonale\nUniverse.Observer.pointer_born",
+    )
+
+    purity_value = purity(reduced(coupled, 0, 2, 2)).evaluate(rational)
+    purity_ok = purity_value == g(Fraction(337, 625))
+    add(
+        "Osservatore",
+        "nel punto, la purezza del sistema ridotto è 337/625",
+        purity_ok,
+        "337/625 < 1, stato ridotto misto\nUniverse.Observer.point_purity"
+        if purity_ok
+        else f"purezza = {purity_value}",
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---

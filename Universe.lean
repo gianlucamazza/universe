@@ -49,6 +49,10 @@ di `gA` è `marginal_left_sphere`.
 `product_det` stanno nell'anello libero, e `point_entangled` valuta il
 determinante di `CNOT(Φ|0⟩ ⊗ |0⟩)` in `−12/25 i`. `point_not_product`
 dice che quel valore non è un prodotto di due vettori di `ℚ(i)`.
+`reduceLeft` traccia il fattore destro. `decoherence` azzera
+l'antidiagonale nell'anello libero, e `pointer_born` ricava `Obs` come
+diagonale dell'apparato dopo `Φ`. `point_purity` valuta la purezza del
+sistema ridotto in `337/625`.
 -/
 import Universe.Composition
 import Universe.Dynamics

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" role="img">
+  <title>Decoherence: the reduced state of the system before and after CNOT, and what the apparatus reads</title>
+  <desc>At c = 3/5, s = 4/5, n = eₓ, with α = 3/5 and β = −4/5 i. Before CNOT the system is |ψ⟩⟨ψ|, with coherences ±12/25 i and purity 1. After CNOT the coherences are zero, the diagonal is the Born pair 9/25, 16/25, and the purity is 337/625. The apparatus reads the same diagonal.</desc>
+  <rect width="920" height="470" fill="#faf8f4"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a1814"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .cell { fill: #fffdf8; stroke: #1a1814; stroke-width: 1.2; }
+    .w { fill: #8c3a2f; }
+    .edge { stroke: #1a1814; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+    .head { font-size: 18px; text-anchor: middle; }
+    .val { font-size: 19px; text-anchor: middle; }
+    .small { font-size: 15px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; text-anchor: middle; }
+  </style>
+
+  <!-- system before -->
+  <text class="head" x="150" y="48">system, before CNOT</text>
+  <text class="small muted mid" x="150" y="72">|ψ⟩⟨ψ|, a pure state</text>
+  <rect class="cell" x="60" y="96" width="90" height="90"/>
+  <rect class="cell" x="150" y="96" width="90" height="90"/>
+  <rect class="cell" x="60" y="186" width="90" height="90"/>
+  <rect class="cell" x="150" y="186" width="90" height="90"/>
+  <rect class="w" x="60" y="96" width="90" height="90" fill-opacity="0.198"/>
+  <rect class="w" x="150" y="96" width="90" height="90" fill-opacity="0.264"/>
+  <rect class="w" x="60" y="186" width="90" height="90" fill-opacity="0.264"/>
+  <rect class="w" x="150" y="186" width="90" height="90" fill-opacity="0.352"/>
+  <text class="val" x="105" y="147">9/25</text>
+  <text class="val" x="195" y="147">12/25 i</text>
+  <text class="val" x="105" y="237">−12/25 i</text>
+  <text class="val" x="195" y="237">16/25</text>
+  <text class="small mid" x="150" y="312">coherence α β̄ = 12/25 i</text>
+  <text class="small mid" x="150" y="336">purity 1</text>
+  <text class="lemma" x="150" y="360">coherence_before</text>
+
+  <path class="edge" d="M 262 186 H 338"/>
+  <text class="small muted mid" x="300" y="172">CNOT</text>
+  <text class="small muted mid" x="300" y="210">trace out</text>
+  <text class="small muted mid" x="300" y="228">apparatus</text>
+
+  <!-- system after -->
+  <text class="head" x="450" y="48">system, after CNOT</text>
+  <text class="small muted mid" x="450" y="72">a mixed state</text>
+  <rect class="cell" x="360" y="96" width="90" height="90"/>
+  <rect class="cell" x="450" y="96" width="90" height="90"/>
+  <rect class="cell" x="360" y="186" width="90" height="90"/>
+  <rect class="cell" x="450" y="186" width="90" height="90"/>
+  <rect class="w" x="360" y="96" width="90" height="90" fill-opacity="0.198"/>
+  <rect class="w" x="450" y="186" width="90" height="90" fill-opacity="0.352"/>
+  <text class="val" x="405" y="147">9/25</text>
+  <text class="val" x="495" y="147">0</text>
+  <text class="val" x="405" y="237">0</text>
+  <text class="val" x="495" y="237">16/25</text>
+  <text class="small mid" x="450" y="312">coherence gone</text>
+  <text class="small mid" x="450" y="336">purity 337/625 &lt; 1</text>
+  <text class="lemma" x="450" y="360">decoherence, point_purity</text>
+
+  <!-- apparatus after -->
+  <text class="head" x="750" y="48">apparatus, after CNOT</text>
+  <text class="small muted mid" x="750" y="72">what the observer reads</text>
+  <rect class="cell" x="660" y="96" width="90" height="90"/>
+  <rect class="cell" x="750" y="96" width="90" height="90"/>
+  <rect class="cell" x="660" y="186" width="90" height="90"/>
+  <rect class="cell" x="750" y="186" width="90" height="90"/>
+  <rect class="w" x="660" y="96" width="90" height="90" fill-opacity="0.198"/>
+  <rect class="w" x="750" y="186" width="90" height="90" fill-opacity="0.352"/>
+  <text class="val" x="705" y="147">9/25</text>
+  <text class="val" x="795" y="147">0</text>
+  <text class="val" x="705" y="237">0</text>
+  <text class="val" x="795" y="237">16/25</text>
+  <text class="small mid" x="750" y="312">P(0) = 9/25,  P(1) = 16/25</text>
+  <text class="small mid" x="750" y="336">the Born weights of Φ|0⟩</text>
+  <text class="lemma" x="750" y="360">pointer_born</text>
+
+  <line x1="36" y1="392" x2="884" y2="392" stroke="#b8b0a2" stroke-width="1"/>
+  <text class="small" x="36" y="420">Measurement is no longer an axiom here: the probabilities appear on the diagonal of a subsystem.</text>
+  <text class="small muted" x="36" y="444">c = 3/5, s = 4/5, n = eₓ · α = 3/5, β = −4/5 i · shading ∝ |entry|</text>
+</svg>

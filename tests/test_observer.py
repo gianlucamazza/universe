@@ -1,11 +1,11 @@
-"""CNOT, determinante di un prodotto, punto razionale entangled."""
+"""CNOT, traccia parziale, purezza nel punto razionale."""
 
 from fractions import Fraction
 
 import pytest
 
 from universe.epistemology import norm_squared
-from universe.observer import cnot, determinant_2x2
+from universe.observer import cnot, determinant_2x2, purity, reduced
 from universe.ontology import Operator, State, tensor_state
 from universe.ring import Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
@@ -69,3 +69,52 @@ def test_rational_point_is_not_a_product():
     det = determinant_2x2(coupled).evaluate(point)
     assert det == g(0, Fraction(-12, 25))
     assert g(Fraction(3, 5)) * g(0, Fraction(-4, 5)) == det
+
+
+def test_reduced_rejects_a_state_of_the_wrong_dimension():
+    ring = Ring(())
+    state = State((ring.one(), ring.zero()))
+    with pytest.raises(ValueError, match="lo stato non ha la dimensione del composto"):
+        reduced(state, 0, 2, 2)
+
+
+def test_reduced_rejects_an_unknown_factor():
+    ring = Ring(())
+    one, zero = ring.one(), ring.zero()
+    state = State((one, zero, zero, zero))
+    with pytest.raises(ValueError, match="fattore sconosciuto"):
+        reduced(state, 2, 2, 2)
+
+
+def test_decoherence_on_a_fresh_ring():
+    ring = Ring(("p0r", "p0i", "p1r", "p1i"))
+    imag = ring.constant(g(0, 1))
+    alpha = ring.var("p0r") + ring.var("p0i") * imag
+    beta = ring.var("p1r") + ring.var("p1i") * imag
+    psi = State((alpha, beta))
+    ket = State((ring.one(), ring.zero()))
+    before = reduced(tensor_state(psi, ket), 0, 2, 2)
+    assert before.rows[0][1] == alpha * beta.conj()
+    after = reduced(cnot(ring).apply(tensor_state(psi, ket)), 0, 2, 2)
+    weights = tuple(amplitude.modulus_squared() for amplitude in psi.amplitudes)
+    assert after.rows[0][1].is_zero()
+    assert after.rows[1][0].is_zero()
+    assert after.rows[0][0] == weights[0]
+    assert after.rows[1][1] == weights[1]
+
+
+def test_point_purity_is_mixed():
+    world = QubitUniverse()
+    point = {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    coupled = cnot(world.scalars.ring).apply(
+        tensor_state(world.evolve(world.ground()), world.ground())
+    )
+    value = purity(reduced(coupled, 0, 2, 2)).evaluate(point)
+    assert value == g(Fraction(337, 625))
+    assert Fraction(337, 625) < 1

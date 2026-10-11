@@ -26,9 +26,9 @@ La fase è `φ = ωt/2`. Sul quoziente `c² + s² = 1` e `|n| = 1` la forma chiu
 U = c I − i s H.
 ```
 
-`c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro.
+`c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 28 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 31 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
