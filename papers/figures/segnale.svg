@@ -38,7 +38,7 @@
   <text class="tiny muted mid" x="254" y="268">I ⊗ U</text>
   <text class="small" x="36" y="330">the system's weights move by a polynomial</text>
   <text class="small" x="36" y="350">in the ideal (gC, gN): zero on the circle</text>
-  <text class="lemma" x="36" y="376">no_signalling_0, no_signalling_1</text>
+  <text class="lemma" x="36" y="376">no_signalling_any_0, no_signalling_any_1</text>
 
   <!-- system bars -->
   <text class="head mid" x="490" y="44">system</text>

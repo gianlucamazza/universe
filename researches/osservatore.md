@@ -38,7 +38,7 @@ La base è la permutazione scritta in `applyCNOT`. `evolution` è `c I − i s H
 
 Nel libero stanno `CNOT`, il determinante, `decoherence`, `pointer_born`, `purity_after` e l'accordo dei due apparati. `cnot_norm` scambia gli ultimi due `columnBorn` con `Gauss.add_comm`. `purity_after` è `|α|⁴ + |β|⁴`.
 
-In `(gC, gN)` stanno `no_signalling_0` e `no_signalling_1`. `I ⊗ U` moltiplica la cella 0 per la prima colonna di `U` e la cella 3 per la seconda. `born_column_defect` porta la differenza su `|α|² · (|u₀|² + |u₁|² − 1)`, nell'ordine `z · conj(z)`, ancora nel libero. L'appartenenza all'ideale arriva da `δ`. I cofattori di `unitary_ideal` restano, moltiplicati a sinistra per `|α|²` o per `|β|²`.
+In `(gC, gN)` stanno `no_signalling_0` e `no_signalling_1`. `I ⊗ U` moltiplica la cella 0 per la prima colonna di `U` e la cella 3 per la seconda. L'appartenenza all'ideale arriva da `δ`.
 
 `gA` paga `purity_sphere`. `one_sub_square` scrive `1 − n²` con cofattori vuoti su `gC` e su `gN`, e con cofattore `−(n + 1)` su `gA`. `n − 1` è `gA` per `normPair_generic`. `reduce` non vede questo difetto: sbuccia solo `c²` e `nx²`, e `inIdeal3` non estende `inIdeal`.
 
@@ -46,7 +46,7 @@ In `(gC, gN)` stanno `no_signalling_0` e `no_signalling_1`. `I ⊗ U` moltiplica
 
 `point_prob0` valuta un modulo quadro, `9/25`. Il determinante nel punto è un prodotto, `−12/25 i`. `point_entangled` espande `quadDet` con quattro `mulMono_single` e con `specPoly keepX`, e chiude in `grind`. `eval_polySame`, `eval_pmul` ed `eval_conj` stanno in `Universe/Evaluation.lean`, 182 righe, e sono posteriori: li usa `point_purity`. Il teorema della fase 1 resta com'è.
 
-`evolution_unitary` è `U†U`, dunque `conj(z) · z`. `columnBorn` è `z · conj(z)`. La citazione diretta non chiude il marginale. `columnBorn_comm` è `coeff_mul_comm`. Il trasporto sta in `evolution_column_00` e `evolution_column_11`.
+`evolution_unitary` è `U†U`, dunque `conj(z) · z`. `columnBorn` è `z · conj(z)`. La citazione diretta non chiude il marginale. La prima prova trasportava `evolution_unitary` sull'ordine `z · conj(z)` con due lemmi di colonna. Era un giro lungo: il marginale di un blocco è già `‖Uγ‖²`, e `literal_evolution_norm` lo chiude per ogni coppia di ampiezze (vedi «Dopo la nota»).
 
 Lo stato di due qubit con quattro ampiezze libere non entra in `Mono`. Il tetto della fase 4 era circa 300 righe, oppure un campo nuovo. `no_signalling_0` e `no_signalling_1` restano entro quel tetto, perché `cnot_ket0` svuota le celle 1 e 2: l'apparato è la costante `1` e la costante `0`. Il certificato Python fa lo stesso conto su tredici indeterminate, `(c, s, nx, ny, nz, a0r, …, a3i)`. Otto reali di ampiezza non sono i quattro esponenti `ar ai br bi`.
 
@@ -63,6 +63,12 @@ Le 73 occorrenze di `.c` e le 61 di `.nx` non sono tutte interfaccia. 62 e 51 st
 Una hermitiana su `ℂ² ⊗ ℂ²` ha 16 reali e non quadra a `I`. `Universe.Qubit.expCoeff_hamiltonian` usa il collasso di `Universe/Series.lean` (146 righe): i coefficienti formali `cosCoeff` e `sinCoeff`, il fattoriale cancellato, l'ipotesi `a² = 1`. `Universe/Qubit.lean` è 921 righe per l'unico `H = n·σ` che soddisfa quell'ipotesi. Senza il quadrato la serie non si chiude e non c'è un `c` da sbucciare. Un terzo quadrato da sbucciare, accanto a `c²` e `nx²`, è una divisione duplicata, come `gN` accanto a `gC`. L'ostacolo è questo. Allargare `Mono` è il passo necessario, e non è il passo che chiude l'hamiltoniano.
 
 `c` e `s` come `cos φ` e `sin φ` reali, senza Mathlib. Non vale il costo. Il legame già dimostrato è la serie formale. `evalAt` sostituisce razionali. L'unico punto del certificato è `c = 3/5`, `s = 4/5`: `9/25` e `16/25` sono i quadrati di quelle frazioni, e `δ` vale zero per `point_gC`, `point_gN` e `point_unitary`. Un coseno con resto non sposta nessuna appartenenza a un ideale. Mathlib resta fuori dalle regole. Le 182 righe di `Evaluation.lean` coprono le sostituzioni razionali che il certificato usa.
+
+## Dopo la nota
+
+Il monomio è passato da nove a tredici esponenti (`plans/parametric-mono.md`, fase 1), con quattro spettatori che la divisione non legge. Lo stato generico di due qubit è entrato in Lean, ma la prova non ne ha avuto bisogno: `no_signalling_any_0` e `no_signalling_any_1` valgono per ogni `v : Quad`, e sono `literal_evolution_norm` applicato ai due blocchi del sistema. La prova della fase 4, circa novanta righe con `born_column_defect` e i due lemmi di colonna, era un caso particolare dello stesso argomento ed è stata tolta: `no_signalling_0` e `no_signalling_1` ne sono ora corollari di una riga.
+
+Il vicolo cieco non era il monomio. Era cercare la prova sulla forma `α|00⟩ + β|11⟩` invece che sul blocco.
 
 ## Fuori da questo argomento
 

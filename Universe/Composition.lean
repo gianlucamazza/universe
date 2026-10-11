@@ -11,6 +11,9 @@ senso di `polySame`. Sul fattore generico, togliere `‖φ‖²` chiede `gA`.
 Tre qubit. `tensor_assoc` identifica le due parentesizzazioni come la stessa
 ottupla. `tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore.
 `tensor_assoc_obs` identifica i moduli quadri delle otto celle.
+
+`genericQuad` ha le quattro ampiezze `ar + i ai`, `br + i bi`,
+`a2r + i a2i`, `a3r + i a3i`.
 -/
 import Universe.Epistemology
 import Universe.Ontology
@@ -273,6 +276,20 @@ theorem marginal_iu_from_gen (U : Mat) (φ : Pair) :
   exact ⟨scale_ket0 _, scale_ket0 _⟩
 
 def genericPair : Pair := ⟨genericA, genericB⟩
+
+def a2r1 : Mono := {Mono.one with a2r := 1}
+def a2i1 : Mono := {Mono.one with a2i := 1}
+def a3r1 : Mono := {Mono.one with a3r := 1}
+def a3i1 : Mono := {Mono.one with a3i := 1}
+
+/-- Ampiezza generica `a2r + i a2i`. -/
+def genericC : Poly := single 1 a2r1 ++ single Gauss.i a2i1
+
+/-- Ampiezza generica `a3r + i a3i`. -/
+def genericD : Poly := single 1 a3r1 ++ single Gauss.i a3i1
+
+/-- Quattro ampiezze libere, nello stile di `genericPair`. -/
+def genericQuad : Quad := ⟨genericA, genericB, genericC, genericD⟩
 
 theorem normPair_generic :
     polySame (psub (normPair genericPair) (single 1 Mono.one)) gA := by

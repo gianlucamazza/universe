@@ -1,13 +1,13 @@
 # Plan: a wider Lean monomial
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress; phase 1 done (`66984b1`). Baseline: `v0.1.0`, `./check.sh` green, certificate prints 33 lines.
+Status: in progress; phases 1–2 done. Phase 2 proved no-signalling for every `v : Quad` in one line per component, and the phase-4 proof of the observer plan was removed as a special case. Baseline: `v0.1.0`, `./check.sh` green, certificate prints 33 lines.
 
 | Phase | State | Goal                                                                  |
 | ----- | ----- | --------------------------------------------------------------------- |
 | 1     | done  | widen `Mono` from 9 to 13 exponents; no statement changes             |
-| 2     | next  | no-signalling and reduced states on a generic two-qubit state in Lean |
-| 3     | open  | exploratory: spectator exponents as a parameter, with go/no-go        |
+| 2     | done  | no-signalling and reduced states on a generic two-qubit state in Lean |
+| 3     | next  | exploratory: spectator exponents as a parameter, with go/no-go        |
 | 4     | open  | docs, figures, research note                                          |
 
 ## 1. Why

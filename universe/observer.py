@@ -15,7 +15,10 @@ restano ampiezze solo nelle celle 0 e 7.
 
 `no_signalling_gap` è `I ⊗ U` su uno stato di due qubit generico. `U` è
 `c I − i s H` nel quoziente. La differenza dei pesi del sistema ha resto
-zero. Lean prova lo stesso fatto solo per `CNOT(|ψ⟩ ⊗ |0⟩)`:
+zero. Lean lo prova per ogni stato, `Universe.Observer.no_signalling_any_0`
+e `Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
+`Universe.Observer.no_signalling_gen_0` e
+`Universe.Observer.no_signalling_gen_1`. Il caso `CNOT(|ψ⟩ ⊗ |0⟩)` resta
 `Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
 """
 
@@ -149,10 +152,10 @@ def no_signalling_gap() -> tuple[Poly, Poly]:
     Le quattro ampiezze sono indeterminate, su
     `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`.
     `U = c I − i s H` usa le regole `c²` e `nx²`. `ar`, `ai`, `br`, `bi`
-    non servono: lo stato porta le proprie ampiezze. Lean non ha otto
-    reali liberi. `Universe.Observer.no_signalling_0` e
-    `Universe.Observer.no_signalling_1` fissano lo stato a
-    `CNOT(|ψ⟩ ⊗ |0⟩)`, con ampiezze solo nelle celle 0 e 3.
+    non servono: lo stato porta le proprie ampiezze. È
+    `Universe.Composition.genericQuad`, e i teoremi sono
+    `Universe.Observer.no_signalling_gen_0` e
+    `Universe.Observer.no_signalling_gen_1`.
     """
     names = (
         "c",

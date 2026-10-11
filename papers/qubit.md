@@ -178,9 +178,9 @@ Due apparati. `cnot01` agisce dal bit alto al bit medio, `cnot02` dal bit alto a
 
 ![Due apparati sullo stesso sistema](figures/osservatori.svg)
 
-Un unitario locale sull'apparato non cambia i pesi del sistema. `no_signalling_0` e `no_signalling_1` prendono `w = CNOT(|ψ⟩ ⊗ |0⟩)` e confrontano `marginalLeft (applyIU evolution w)` con `marginalLeft w`. Ogni componente della differenza sta in `(gC, gN)`. `evolution_column_00` e `evolution_column_11` trasportano `evolution_unitary` sull'ordine `z · conj(z)`: le due norme di colonna meno `1` sono `δ`. `born_column_defect` moltiplica quel difetto per `|α|²` o `|β|²`. L'apparato parte da `|0⟩`, quindi le ampiezze non nulle stanno solo nelle celle 0 e 3: bastano i nove esponenti.
+Un unitario locale sull'apparato non cambia i pesi del sistema, per ogni stato di due qubit. `no_signalling_any_0` e `no_signalling_any_1` confrontano `marginalLeft (applyIU evolution v)` con `marginalLeft v` per ogni `v : Quad`. L'argomento è una riga: `I ⊗ U` agisce su ciascun blocco `(a₀, a₁)` e `(a₂, a₃)` come `U` su un qubit, quindi ogni componente della differenza è `‖Uγ‖² − ‖γ‖²`, che `literal_evolution_norm` mette in `(gC, gN)`. `no_signalling_gen_0` e `no_signalling_gen_1` sono il caso `genericQuad`, le cui quattro celle usano i tredici esponenti di `Mono`. `no_signalling_0` e `no_signalling_1` sono il caso `CNOT(|ψ⟩ ⊗ |0⟩)`.
 
-Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`. Quella generalità non entra nel monomio di Lean. La riga del README registra lo scarto, come `kronecker_ui_gen` registra `|φ⟩ = |0⟩`.
+Il certificato Python fa lo stesso conto su uno stato di due qubit generico, otto reali di ampiezza più `c`, `s`, `n`, e cita `no_signalling_gen_0` e `no_signalling_gen_1`.
 
 ![Un unitario sull'apparato: i pesi del sistema restano, quelli dell'apparato cambiano](figures/segnale.svg)
 

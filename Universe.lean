@@ -58,7 +58,9 @@ sistema ridotto in `337/625`.
 in disaccordo, in entrambi gli ordini e su entrambe le parentesizzazioni.
 `no_signalling_0` e `no_signalling_1` dicono che `I ⊗ U` sull'apparato,
 dopo `CNOT` con `|0⟩`, cambia il marginale del sistema di un polinomio
-in `(gC, gN)`.
+in `(gC, gN)`. `no_signalling_any_0` e `no_signalling_any_1` lo dicono
+per ogni stato di due qubit; `no_signalling_gen_0` e `no_signalling_gen_1`
+sono il caso `genericQuad`.
 -/
 import Universe.Composition
 import Universe.Dynamics

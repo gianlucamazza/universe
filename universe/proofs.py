@@ -40,8 +40,11 @@ entrambi gli ordini e su entrambe le parentesizzazioni, danno
 `Universe.Observer.order_irrelevant`). Un unitario locale sull'apparato
 non cambia i due pesi del sistema. Il conto sta sull'anello
 `(c, s, nx, ny, nz, a0r, a0i, a1r, a1i, a2r, a2i, a3r, a3i)`: lo stato è
-generico. Lean lo prova per `CNOT(|ψ⟩ ⊗ |0⟩)`,
-`Universe.Observer.no_signalling_0` e `Universe.Observer.no_signalling_1`.
+generico. Lean lo prova per ogni `Quad`,
+`Universe.Observer.no_signalling_any_0` e
+`Universe.Observer.no_signalling_any_1`, e su `genericQuad`,
+`Universe.Observer.no_signalling_gen_0` e
+`Universe.Observer.no_signalling_gen_1`.
 """
 
 from __future__ import annotations
@@ -465,7 +468,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "un unitario locale sull'apparato non cambia i pesi del sistema",
         signal_ok,
         "stato generico, anello (c, s, nx, ny, nz, a0r, …, a3i)\n"
-        "Universe.Observer.no_signalling_0, Universe.Observer.no_signalling_1"
+        "Universe.Observer.no_signalling_gen_0, Universe.Observer.no_signalling_gen_1"
         if signal_ok
         else (gap0_reason or gap1_reason or ""),
     )
