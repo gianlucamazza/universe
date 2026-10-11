@@ -66,7 +66,8 @@ e `Universe.Observer.no_signalling_any_1`; su `genericQuad`,
 `Universe.Observer.no_signalling_gen_1`. Per ogni stato di tre qubit,
 `Universe.Observer.no_signalling_wigner` e
 `Universe.Observer.no_signalling_friend` dicono lo stesso di un unitario
-sul qubit di Wigner e su quello dell'amico.
+sul qubit di Wigner e su quello dell'amico. Per ogni `n` e ogni coppia di
+qubit distinti, lo stesso è `Universe.Qubits.no_signalling_at`.
 
 `U` commuta con `H` nell'anello libero:
 `Universe.Symmetry.evolution_commutes_hamiltonian`. L'energia

@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 69 righe.
+"""Certificato eseguibile del primo universo. Stampa 70 righe.
 
 Una riga è dimostrata quando il resto è zero e l'espansione libera dei
 cofattori ridà il polinomio. Il collasso della serie, nel footer, è
@@ -67,6 +67,9 @@ qubit dell'amico lasciano i pesi del sistema con resto zero
 Una `U` su un qubit qualsiasi di uno stato generico di `n ≤ 4` qubit lascia
 la norma con resto zero; Lean lo prova per ogni `n`
 (`Universe.Qubits.norm_applyAt`).
+Un unitario sul qubit `b` lascia il marginale del qubit `a ≠ b` con resto
+zero, per `n = 2, 3, 4` e ogni coppia; Lean lo prova per ogni `n`
+(`Universe.Qubits.no_signalling_at`).
 `(n·σ)(m·σ) = (n·m) I + i (n×m)·σ` ha origine zero sull'anello
 `(nx, ny, nz, mx, my, mz)`, senza regole (`Universe.Qubit.pauli_product`).
 `UH = HU` ha origine libera zero
@@ -163,7 +166,7 @@ from universe.observer import (
     reduced,
 )
 from universe.ontology import Operator, State, determinant, tensor_index, tensor_state
-from universe.qubits import generic_state, on_qubit
+from universe.qubits import generic_state, marginal_at, on_qubit
 from universe.ring import ZERO_G, Gauss, Poly, Ring, g
 from universe.worlds.qubit import QubitUniverse
 
@@ -769,6 +772,16 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         three + "Universe.Observer.no_signalling_friend"
         if friend_ok
         else (f0_reason or f1_reason or ""),
+    )
+
+    qubits_signal = _marginal_on_other_qubits(4)
+    add(
+        "Osservatore",
+        "un unitario su un altro qubit non cambia il marginale, n ≤ 4",
+        qubits_signal is None,
+        "stato generico, n = 2, 3, 4; Lean per ogni n\nUniverse.Qubits.no_signalling_at"
+        if qubits_signal is None
+        else qubits_signal,
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---
@@ -1399,6 +1412,29 @@ class _TimeLaw:
     circle: bool
     angle: tuple[Gauss, Gauss]
     image: tuple[Gauss, Gauss]
+
+
+def _marginal_on_other_qubits(max_n: int) -> str | None:
+    """Il marginale del qubit `a` dopo `U` sul qubit `b ≠ a`, resto zero."""
+    for n in range(2, max_n + 1):
+        law, state = generic_state(n)
+        gate = evolution(law, hamiltonian(law))
+        before = [marginal_at(state, qubit) for qubit in range(n)]
+        for source in range(n):
+            moved = on_qubit(gate, source, n).apply(state)
+            for target in range(n):
+                if target == source:
+                    continue
+                after = marginal_at(moved, target)
+                gaps = (after[0] - before[target][0], after[1] - before[target][1])
+                for component, gap in enumerate(gaps):
+                    reason = gap.certification()
+                    if reason is not None:
+                        return (
+                            f"n = {n}, a = {target}, b = {source}, "
+                            f"P({component}): {reason}"
+                        )
+    return None
 
 
 def _norm_on_every_qubit(max_n: int) -> str | None:

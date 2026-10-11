@@ -109,6 +109,8 @@ Nel punto le norme sono `9/25` e `16/25`.
 applica una matrice `2×2` al qubit `k`: sul bit alto mescola le branche
 foglia per foglia, e sul qubit `k + 1` agisce nei due figli.
 `norm_applyAt` mette `‖applyAt k U v‖² − ‖v‖²` in `(gC, gN)`.
+`marginalAt` è la coppia di Born di un qubit. `no_signalling_at` la lascia
+in `(gC, gN)` quando il unitario agisce su un qubit diverso.
 -/
 import Universe.Composition
 import Universe.Dynamics

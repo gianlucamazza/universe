@@ -132,6 +132,9 @@ LEAN: dict[str, tuple[str, ...]] = {
     "un unitario sul qubit dell'amico non cambia i pesi del sistema": (
         "Universe.Observer.no_signalling_friend",
     ),
+    "un unitario su un altro qubit non cambia il marginale, n ≤ 4": (
+        "Universe.Qubits.no_signalling_at",
+    ),
     "U su un qubit qualsiasi di n conserva la norma, n ≤ 4": (
         "Universe.Qubits.norm_applyAt",
     ),
