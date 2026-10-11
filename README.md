@@ -256,4 +256,4 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). To cite the project, use [`CITATION.cff`](CITATION.cff) (GitHub shows it as "Cite this repository").

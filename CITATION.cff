@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "universe"
+abstract: "A tiny quantum universe in which every law is a proved theorem: exact Python certificate and Lean 4 proofs, with the observer derived from inside."
+type: software
+authors:
+  - family-names: Mazza
+    given-names: Gianluca
+license: MIT
+repository-code: "https://github.com/gianlucamazza/universe"
+version: 0.3.2
+date-released: 2026-10-11
+keywords:
+  - lean4
+  - formal-verification
+  - quantum-mechanics
+  - exact-arithmetic
