@@ -93,10 +93,12 @@ design tried and where it broke, and stop the plan.
 ### Phase 4: the old structures are cases
 
 Maps `toQuad`/`ofQuad`, `toOct`/`ofOct`, and lemmas that `applyAt` is `applyUI`, `applyIU`,
-`applyUII`, `applyIUI`, `applyIIU` under them. Then `no_signalling_any_0`,
-`no_signalling_wigner`, `two_pointers` and `observers_agree` follow from the `n`-qubit
-theorems as one-line corollaries, named `*_of_qubits`. The originals stay: this phase adds
-the bridge, it does not delete proofs.
+`applyUII`, `applyIUI`, `applyIIU` under them. Then every `Quad` and `Oct` theorem that the
+`n`-qubit theorems cover (`no_signalling_any_0`, `no_signalling_any_1`, `no_signalling_wigner`,
+`no_signalling_friend`, `two_pointers`, `observers_agree`, and any other found while doing it)
+keeps its name and its statement, and its proof becomes a short corollary. The old proofs and
+the lemmas only they used are deleted: two proofs of one fact are debt. Statements do not
+change, so `universe/lean_map.py` and the docs do not either. Report the line delta.
 
 ### Phase 5: docs, figure, release
 
