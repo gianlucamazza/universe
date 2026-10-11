@@ -1,17 +1,18 @@
 # Plan: nothing given from outside
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: complete. All seven phases are done and pushed.
+Status: phases 1–7 done; phase 8 closes the two limits they left.
 
-| Phase | State | Goal                                                                  |
-| ----- | ----- | --------------------------------------------------------------------- |
-| 1     | done  | energy is conserved                                                   |
-| 2     | done  | the interaction comes from a Hamiltonian; `CNOT` is one of its points |
-| 3     | done  | partial measurement: coherence shrinks by `⟨0\|U\|0⟩`                 |
-| 4     | done  | reading the pointer: the conditional state and repeatability          |
-| 5     | done  | a unitary change of basis is the same universe                        |
-| 6     | done  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                             |
-| 7     | done  | docs and figures                                                      |
+| Phase | State | Goal                                                                   |
+| ----- | ----- | ---------------------------------------------------------------------- |
+| 1     | done  | energy is conserved                                                    |
+| 2     | done  | the interaction comes from a Hamiltonian; `CNOT` is one of its points  |
+| 3     | done  | partial measurement: coherence shrinks by `⟨0\|U\|0⟩`                  |
+| 4     | done  | reading the pointer: the conditional state and repeatability           |
+| 5     | done  | a unitary change of basis is the same universe                         |
+| 6     | done  | time composes: `U(φ₁) U(φ₂) = U(φ₁ + φ₂)`                              |
+| 7     | done  | docs and figures                                                       |
+| 8     | next  | close the two limits: symbolic change of basis, composed angle in Lean |
 
 ## 1. Why
 
@@ -132,6 +133,24 @@ Add spectators `c2 s2` to `Mono`. With `c = c₁c₂ − s₁s₂` and `s = s₁
 
 Go/no-go: if `reduce` would have to peel `c2`, stop: state the result with explicit
 cofactors (`inIdeal3`-style) instead.
+
+### Phase 8: closing the two limits
+
+Phases 5 and 6 left two documented gaps. Close both.
+
+1. **Change of basis for the symbolic law.** `conj_evolution` and `conj_born` assume
+   `V†V = I` in the free ring, so they do not apply to `evolution`, which is unitary only
+   modulo `δ`. Prove `conj_evolution_rel` and `conj_born_rel` with the hypothesis
+   `matRel (V†V) I` (modulo `(gC, gN)`) and conclusions componentwise in `inIdeal`. Then
+   instantiate `V = evolution`: `conj_evolution_law` and `conj_born_law`. Reuse
+   `evolution_unitary`, `matRel` congruences and `sandwich_rel`.
+2. **The composed angle in Lean.** `evalAt` ignores `c2 s2`, so the rational point of
+   `evolution_compose` is Python-only. Add an evaluator that also substitutes `c2 s2`
+   (`evalAt2` in `Universe/Evaluation.lean`, with the homomorphism lemmas it needs and a
+   lemma that it agrees with `evalAt` on monomials without `c2 s2`). Prove
+   `point_compose`: at `c = c2 = 3/5`, `s = s2 = 4/5`, `n = eₓ`, the composed angle is
+   `(−7/25, 24/25)` and `U(c,s)U(c2,s2)|0⟩ = −7/25 |0⟩ − 24/25 i |1⟩`.
+3. The Python lines for both cite the new theorems. Docs: only the certificate count.
 
 ### Phase 7: docs and figures
 
