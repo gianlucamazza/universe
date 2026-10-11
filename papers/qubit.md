@@ -190,6 +190,8 @@ Questo non dice quale esito avviene, né perché la base sia quella computaziona
 
 L'argomento, i vicoli ciechi e i tre candidati per il passo successivo sono in [`researches/osservatore.md`](../researches/osservatore.md).
 
+Il monomio di Lean ha tredici esponenti con nome: `c s nx ny nz` per la legge, otto per le ampiezze di due qubit. La divisione legge solo `c` e `nx`, la valutazione solo i cinque della legge. Perché restano campi con nome e non un parametro è `researches/monomio.md`.
+
 ## 8. Fuori da questa nota
 
 Un secondo universo fisico, il limite continuo, la meccanica classica, una libreria di basi generali, Mathlib, e la verifica del sorgente Python dentro Lean.

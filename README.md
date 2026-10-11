@@ -87,7 +87,7 @@ The README is in English. The notes in `papers/` and `researches/`, the docstrin
 
 The universe is the triple `(X, Φ, Obs)`. `X` is a finite-dimensional state space. `Φ` is `exp(−i φ n·σ)`, written in closed form as `U = c I − i s H` with `H = n·σ`; `c` and `s` stay symbols, bound only by `c² + s² = 1` and `|n| = 1`. `expCoeff_hamiltonian` is what licenses that closed form: `H² = I`, so the series of `exp` collapses to cosine and sine. Two representations are the same universe when an isomorphism commutes with `Φ` and `Obs`.
 
-A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial, and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
+A statement is a polynomial identity. It is proved when its left side minus its right side reduces to zero under the rules, and the proof keeps the **cofactors**: the free-ring expansion `p = Σ fᵢ gᵢ` that rebuilds the polynomial from the rules. Python exhibits those cofactors and checks the expansion. Lean proves the same identities for every polynomial over a monomial of thirteen named exponents (`c s nx ny nz` for the law, eight for the amplitudes of two qubits), and `Universe.Dynamics.reduce_complete` is the converse: membership in `(gC, gN)` means every coefficient of the remainder is zero. Cofactors are a witness, and they are not unique. Neither certificate is extracted from the other.
 
 The statements separate by the rules they need:
 
@@ -220,6 +220,7 @@ Every row is a line of the certificate, a Lean theorem, or both. "certificate" m
 - [`researches/divisione-monica.md`](researches/divisione-monica.md): the monic division behind `reduce_complete`.
 - [`researches/associazione.md`](researches/associazione.md): the three-qubit associativity.
 - [`researches/osservatore.md`](researches/osservatore.md): what the observer construction settles, and what it does not.
+- [`researches/monomio.md`](researches/monomio.md): why the Lean monomial keeps named exponents instead of a parameter.
 - [`plans/observer-inside.md`](plans/observer-inside.md): the plan that built the observer, phase by phase.
 - [`plans/parametric-mono.md`](plans/parametric-mono.md): a wider Lean monomial.
 - [`plans/no-outside.md`](plans/no-outside.md): removing what the model still takes from outside: the interaction, perfect measurement, time composition, conservation, change of basis.
