@@ -14,7 +14,7 @@ Le regole del nucleo sono quelle della meccanica quantistica che regge ogni espe
 
 **Campi.** La materia è descritta da campi quantistici, il Modello Standard, con particelle create e distrutte e interazioni fissate da simmetrie di gauge. I loro parametri sono una ventina di costanti misurate (Particle Data Group). Nel nucleo l'interazione è un generatore scelto, `G = |1⟩⟨1| ⊗ (n·σ)`.
 
-**Tempo.** Qui il tempo è una coppia di simboli con `c² + s² = 1`. La tappa M3 cerca di legarli a un angolo con un resto dimostrato. Nel nostro universo il tempo è continuo e fa parte dello spazio-tempo.
+**Tempo.** Qui il tempo è una coppia di simboli con `c² + s² = 1`. La tappa M3 li lega a un angolo razionale `φ` con le somme parziali della serie e un resto dimostrato (`Universe.Angle.circle_bound`), ma `cos φ` come numero reale resta fuori: senza i reali non c'è il limite. Nel nostro universo il tempo è continuo e fa parte dello spazio-tempo.
 
 **Gravità.** Assente dal nucleo, e senza una teoria quantistica accettata nemmeno fuori (Kiefer). Qui la distanza non è nostra.
 
@@ -24,7 +24,7 @@ Le regole del nucleo sono quelle della meccanica quantistica che regge ogni espe
 
 ## In sintesi
 
-Il nucleo ha la grammatica giusta e un vocabolario minimo. Scala e tempo sono distanze che le tappe M2 e M3 riducono. Spazio, campi e gravità sono distanze di natura: chiederebbero un altro nucleo, non un'estensione di questo.
+Il nucleo ha la grammatica giusta e un vocabolario minimo. Scala e tempo sono distanze che le tappe M2 e M3 hanno ridotto: ogni numero di qubit, e il tempo fin dove arrivano i razionali. Spazio, campi e gravità sono distanze di natura: chiederebbero un altro nucleo, non un'estensione di questo.
 
 ## Fonti
 

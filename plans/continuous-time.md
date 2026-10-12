@@ -1,15 +1,15 @@
 # Plan: continuous time
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: in progress. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
+Status: complete. All five phases are done and pushed. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
 
-| Phase | State   | Goal                                                                   |
-| ----- | ------- | ---------------------------------------------------------------------- |
-| 1     | done    | spike: partial sums, and the addition law degree by degree (go/no-go)  |
-| 2     | done    | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
-| 3     | done    | the group law up to a bound, and `r_N` goes to zero                    |
-| 4     | done    | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
-| 5     | planned | docs, figure, release                                                  |
+| Phase | State | Goal                                                                   |
+| ----- | ----- | ---------------------------------------------------------------------- |
+| 1     | done  | spike: partial sums, and the addition law degree by degree (go/no-go)  |
+| 2     | done  | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
+| 3     | done  | the group law up to a bound, and `r_N` goes to zero                    |
+| 4     | done  | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
+| 5     | done  | docs, figure, release                                                  |
 
 ## 1. Why
 
@@ -152,7 +152,7 @@ same numbers, one certificate line.
 ### Phase 5: docs, figure, release
 
 README (a paragraph "Continuous time" next to "Time composes", rows in "What is proved"),
-`papers/qubit.md`, and the line count everywhere. Figure `papers/figures/tempo.svg`, drawn by
+`papers/qubit.md`, and the line count everywhere. Figure `papers/figures/angolo.svg` (`tempo.svg` is taken by the composition of time), drawn by
 the orchestrator: `(C_N(φ), S_N(φ))` for `N = 1 … 8` spiralling onto the unit circle, with the
 band `±r_N`. `plans/roadmap.md`: M3 done. Release `v0.7.0`.
 

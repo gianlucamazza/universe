@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" role="img">
+  <title>Continuous time: the partial sums of cosine and sine walk onto the unit circle</title>
+  <desc>Left: the points (C_N(1), S_N(1)) for N = 0 to 8 in the plane. Each degree moves one coordinate: cosine on even degrees, sine on odd ones, so the path is a staircase that closes on the point of the unit circle at angle 1. Right: for each N, the exact gap C_N² + S_N² − 1 and the proved bound r_N(1) = Σ_{m=N+1}^{2N} 2ᵐ/m!; the gap stays inside the bound and the bound goes to zero.</desc>
+  <rect width="920" height="540" fill="#faf8f4"/>
+  <style>
+    text { font-family: Palatino, "Palatino Linotype", Georgia, serif; fill: #1a1814; }
+    .axis { stroke: #1a1814; stroke-width: 1.4; fill: none; }
+    .circle { fill: none; stroke: #b8b0a2; stroke-width: 1.2; stroke-dasharray: 5 5; }
+    .ray { stroke: #b8b0a2; stroke-width: 1.2; }
+    .walk { stroke: #8c3a2f; stroke-width: 1.8; fill: none; }
+    .head { font-size: 18px; }
+    .small { font-size: 15px; }
+    .tiny { font-size: 13px; }
+    .muted { fill: #6b6458; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .num { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; }
+    .lemma { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #8c3a2f; }
+  </style>
+
+  <text class="head" x="36" y="44">the partial sums walk onto the circle</text>
+  <text class="tiny muted" x="36" y="64">(C_N(φ), S_N(φ)) at φ = 1, N = 0 … 8</text>
+
+  <!-- plane: origin (80, 460), 300 px per unit -->
+  <path class="circle" d="M 380 460 A 300 300 0 0 0 80 160"/>
+  <line class="axis" x1="80" y1="460" x2="440" y2="460"/>
+  <line class="axis" x1="80" y1="460" x2="80" y2="110"/>
+  <text class="small" x="446" y="465">C</text>
+  <text class="small" x="74" y="102">S</text>
+  <text class="tiny muted mid" x="380" y="480">1</text>
+  <text class="tiny muted end" x="72" y="164">1</text>
+  <line class="ray" x1="80" y1="460" x2="242.1" y2="207.6"/>
+  <text class="tiny muted" x="128" y="420">φ = 1</text>
+
+  <!-- the staircase: even degrees move C, odd degrees move S -->
+  <polyline class="walk" points="380,460 380,160 230,160 230,210 242.5,210 242.5,207.5 242.1,207.5 242.1,207.6"/>
+  <g fill="#8c3a2f">
+    <circle cx="380" cy="460" r="4.5"/>
+    <circle cx="380" cy="160" r="4.5"/>
+    <circle cx="230" cy="160" r="4.5"/>
+    <circle cx="230" cy="210" r="4.5"/>
+    <circle cx="242.5" cy="210" r="3.5"/>
+  </g>
+  <circle cx="242.1" cy="207.6" r="7" fill="none" stroke="#1a1814" stroke-width="1.2"/>
+  <g class="tiny">
+    <text x="390" y="452">N = 0</text>
+    <text x="390" y="156">N = 1</text>
+    <text class="end" x="222" y="156">N = 2</text>
+    <text class="end" x="222" y="216">N = 3</text>
+    <line class="ray" x1="248" y1="214" x2="282" y2="250"/><text x="286" y="262">N = 4 … 8, closing on</text><text x="286" y="278">(cos 1, sin 1)</text>
+  </g>
+  <text class="tiny muted" x="36" y="510">each degree moves one coordinate: C on even N, S on odd N</text>
+
+  <!-- table -->
+  <text class="head" x="500" y="44">how far from the circle</text>
+  <text class="tiny muted" x="500" y="64">exact rationals, φ = 1</text>
+  <g class="small">
+    <text x="500" y="100">N</text>
+    <text x="540" y="100">C_N² + S_N² − 1</text>
+    <text x="720" y="100">r_N(1)</text>
+  </g>
+  <line class="axis" x1="500" y1="110" x2="880" y2="110" style="stroke-width:1"/>
+  <g class="num">
+    <text x="500" y="134">3</text><text x="540" y="134">−1/18</text><text x="720" y="134">46/45</text>
+    <text x="500" y="160">4</text><text x="540" y="160">−7/576</text><text x="720" y="160">122/315</text>
+    <text x="500" y="186">5</text><text x="540" y="186">13/7200</text><text x="720" y="186">578/4725</text>
+    <text x="500" y="212">6</text><text x="540" y="212">157/518400</text><text x="720" y="212">3134/93555</text>
+    <text x="500" y="238">7</text><text x="540" y="238">−79/2540160</text><text x="720" y="238">344954/42567525</text>
+    <text x="500" y="264">8</text><text x="540" y="264">−6991/1625702400</text><text x="720" y="264">373426/212837625</text>
+  </g>
+
+  <text class="small" x="500" y="310">the gap is an explicit tail, inside the bound</text>
+  <text class="lemma" x="500" y="330">circle_tail, circle_bound</text>
+  <text class="small" x="500" y="364">r_N(φ): the sum of (2|φ|)ᵐ / m! for N &lt; m ≤ 2N</text>
+  <text class="small" x="500" y="398">the group law, up to the same kind of tail</text>
+  <text class="lemma" x="500" y="418">group_bound_cos, group_bound_sin</text>
+  <text class="small" x="500" y="452">r_N halves once 2|φ| ≤ (N + 2) / 2</text>
+  <text class="lemma" x="500" y="472">remainder_small</text>
+  <text class="tiny muted" x="500" y="510">for every N and every rational φ; no reals, no limit</text>
+</svg>
