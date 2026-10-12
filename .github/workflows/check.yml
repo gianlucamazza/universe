@@ -57,3 +57,5 @@ jobs:
           test: false
           use-mathlib-cache: false
           build-args: "--wfail"
+      # The bridge: Lean prints the rational points from its own definitions.
+      - run: lake exe points | diff - points.txt

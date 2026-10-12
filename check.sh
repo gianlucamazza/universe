@@ -14,4 +14,6 @@ if command -v prettier >/dev/null; then prettier --check --log-level warn "**/*.
 python -m pytest -q tests
 python -m universe >/dev/null
 lake build --wfail
+# The bridge: Lean reprints points.txt; tests/test_points.py compares Python with it.
+lake exe points | diff - points.txt
 echo "ok"

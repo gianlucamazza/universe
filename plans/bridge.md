@@ -7,7 +7,7 @@ Status: in progress. Milestone M4 of `plans/roadmap.md`, release `v0.8.0`.
 | ----- | ------- | --------------------------------------------------------------------- |
 | 1     | done    | spike: `lake exe points` prints one rational point, Python compares   |
 | 2     | done    | every rational point of the certificate, in Lean and in Python        |
-| 3     | planned | CI: the Lean job checks the file, the Python job compares the numbers |
+| 3     | done    | CI: the Lean job checks the file, the Python job compares the numbers |
 | 4     | planned | docs, release                                                         |
 
 ## 1. Why
