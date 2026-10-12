@@ -22,18 +22,18 @@ It is complete, and version `1.0.0` is due, when all of the following hold:
    certificate line mapped in `universe/lean_map.py`.
 
 Anything outside this list is out of scope for 1.0, and is listed in `papers/qubit.md`,
-section 8.
+section 9.
 
 ## 2. Milestones
 
-| Milestone | State   | Release  | Plan                       | Kind        | Done when                                            |
-| --------- | ------- | -------- | -------------------------- | ----------- | ---------------------------------------------------- |
-| M1        | done    | `v0.5.0` | `plans/wigner.md`          | code        | phases 4–5 done                                      |
-| M2        | done    | `v0.6.0` | `plans/n-qubits.md`        | code        | criterion 1                                          |
-| M3        | done    | `v0.7.0` | `plans/continuous-time.md` | exploratory | criterion 2, or a no-go note in `researches/`        |
-| M4        | done    | `v0.8.0` | `plans/bridge.md`          | code        | criterion 3                                          |
-| M5        | done    | `v0.5.0` | none                       | notes       | criterion 4                                          |
-| M6        | planned | `v1.0.0` | none                       | release     | criteria 1–5, `papers/qubit.md` rewritten as a whole |
+| Milestone | State | Release  | Plan                       | Kind        | Done when                                            |
+| --------- | ----- | -------- | -------------------------- | ----------- | ---------------------------------------------------- |
+| M1        | done  | `v0.5.0` | `plans/wigner.md`          | code        | phases 4–5 done                                      |
+| M2        | done  | `v0.6.0` | `plans/n-qubits.md`        | code        | criterion 1                                          |
+| M3        | done  | `v0.7.0` | `plans/continuous-time.md` | exploratory | criterion 2, or a no-go note in `researches/`        |
+| M4        | done  | `v0.8.0` | `plans/bridge.md`          | code        | criterion 3                                          |
+| M5        | done  | `v0.5.0` | none                       | notes       | criterion 4                                          |
+| M6        | done  | `v1.0.0` | none                       | release     | criteria 1–5, `papers/qubit.md` rewritten as a whole |
 
 Each plan is written only when the previous milestone is released, so that it starts from the
 code as it is.
@@ -82,6 +82,14 @@ Notes in Italian, like the others in `researches/`, each with sources:
   would cost in this kernel.
 - `researches/distanza.md`: what separates the kernel from our universe: scale, space,
   fields, gravity, the arrow of time.
+
+### M6: 1.0
+
+Released when criteria 1–5 held: `n`-qubit theorems in `Universe/Qubits.lean`, partial sums
+with a proved remainder in `Universe/Angle.lean`, 95 rational points printed by both kernels
+(`points.txt`), the limits in `researches/misura.md`, `born.md`, `distanza.md`, and every gate
+green. `papers/qubit.md` was rewritten as one note: the six levels of equality, the law, time,
+observation, composition, the observer, and the two kernels.
 
 ## 3. Order and cadence
 

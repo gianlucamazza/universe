@@ -47,7 +47,7 @@ Every fact is checked twice, independently:
 
 8. **Two kernels, one set of numbers.** Every rational point the Python certificate prints is also printed by Lean, from the same terms its theorems are about, and a test compares them. Done.
 
-   What comes next, and what "complete" means here, is [`plans/roadmap.md`](plans/roadmap.md).
+   What "complete" means here, and how version 1.0 meets it, is [`plans/roadmap.md`](plans/roadmap.md).
 
 The model does not simulate our universe, and it does not try to. It is a laboratory where the parts of a physical theory can be made exact one at a time.
 
