@@ -244,4 +244,8 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Symmetry.evolution_compose",
         "Universe.Symmetry.point_compose",
     ),
+    "la legge di addizione di coseno e seno, a ogni grado": (
+        "Universe.Angle.angle_add_cos",
+        "Universe.Angle.angle_add_sin",
+    ),
 }

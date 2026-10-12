@@ -10,6 +10,8 @@ La nota è `papers/qubit.md`.
 è il converso: se `p` sta in `(gC, gN)`, ogni coefficiente di `(reduce p).rem` è zero.
 `gA`, nello stesso file, è la sfera delle ampiezze e non entra in `reduce`.
 `Universe.Series` è il collasso di `exp(-i φ a)` quando `a² = 1`.
+`Universe.Angle` somma `cosCoeff k · φᵏ / k!` e `sinCoeff`.
+`angle_add_cos` e `angle_add_sin` sono la legge di addizione a ogni grado.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
 `Universe.Evaluation` dice che `evalAt` rispetta `polySame`, il prodotto e il coniugio.
 `Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,
@@ -118,6 +120,7 @@ la traccia parziale su un qubit. `cnotFrom0` è il `CNOT` dal qubit `0`.
 due qubit differiscono, e `fanout_decoherence` rende il sistema
 diagonale con `bornPair`, per `n ≥ 2`.
 -/
+import Universe.Angle
 import Universe.Composition
 import Universe.Dynamics
 import Universe.Epistemology

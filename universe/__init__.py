@@ -16,6 +16,10 @@ zero nel quoziente c² + s² = 1, |n| = 1, e quel resto esibisce i cofattori
 nell'anello libero.
 Il collasso di exp(−i φ a) è Universe.Series.expCoeff quando a² = 1.
 L'istanza su questo qubit è Universe.Qubit.expCoeff_hamiltonian.
+`Universe.Angle.cosSum` e `Universe.Angle.sinSum` sommano i termini
+`cosCoeff k · φᵏ / k!` e `sinCoeff` fino al grado `N`.
+`Universe.Angle.angle_add_cos` e `Universe.Angle.angle_add_sin` sono
+la legge di addizione a ogni grado.
 
 Le identità si ripartiscono per i generatori che usano. Nel libero stanno
 H† = H, |z|² = re² + im², il proiettore Π₀ e la composizione con un |0⟩

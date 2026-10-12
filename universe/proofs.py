@@ -1,7 +1,9 @@
-"""Certificato eseguibile del primo universo. Stampa 76 righe.
+"""Certificato eseguibile del primo universo. Stampa 77 righe.
 
-Una riga è dimostrata quando il resto è zero e l'espansione libera dei
-cofattori ridà il polinomio. Il collasso della serie, nel footer, è
+Una riga algebrica è dimostrata quando il resto è zero e l'espansione
+libera dei cofattori ridà il polinomio. La riga della sezione Tempo non
+è un resto: è l'uguaglianza di razionali della legge di addizione, per
+ogni grado `m ≤ 12`. Il collasso della serie, nel footer, è
 `Universe.Qubit.expCoeff_hamiltonian`.
 
 La ripartizione per ideali è `papers/qubit.md`. La completezza di
@@ -140,6 +142,10 @@ gli ordini. `evalAt3` legge anche `mx my mz`
 (`Universe.Symmetry.point_axes`, `Universe.Symmetry.rotations_noncommute`).
 Con `V = U` il resto di `V(Uψ) − (V U V†)(Vψ)` e dei pesi di Born è zero
 (`Universe.Symmetry.conj_evolution_law`, `Universe.Symmetry.conj_born_law`).
+La sezione Tempo confronta la convoluzione di coseno e seno con il
+termine in `x + y`, per `m ≤ 12` e per le frazioni `0`, `±1`, `1/2`,
+`3/5`, `−4/5` (`Universe.Angle.angle_add_cos`,
+`Universe.Angle.angle_add_sin`).
 """
 
 from __future__ import annotations
@@ -147,6 +153,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 
+from universe.angle import addition_scan
 from universe.dynamics import evolution, hamiltonian
 from universe.epistemology import (
     born,
@@ -1344,6 +1351,14 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
             *map(_format_gauss, time_law.angle + time_law.image)
         ),
     )
+    holds, detail = addition_scan()
+    cited = "Universe.Angle.angle_add_cos, Universe.Angle.angle_add_sin"
+    add(
+        "Tempo",
+        "la legge di addizione di coseno e seno, a ogni grado",
+        holds,
+        f"{detail}\n{cited}" if holds else detail,
+    )
     return proven
 
 
@@ -1876,7 +1891,7 @@ def render(theorems: list[Theorem], world: QubitUniverse) -> str:
         if theorem.holds:
             passed += 1
     lines.append("")
-    lines.append(f"{passed}/{len(theorems)} identità algebriche dimostrate.")
+    lines.append(f"{passed}/{len(theorems)} righe dimostrate.")
     lines.append("")
     lines.append("Collasso della serie, teorema Universe.Qubit.expCoeff_hamiltonian")
     lines.append(f"  {ANALYTIC_PREMISE}")
