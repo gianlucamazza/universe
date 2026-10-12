@@ -531,17 +531,19 @@ class Law:
     nz: Poly
 
 
-def law_ring(extra: tuple[str, ...] = ()) -> Law:
+def law_ring(extra: tuple[str, ...] = (), *, quotient: bool = True) -> Law:
     """`(c, s, nx, ny, nz, *extra)` con le regole `c²` e `nx²`.
 
     Le variabili di `extra` restano libere: ampiezze, o altre indeterminate.
+    Con `quotient=False` l'anello è libero: nessuna regola, come `evalAt`.
     """
     ring = Ring(("c", "s", "nx", "ny", "nz", *extra))
     c, s, nx, ny, nz = (ring.var(name) for name in ("c", "s", "nx", "ny", "nz"))
-    one = ring.one()
-    # Orientamento della riscrittura: c prima di s, nx prima di ny e di nz.
-    ring.set_square("c", one - s**2)
-    ring.set_square("nx", one - ny**2 - nz**2)
+    if quotient:
+        one = ring.one()
+        # Orientamento della riscrittura: c prima di s, nx prima di ny e di nz.
+        ring.set_square("c", one - s**2)
+        ring.set_square("nx", one - ny**2 - nz**2)
     return Law(ring=ring, c=c, s=s, nx=nx, ny=ny, nz=nz)
 
 

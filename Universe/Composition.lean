@@ -75,6 +75,10 @@ def applyMat (U : Mat) (ψ : Pair) : Pair where
   a0 := pmul U.a00 ψ.a0 ++ pmul U.a01 ψ.a1
   a1 := pmul U.a10 ψ.a0 ++ pmul U.a11 ψ.a1
 
+/-- `U|0⟩` è la prima colonna di `U`. -/
+theorem apply_ket0 (U : Mat) : applyMat U ket0 = ⟨U.a00, U.a10⟩ := by
+  simp only [applyMat, ket0, pmul_one, pmul_nil, List.append_nil]
+
 /-- `(U ⊗ I)` sulla codifica `2 * i + k`. Il fattore `I` vale `1` sulla diagonale. -/
 def applyUI (U : Mat) (v : Quad) : Quad where
   a0 := pmul U.a00 v.a0 ++ pmul U.a01 v.a2

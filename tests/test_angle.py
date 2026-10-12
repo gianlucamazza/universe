@@ -6,6 +6,9 @@ from universe.angle import (
     DEGREE,
     SAMPLES,
     addition_scan,
+    angle_at_half,
+    axis_reading,
+    born_scan,
     c_term,
     circle_at_one,
     circle_gap,
@@ -32,6 +35,7 @@ from universe.angle import (
     sin_sum,
     tail_sum,
 )
+from universe.ring import g
 
 
 def test_coefficients_have_period_four():
@@ -144,6 +148,25 @@ def test_group_law_and_bound():
     assert abs(cosine) <= bound
     assert abs(sine) <= bound
     holds, _detail = group_scan()
+    assert holds
+
+
+def test_born_weights_on_axis():
+    witness = Fraction(1, 2)
+    cosine, sine, weight0, weight1, gap, bound = angle_at_half()
+    assert cosine == cos_sum(4, witness) == Fraction(337, 384)
+    assert sine == sin_sum(4, witness) == Fraction(23, 48)
+    assert weight0 == Fraction(113569, 147456)
+    assert weight1 == Fraction(529, 2304)
+    assert gap == Fraction(-31, 147456)
+    assert bound == Fraction(401, 40320)
+    assert abs(gap) <= bound
+    amplitude0, amplitude1, born0, born1 = axis_reading(cosine, sine)
+    assert amplitude0 == g(cosine)
+    assert amplitude1 == g(0, -sine)
+    assert born0 == g(weight0)
+    assert born1 == g(weight1)
+    holds, _detail = born_scan()
     assert holds
 
 

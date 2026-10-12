@@ -8,7 +8,7 @@ Status: in progress. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
 | 1     | done    | spike: partial sums, and the addition law degree by degree (go/no-go)  |
 | 2     | done    | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
 | 3     | done    | the group law up to a bound, and `r_N` goes to zero                    |
-| 4     | planned | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
+| 4     | done    | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
 | 5     | planned | docs, figure, release                                                  |
 
 ## 1. Why
@@ -65,6 +65,17 @@ Phase 3 note: one band bound, `highBand_abs_le`, gives `circle_bound`, `group_bo
 `group_bound_sin`. The review made `cosConvTerm`, `sinConvTerm` the diagonals of `cosCell`,
 `sinCell` (one definition of each product), and `tail_sum` in Python the `high_band` of
 `circle_cell`.
+
+Phase 4 note: `angle_born` reads `U|0⟩` along `e_x` at `(C_N(φ), S_N(φ))` for every `N`
+and every rational `φ`. The amplitudes are `C_N` and `−i S_N`; the Born weights are the
+squares; `circle_bound` keeps their sum within `remainder`. `eval_prob_axis_x` is that
+reading on the specialized column, and `point_prob0`, `point_prob1` are its case
+`c = 3/5`, `s = 4/5`. `born_axis_x` is the squares of the raw column, from
+`eval_columnBorn` and `eval_bracket_axis_x`. `angle_half` is `decide_cbv` at `φ = 1/2`,
+`N = 4`. The Python line evaluates a free ring: `set_square` would replace `c²` by
+`1 − s²`. The review gave `law_ring` a `quotient=False` switch instead of a second hand-built
+law, read the witness weights from `U|0⟩` instead of squaring the sums (the old check
+compared a number with itself), and dropped the one-line wrapper `bornPair_columns`.
 
 ## 2. Ground rules
 

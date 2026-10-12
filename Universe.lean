@@ -16,7 +16,10 @@ La nota è `papers/qubit.md`.
 con `remainder`, e `exp_add` è la legge di addizione di `xᵏ / k!`.
 `group_bound_cos` e `group_bound_sin` stimano la legge di gruppo troncata
 con la coda di `exp(|x| + |y|)`. Se `2|x| ≤ (N + 2) / 2`, `remainder_small`
-chiude `remainder` con il doppio del primo termine.
+chiude `remainder` con il doppio del primo termine. `angle_born` legge,
+lungo `e_x` e per ogni `N` e ogni `φ` razionale, `U|0⟩` nel punto
+`(C_N(φ), S_N(φ))`: ampiezze `C_N` e `−i S_N`, pesi di Born i quadrati,
+somma entro `remainder` da `1`. `angle_half` è `φ = 1/2`, `N = 4`.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
 `Universe.Evaluation` dice che `evalAt` rispetta `polySame`, il prodotto e il coniugio.
 `Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,
@@ -39,7 +42,8 @@ con il prodotto, `specX_conj` e `specZ_conj` con il coniugio. `axis_x_born0`
 `axis_x_gn` azzera i coefficienti di `gN`. `axis_z_born1` dice che il secondo
 peso è il polinomio zero, `axis_z_born0` è `spec keepZ groundP0 − 1 = gC`,
 e `axis_z_gn` azzera i coefficienti di `gN` lungo z.
-`point_prob0` e `point_prob1` valutano quei pesi in `c = 3/5`, `s = 4/5`.
+`eval_prob_axis_x` valuta quei pesi lungo `e_x` per ogni `c` e `s`.
+`point_prob0` e `point_prob1` sono il caso `c = 3/5`, `s = 4/5`.
 `point_gC` e `point_gN` sono i due vincoli in `ℚ`, e `point_unitary` valuta `δ`
 in `n = e_x`.
 `Universe.Ontology` è X. `tensorIndexAssoc` è l'associatività degli indici.

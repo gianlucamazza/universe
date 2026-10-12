@@ -1,4 +1,4 @@
-"""Certificato eseguibile del primo universo. Stampa 81 righe.
+"""Certificato eseguibile del primo universo. Stampa 82 righe.
 
 Una riga algebrica è dimostrata quando il resto è zero e l'espansione
 libera dei cofattori ridà il polinomio. Le righe della sezione Tempo non
@@ -159,6 +159,14 @@ termine in `x + y`, per `m ≤ 12` e per le frazioni `0`, `±1`, `1/2`,
 `Universe.Angle.group_bound_sin`). Se `2|x| ≤ (N + 2) / 2`, `remainder`
 sta sotto il doppio del primo termine (`Universe.Angle.remainder_small`).
 Il punto `φ = 1`, `N = 8` è `Universe.Angle.circle_eight`.
+Lungo `e_x`, in `(C_N(φ), S_N(φ))`, `U|0⟩` ha ampiezze `C_N` e `−i S_N`
+e pesi `C_N²`, `S_N²`; la somma dista da `1` al più del resto
+(`Universe.Angle.angle_born`, `Universe.Evaluation.born_axis_x`,
+`Universe.Evaluation.eval_bracket_axis_x`). Il punto `φ = 1/2`, `N = 4`
+è `Universe.Angle.angle_half`. La lettura Python è sull'anello libero:
+il quoziente sostituirebbe `c²` con `1 − s²`. `point_prob0` e
+`point_prob1` restano il caso `3/5`, `4/5` di
+`Universe.Epistemology.eval_prob_axis_x`.
 """
 
 from __future__ import annotations
@@ -168,6 +176,7 @@ from fractions import Fraction
 
 from universe.angle import (
     addition_scan,
+    born_scan,
     circle_at_one,
     circle_scan,
     group_scan,
@@ -1422,6 +1431,19 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     add(
         "Tempo",
         "se 2|x| ≤ (N + 2) / 2, il resto sta sotto il doppio del primo termine",
+        holds,
+        f"{detail}\n{cited}" if holds else detail,
+    )
+    holds, detail = born_scan()
+    cited = (
+        "Universe.Angle.angle_born, Universe.Angle.angle_half, "
+        "Universe.Evaluation.born_axis_x, Universe.Evaluation.eval_bracket_axis_x, "
+        "Universe.Evaluation.eval_columnBorn, Universe.Angle.circle_bound"
+    )
+    add(
+        "Tempo",
+        "lungo e_x, i pesi di U|0⟩ in (C_N(φ), S_N(φ)) sono C_N² e S_N², "
+        "entro il resto da 1",
         holds,
         f"{detail}\n{cited}" if holds else detail,
     )

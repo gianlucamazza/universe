@@ -16,7 +16,14 @@ La stessa stima, `highBand_abs_le`, dà la legge di gruppo: lo scarto fra
 `exp(|x| + |y|)`. `circle_bound` è il caso `u = v = |x|` sulla cella
 `c c + s s`. Se `2|x| ≤ (N + 2) / 2`, i termini di `remainder` si dimezzano
 e `remainder_small` lo chiude con il doppio del primo.
+
+In `(c, s) = (C_N(φ), S_N(φ))`, lungo `e_x`, `angle_born` legge `U|0⟩`:
+le ampiezze sono `C_N` e `−i S_N`, i pesi di Born i loro quadrati, e la
+somma dista da `1` al più di `remainder`. `point_prob0` e `point_prob1`
+sono il caso `3/5`, `4/5` della stessa lettura specializzata.
 -/
+import Universe.Composition
+import Universe.Evaluation
 import Universe.Series
 
 namespace Universe.Angle
@@ -1500,5 +1507,81 @@ theorem remainder_half :
       remainder 4 ((1 : Rat) / 2) = (401 : Rat) / 40320 ∧
         2 * expTerm (4 + 1) ((2 : Rat) * ((1 : Rat) / 2).abs) = (1 : Rat) / 60 := by
   decide_cbv
+
+open Universe.Composition
+open Universe.Epistemology
+open Universe.Evaluation
+open Universe.Qubit
+
+/-- Lungo `e_x`, in `(C_N(φ), S_N(φ))`, `U|0⟩` ha ampiezze `C_N` e `−i S_N`.
+
+I pesi di Born sono i quadrati. Con `circle_bound` la loro somma dista
+da `1` al più di `remainder N φ`. Vale per ogni `N` e ogni `φ` razionale.
+-/
+theorem angle_born (n : Nat) (φ : Rat) :
+    evalAt (cosSum n φ) (sinSum n φ) 1 0 0 (applyMat evolution ket0).a0 =
+      ⟨cosSum n φ, 0⟩ ∧
+    evalAt (cosSum n φ) (sinSum n φ) 1 0 0 (applyMat evolution ket0).a1 =
+      ⟨0, -(sinSum n φ)⟩ ∧
+    evalAt (cosSum n φ) (sinSum n φ) 1 0 0
+        (bornPair (applyMat evolution ket0)).a0 =
+      ⟨cosSum n φ * cosSum n φ, 0⟩ ∧
+    evalAt (cosSum n φ) (sinSum n φ) 1 0 0
+        (bornPair (applyMat evolution ket0)).a1 =
+      ⟨sinSum n φ * sinSum n φ, 0⟩ ∧
+    (cosSum n φ * cosSum n φ + sinSum n φ * sinSum n φ - 1).abs ≤
+      remainder n φ := by
+  have hket := apply_ket0 evolution
+  have hb := born_axis_x (cosSum n φ) (sinSum n φ)
+  refine ⟨?_, ?_, ?_, ?_, circle_bound n φ⟩
+  · rw [hket, eval_bracket_axis_x]
+  · rw [hket, eval_bracket_axis_x_1]
+  · rw [hket]
+    exact hb.1
+  · rw [hket]
+    exact hb.2
+
+/-- Nel punto `3/5`, `4/5` i pesi di `U|0⟩` sono `point_prob0` e `point_prob1`. -/
+theorem point_ket_born :
+    evalAt pointC pointS 1 0 0 (bornPair (applyMat evolution ket0)).a0 =
+      ⟨(9 : Rat) / 25, 0⟩ ∧
+    evalAt pointC pointS 1 0 0 (bornPair (applyMat evolution ket0)).a1 =
+      ⟨(16 : Rat) / 25, 0⟩ := by
+  rw [apply_ket0]
+  exact ⟨((born_axis_x pointC pointS).1.trans (eval_prob_axis_x pointC pointS).1.symm).trans
+      point_prob0,
+    ((born_axis_x pointC pointS).2.trans (eval_prob_axis_x pointC pointS).2.symm).trans
+      point_prob1⟩
+
+/-- `φ = 1/2`, `N = 4`: ampiezze, pesi, scarto e resto. -/
+theorem angle_half :
+    cosSum 4 ((1 : Rat) / 2) = (337 : Rat) / 384 ∧
+      sinSum 4 ((1 : Rat) / 2) = (23 : Rat) / 48 ∧
+        evalAt (cosSum 4 ((1 : Rat) / 2)) (sinSum 4 ((1 : Rat) / 2)) 1 0 0
+            (applyMat evolution ket0).a0 = ⟨(337 : Rat) / 384, 0⟩ ∧
+          evalAt (cosSum 4 ((1 : Rat) / 2)) (sinSum 4 ((1 : Rat) / 2)) 1 0 0
+              (applyMat evolution ket0).a1 = ⟨0, -((23 : Rat) / 48)⟩ ∧
+            evalAt (cosSum 4 ((1 : Rat) / 2)) (sinSum 4 ((1 : Rat) / 2)) 1 0 0
+                (bornPair (applyMat evolution ket0)).a0 =
+              ⟨(113569 : Rat) / 147456, 0⟩ ∧
+              evalAt (cosSum 4 ((1 : Rat) / 2)) (sinSum 4 ((1 : Rat) / 2)) 1 0 0
+                  (bornPair (applyMat evolution ket0)).a1 = ⟨(529 : Rat) / 2304, 0⟩ ∧
+                cosSum 4 ((1 : Rat) / 2) * cosSum 4 ((1 : Rat) / 2) +
+                    sinSum 4 ((1 : Rat) / 2) * sinSum 4 ((1 : Rat) / 2) - 1 =
+                  -((31 : Rat) / 147456) ∧
+                  remainder 4 ((1 : Rat) / 2) = (401 : Rat) / 40320 := by
+  have h := angle_born 4 ((1 : Rat) / 2)
+  have hc : cosSum 4 ((1 : Rat) / 2) = (337 : Rat) / 384 := by decide_cbv
+  have hs : sinSum 4 ((1 : Rat) / 2) = (23 : Rat) / 48 := by decide_cbv
+  refine ⟨hc, hs, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [h.1, hc]
+  · rw [h.2.1, hs]
+  · rw [h.2.2.1, hc]
+    ext <;> decide_cbv
+  · rw [h.2.2.2.1, hs]
+    ext <;> decide_cbv
+  · rw [hc, hs]
+    decide_cbv
+  · decide_cbv
 
 end Universe.Angle

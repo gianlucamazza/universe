@@ -10,8 +10,9 @@ sullo stato generico. `literal_sandwich` identifica il modulo letterale
 `|γ₀|² + |γ₁|²` con il sandwich, per ogni matrice. `keepX` e `keepZ`
 specializzano un asse e, per questi due, `spec` è un omomorfismo d'anello.
 `axis_x_born0` e `axis_z_born0` partono dai pesi di Born. `axis_z_gn`
-azzera `gN` lungo z. Il punto `c = 3/5`, `s = 4/5`, `n = e_x` valuta
-`δ` e i pesi lungo x.
+azzera `gN` lungo z. `eval_prob_axis_x` valuta quei pesi lungo `e_x`
+per ogni `c` e `s`: sono `c²` e `s²`. Il punto `c = 3/5`, `s = 4/5`
+è il caso `point_prob0`, `point_prob1`, e lì valuta anche `δ`.
 -/
 import Universe.Qubit
 
@@ -1039,17 +1040,29 @@ theorem eval_single (c s nx ny nz : Rat) (a : Gauss) (m : Mono) :
       ⟨a.re * monoVal c s nx ny nz m, a.im * monoVal c s nx ny nz m⟩ := by
   simp [evalAt, single, Gauss.add_zero]
 
+/-- Lungo `e_x`, per ogni `c` e `s`, i pesi specializzati di `U|0⟩` sono `c²` e `s²`. -/
+theorem eval_prob_axis_x (c s : Rat) :
+    evalAt c s 1 0 0 (columnBorn (specPoly keepX evolution.a00)) = ⟨c * c, 0⟩ ∧
+      evalAt c s 1 0 0 (columnBorn (specPoly keepX evolution.a10)) = ⟨s * s, 0⟩ := by
+  refine ⟨?_, ?_⟩
+  · rw [specX_a00, born_c, List.append_nil, eval_single]
+    ext <;> simp [monoVal, powR, cSq] <;> grind
+  · rw [specX_a10, born_minus_i_s, List.append_nil, eval_single]
+    ext <;> simp [monoVal, powR, sSq] <;> grind
+
+/-- Caso `c = 3/5`, `s = 4/5` di `eval_prob_axis_x`: `P(1) = 16/25`. -/
 theorem point_prob1 :
     evalAt pointC pointS 1 0 0 (columnBorn (specPoly keepX evolution.a10)) =
       ⟨(16 : Rat) / 25, 0⟩ := by
-  rw [specX_a10, born_minus_i_s, List.append_nil, eval_single]
-  ext <;> simp [monoVal, powR, sSq, pointC, pointS] <;> grind
+  rw [(eval_prob_axis_x pointC pointS).2]
+  ext <;> simp [pointS] <;> grind
 
+/-- Caso `c = 3/5`, `s = 4/5` di `eval_prob_axis_x`: `P(0) = 9/25`. -/
 theorem point_prob0 :
     evalAt pointC pointS 1 0 0 (columnBorn (specPoly keepX evolution.a00)) =
       ⟨(9 : Rat) / 25, 0⟩ := by
-  rw [specX_a00, born_c, List.append_nil, eval_single]
-  ext <;> simp [monoVal, powR, cSq, pointC, pointS] <;> grind
+  rw [(eval_prob_axis_x pointC pointS).1]
+  ext <;> simp [pointC] <;> grind
 
 theorem point_gC : evalAt pointC pointS 1 0 0 gC = 0 := by
   rw [gC, eval_append, eval_append, eval_single, eval_single, eval_single]

@@ -268,4 +268,13 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Angle.remainder_small",
         "Universe.Angle.remainder_half",
     ),
+    "lungo e_x, i pesi di U|0⟩ in (C_N(φ), S_N(φ)) sono C_N² e S_N², "
+    "entro il resto da 1": (
+        "Universe.Angle.angle_born",
+        "Universe.Angle.angle_half",
+        "Universe.Evaluation.born_axis_x",
+        "Universe.Evaluation.eval_bracket_axis_x",
+        "Universe.Evaluation.eval_columnBorn",
+        "Universe.Angle.circle_bound",
+    ),
 }

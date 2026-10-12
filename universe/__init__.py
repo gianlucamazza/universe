@@ -24,7 +24,11 @@ come coda, `circle_bound` la stima con `remainder`, e `exp_add` è la
 legge di addizione di `xᵏ / k!`. `group_bound_cos` e `group_bound_sin`
 stimano la legge di gruppo troncata con la coda di `exp(|x| + |y|)`.
 Se `2|x| ≤ (N + 2) / 2`, `remainder_small` chiude `remainder` con il
-doppio del primo termine.
+doppio del primo termine. `Universe.Angle.angle_born` legge `U|0⟩` in
+`(C_N(φ), S_N(φ))` lungo `e_x`: ampiezze `C_N` e `−i S_N`, pesi i
+quadrati, somma entro `remainder` da `1`. `Universe.Angle.angle_half`
+è `φ = 1/2`, `N = 4`. `point_prob0` e `point_prob1` sono il caso
+`3/5`, `4/5` di `Universe.Epistemology.eval_prob_axis_x`.
 
 Le identità si ripartiscono per i generatori che usano. Nel libero stanno
 H† = H, |z|² = re² + im², il proiettore Π₀ e la composizione con un |0⟩

@@ -11,8 +11,10 @@ Su un polinomio senza quegli esponenti, `evalAt2_agrees` coincide con `evalAt`.
 Su un polinomio senza quegli esponenti, `evalAt3_agrees` coincide con `evalAt2`.
 `listEval` somma i coefficienti lungo un supporto senza ripetizioni;
 `eval_cover` lo identifica con `evalAt`. Lungo `n = e_x`, `eval_gN_axis_x`
-azzera `gN` e `eval_bracket_axis_x` legge `⟨0|U|0⟩ = c`. Se `(c, s)` sta
-sul cerchio, `eval_gC_on_circle` azzera `gC`.
+azzera `gN` e `eval_bracket_axis_x` legge `⟨0|U|0⟩ = c`.
+`eval_bracket_axis_x_1` legge `⟨1|U|0⟩ = −i s`. `eval_columnBorn` porta
+il modulo sul valore, e `born_axis_x` ne ricava i pesi `c²` e `s²`.
+Se `(c, s)` sta sul cerchio, `eval_gC_on_circle` azzera `gC`.
 -/
 import Universe.Epistemology
 
@@ -299,6 +301,12 @@ theorem eval_column_const (c s nx ny nz : Rat) (z : Gauss) :
   rw [columnBorn_const, eval_append, eval_const]
   simp [evalAt, Gauss.add_zero]
 
+/-- `|z|²` valutato è il modulo del valore. -/
+theorem eval_columnBorn (c s nx ny nz : Rat) (p : Poly) :
+    evalAt c s nx ny nz (columnBorn p) =
+      evalAt c s nx ny nz p * Gauss.conj (evalAt c s nx ny nz p) := by
+  rw [columnBorn, eval_pmul, eval_conj]
+
 /-- Lungo `e_x` i coefficienti di `gN` valgono zero, per ogni `c, s`. -/
 theorem eval_gN_axis_x (c s : Rat) : evalAt c s 1 0 0 gN = 0 := by
   rw [gN, eval_append, eval_append, eval_append, eval_single, eval_single, eval_single,
@@ -321,6 +329,23 @@ theorem eval_bracket_axis_x (c s : Rat) : evalAt c s 1 0 0 evolution.a00 = ⟨c,
   rw [evolution_a00_bin, eval_append, eval_single, eval_single]
   simp [monoVal, powR, c1, s1, nz1, Mono.mul, Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i]
   ext <;> simp <;> grind
+
+/-- Lungo `e_x`, `⟨1|U|0⟩` vale `−i s`: il termine `s ny` si annulla. -/
+theorem eval_bracket_axis_x_1 (c s : Rat) : evalAt c s 1 0 0 evolution.a10 = ⟨0, -s⟩ := by
+  rw [evolution_a10_bin, eval_append, eval_single, eval_single]
+  simp [monoVal, powR, s1, nx1, ny1, Mono.mul, Gauss.re_neg, Gauss.im_neg, Gauss.re_i,
+    Gauss.im_i]
+  ext <;> simp <;> grind
+
+/-- Lungo `e_x`, i pesi di Born delle due ampiezze di `U` sono `c²` e `s²`. -/
+theorem born_axis_x (c s : Rat) :
+    evalAt c s 1 0 0 (columnBorn evolution.a00) = ⟨c * c, 0⟩ ∧
+      evalAt c s 1 0 0 (columnBorn evolution.a10) = ⟨s * s, 0⟩ := by
+  refine ⟨?_, ?_⟩
+  · rw [eval_columnBorn, eval_bracket_axis_x]
+    ext <;> simp [Gauss.conj] <;> grind
+  · rw [eval_columnBorn, eval_bracket_axis_x_1]
+    ext <;> simp [Gauss.conj] <;> grind
 
 end
 

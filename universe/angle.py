@@ -11,6 +11,10 @@ Lo scarto della legge di gruppo è la banda alta, e il valore assoluto
 sta sotto la coda di `exp(|x| + |y|)` (`Universe.Angle.group_bound_cos`,
 `Universe.Angle.group_bound_sin`). Se `2|x| ≤ (N + 2) / 2`, `remainder`
 sta sotto il doppio del primo termine (`Universe.Angle.remainder_small`).
+In `(c, s) = (C_N(φ), S_N(φ))`, lungo `e_x`, `U|0⟩` ha ampiezze `C_N` e
+`−i S_N` e pesi `C_N²`, `S_N²` (`Universe.Angle.angle_born`). La lettura
+è sull'anello libero: il quoziente sostituirebbe `c²` con `1 − s²`.
+`Universe.Angle.angle_half` è il punto `φ = 1/2`, `N = 4`.
 I coefficienti ripetono `Universe.Series.cosCoeff` e
 `Universe.Series.sinCoeff`.
 """
@@ -19,7 +23,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from fractions import Fraction
+from functools import cache
 from math import factorial
+
+from universe.dynamics import evolution, hamiltonian
+from universe.epistemology import born
+from universe.ontology import State
+from universe.ring import Gauss, Poly, g, law_ring
 
 DEGREE = 12
 
@@ -303,4 +313,103 @@ def remainder_small_scan(
         f"con 2|x| ≤ (N + 2) / 2\n"
         f"testimone N = 4, x = 1/2: 2|x| = {_rat(2 * abs(witness))} "
         f"≤ {_rat(Fraction(6, 2))}, resto {_rat(rest)} ≤ {_rat(cap)}",
+    )
+
+
+@cache
+def _axis_columns() -> tuple[Poly, Poly, Poly, Poly]:
+    """Prima colonna di `U` e i suoi pesi, sull'anello libero."""
+    law = law_ring(quotient=False)
+    state = evolution(law, hamiltonian(law)).apply(
+        State((law.ring.one(), law.ring.zero()))
+    )
+    weights = born(state)
+    return state.amplitudes[0], state.amplitudes[1], weights[0], weights[1]
+
+
+def axis_reading(cosine: Fraction, sine: Fraction) -> tuple[Gauss, Gauss, Gauss, Gauss]:
+    """`⟨0|U|0⟩`, `⟨1|U|0⟩`, `P(0)`, `P(1)` in `(cosine, sine)` lungo `e_x`."""
+    amplitude0, amplitude1, weight0, weight1 = _axis_columns()
+    point = {
+        "c": g(cosine),
+        "s": g(sine),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    return (
+        amplitude0.evaluate(point),
+        amplitude1.evaluate(point),
+        weight0.evaluate(point),
+        weight1.evaluate(point),
+    )
+
+
+def angle_at_half() -> tuple[
+    Fraction, Fraction, Fraction, Fraction, Fraction, Fraction
+]:
+    """`φ = 1/2`, `N = 4`: coseno, seno, i due pesi letti da `U|0⟩`, scarto, resto."""
+    point = Fraction(1, 2)
+    cosine = cos_sum(4, point)
+    sine = sin_sum(4, point)
+    _, _, born0, born1 = axis_reading(cosine, sine)
+    if born0.im or born1.im:
+        raise ArithmeticError("un peso di Born non è reale")
+    return (
+        cosine,
+        sine,
+        born0.re,
+        born1.re,
+        circle_gap(4, point),
+        remainder(4, point),
+    )
+
+
+def born_scan(
+    degree: int = DEGREE,
+    samples: tuple[Fraction, ...] = SAMPLES,
+) -> tuple[bool, str]:
+    """Lungo `e_x`, i pesi di `U|0⟩` in `(C_N, S_N)` sono i quadrati.
+
+    La somma dista da `1` al più del resto. L'anello è libero.
+    """
+    for order in range(degree + 1):
+        for sample in samples:
+            cosine = cos_sum(order, sample)
+            sine = sin_sum(order, sample)
+            if abs(circle_gap(order, sample)) > remainder(order, sample):
+                return (
+                    False,
+                    f"scarto a N = {order}, φ = {_rat(sample)}",
+                )
+            amp0, amp1, born0, born1 = axis_reading(cosine, sine)
+            if (
+                amp0 != g(cosine)
+                or amp1 != g(0, -sine)
+                or born0 != g(cosine * cosine)
+                or born1 != g(sine * sine)
+            ):
+                return (
+                    False,
+                    f"pesi a N = {order}, φ = {_rat(sample)}: "
+                    f"{amp0}, {amp1}, {born0}, {born1}",
+                )
+    cosine, sine, weight0, weight1, gap, bound = angle_at_half()
+    if (
+        cosine != Fraction(337, 384)
+        or sine != Fraction(23, 48)
+        or weight0 != Fraction(113569, 147456)
+        or weight1 != Fraction(529, 2304)
+        or gap != Fraction(-31, 147456)
+        or bound != Fraction(401, 40320)
+        or abs(gap) > bound
+    ):
+        return (False, "il testimone non torna")
+    listed = ", ".join(_rat(sample) for sample in samples)
+    return (
+        True,
+        f"per ogni N ≤ {degree} e per φ in {{{listed}}}, anello libero\n"
+        f"testimone φ = 1/2, N = 4: C = {_rat(cosine)}, S = {_rat(sine)}, "
+        f"pesi {_rat(weight0)} e {_rat(weight1)}, "
+        f"scarto {_rat(gap)}, resto {_rat(bound)}",
     )
