@@ -28,7 +28,7 @@ U = c I − i s H.
 
 `c` e `s` sono indeterminate del quoziente del cerchio. Il collasso della serie che autorizza quella scrittura è `Universe.Qubit.expCoeff_hamiltonian`: `H² = I` nel quoziente, quindi i coefficienti di `φⁿ/n!` in `exp(−iφ H)` sono quelli di `cos φ · I + (−i sin φ) · H`. `Obs` è la misura proiettiva nella base computazionale. La probabilità di un'ampiezza è il suo modulo quadro. `Universe.Observer.pointer_born` ricava quegli stessi pesi come diagonale dell'apparato, dopo `CNOT` su `Φ|ψ⟩ ⊗ |0⟩`.
 
-Il certificato eseguibile stampa 82 identità. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano. Dove calcolano polinomi diversi, la nota lo dice.
+Il certificato eseguibile stampa 82 righe. Il testo formale non è un'estrazione del testo Python, né il contrario. I due testi si citano, e i loro numeri si confrontano: `lake exe points` stampa `points.txt` da `Universe.Points.table`, dove ogni voce è il membro sinistro di un teorema di punto, e `tests/test_points.py` lo confronta, in frazioni esatte, con i valori che il certificato calcola per le sue righe. Dove calcolano polinomi diversi, la nota lo dice.
 
 ## 2. L'anello
 
@@ -153,7 +153,7 @@ Su tre qubit, `tensorIndex_assoc_qubit` è `tensorIndexAssoc` con dimensioni `2`
 
 Il certificato Python confronta i polinomi ridotti nel caso `|φ⟩ = |0⟩`, anche quando l'altro fattore è lo stato generico. `|00⟩` è il caso `α = 1`, `β = 0` delle stesse due righe, e resta nel dettaglio. La riga di associatività usa due anelli. Gli indici stanno su `(i, j, k, nb, nc)`. Ampiezze e `(U ⊗ I ⊗ I)` stanno su `(u00, u01, u10, u11, a0, a1, b0, b1, c0, c1)`. Il dettaglio cita `tensor_assoc`, `tensor_assoc_ui` e `tensor_assoc_obs`.
 
-Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = eₓ`, riempiono le otto celle. Il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`. Le due parentesizzazioni danno gli stessi pesi e la somma è `1`. È la stessa riga del punto razionale: Lean ha `point_prob0` e `point_prob1` sul singolo fattore, il certificato valuta il triplo tensore. Quella misura non aggiunge una riga.
+Tre copie di `Φ|0⟩`, valutate in `c = 3/5`, `s = 4/5`, `n = eₓ`, riempiono le otto celle. Il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`. Le due parentesizzazioni danno gli stessi pesi e la somma è `1`. È la stessa riga del punto razionale: Lean ha `point_prob0` e `point_prob1` sul singolo fattore e `point_cells` sulle otto celle del triplo tensore (`threeCopies`). Quella misura non aggiunge una riga.
 
 ![Otto celle di tre copie di Φ|0⟩](figures/celle.svg)
 
