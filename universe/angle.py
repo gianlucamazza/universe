@@ -7,12 +7,17 @@ La convoluzione fino a `m` è il termine in `x + y`:
 `exp_term` è `xᵐ / m!`: la stessa legge è `Universe.Angle.exp_add`.
 `C_n² + S_n² − 1` è `tail_sum`, e il valore assoluto sta sotto
 `remainder` (`Universe.Angle.circle_tail`, `Universe.Angle.circle_bound`).
+Lo scarto della legge di gruppo è la banda alta, e il valore assoluto
+sta sotto la coda di `exp(|x| + |y|)` (`Universe.Angle.group_bound_cos`,
+`Universe.Angle.group_bound_sin`). Se `2|x| ≤ (N + 2) / 2`, `remainder`
+sta sotto il doppio del primo termine (`Universe.Angle.remainder_small`).
 I coefficienti ripetono `Universe.Series.cosCoeff` e
 `Universe.Series.sinCoeff`.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from fractions import Fraction
 from math import factorial
 
@@ -112,24 +117,32 @@ def exp_term(m: int, x: Fraction) -> Fraction:
     return x**m / factorial(m)
 
 
+def circle_cell(j: int, k: int, x: Fraction, y: Fraction) -> Fraction:
+    """`c_j(x) c_k(y) + s_j(x) s_k(y)`, `Universe.Angle.circleTerm` con `y = x`."""
+    return c_term(j, x) * c_term(k, y) + s_term(j, x) * s_term(k, y)
+
+
 def tail_sum(n: int, x: Fraction) -> Fraction:
-    """Coda oltre il grado `n`: `Σ_{m = n + 1}^{2n} Σ_{k = m − n}^{n}` del prodotto."""
-    total = Fraction(0)
-    for degree in range(n + 1, 2 * n + 1):
-        for index in range(degree - n, n + 1):
-            total += c_term(index, x) * c_term(degree - index, x) + s_term(
-                index, x
-            ) * s_term(degree - index, x)
-    return total
+    """Coda oltre il grado `n`: le diagonali alte di `circle_cell`."""
+    return high_band(n, x, x, circle_cell)
 
 
-def remainder(n: int, x: Fraction) -> Fraction:
-    """`r_n(x) = Σ_{m = n + 1}^{2n} (2|x|)ᵐ / m!`."""
-    scale = 2 * abs(x)
+def exp_tail(n: int, scale: Fraction) -> Fraction:
+    """`Σ_{m = n + 1}^{2n} scaleᵐ / m!`."""
     return sum(
         (exp_term(degree, scale) for degree in range(n + 1, 2 * n + 1)),
         Fraction(0),
     )
+
+
+def remainder(n: int, x: Fraction) -> Fraction:
+    """`r_n(x) = Σ_{m = n + 1}^{2n} (2|x|)ᵐ / m!`."""
+    return exp_tail(n, 2 * abs(x))
+
+
+def group_remainder(n: int, x: Fraction, y: Fraction) -> Fraction:
+    """Coda di `exp(|x| + |y|)` da `n + 1` a `2n`."""
+    return exp_tail(n, abs(x) + abs(y))
 
 
 def circle_gap(n: int, x: Fraction) -> Fraction:
@@ -164,4 +177,130 @@ def circle_at_one() -> tuple[Fraction, Fraction, Fraction, Fraction]:
         sin_sum(8, point),
         circle_gap(8, point),
         remainder(8, point),
+    )
+
+
+def cos_cell(j: int, k: int, x: Fraction, y: Fraction) -> Fraction:
+    """`c_j(x) c_k(y) − s_j(x) s_k(y)`."""
+    return c_term(j, x) * c_term(k, y) - s_term(j, x) * s_term(k, y)
+
+
+def sin_cell(j: int, k: int, x: Fraction, y: Fraction) -> Fraction:
+    """`s_j(x) c_k(y) + c_j(x) s_k(y)`."""
+    return s_term(j, x) * c_term(k, y) + c_term(j, x) * s_term(k, y)
+
+
+def high_band(
+    n: int,
+    x: Fraction,
+    y: Fraction,
+    cell: Callable[[int, int, Fraction, Fraction], Fraction],
+) -> Fraction:
+    """Diagonali `n < m ≤ 2n`: `k` corre da `m − n` a `n`."""
+    total = Fraction(0)
+    for degree in range(n + 1, 2 * n + 1):
+        for index in range(degree - n, n + 1):
+            total += cell(index, degree - index, x, y)
+    return total
+
+
+def cos_product(n: int, x: Fraction, y: Fraction) -> Fraction:
+    """`C_n(x) C_n(y) − S_n(x) S_n(y)`."""
+    return cos_sum(n, x) * cos_sum(n, y) - sin_sum(n, x) * sin_sum(n, y)
+
+
+def sin_product(n: int, x: Fraction, y: Fraction) -> Fraction:
+    """`S_n(x) C_n(y) + C_n(x) S_n(y)`."""
+    return sin_sum(n, x) * cos_sum(n, y) + cos_sum(n, x) * sin_sum(n, y)
+
+
+def group_gap_cos(n: int, x: Fraction, y: Fraction) -> Fraction:
+    """`C_n(x + y) − (C_n(x) C_n(y) − S_n(x) S_n(y))`."""
+    return cos_sum(n, x + y) - cos_product(n, x, y)
+
+
+def group_gap_sin(n: int, x: Fraction, y: Fraction) -> Fraction:
+    """`S_n(x + y) − (S_n(x) C_n(y) + C_n(x) S_n(y))`."""
+    return sin_sum(n, x + y) - sin_product(n, x, y)
+
+
+def group_scan(
+    degree: int = DEGREE,
+    samples: tuple[Fraction, ...] = SAMPLES,
+) -> tuple[bool, str]:
+    """Scarto della legge di gruppo uguale alla banda alta, e sotto la coda."""
+    for order in range(degree + 1):
+        for left in samples:
+            for right in samples:
+                cosine = group_gap_cos(order, left, right)
+                sine = group_gap_sin(order, left, right)
+                bound = group_remainder(order, left, right)
+                cos_tail = high_band(order, left, right, cos_cell)
+                sin_tail = high_band(order, left, right, sin_cell)
+                if (
+                    cosine != -cos_tail
+                    or sine != -sin_tail
+                    or abs(cosine) > bound
+                    or abs(sine) > bound
+                ):
+                    return (
+                        False,
+                        f"fallisce a N = {order}, x = {_rat(left)}, y = {_rat(right)}",
+                    )
+    witness = Fraction(1, 2)
+    cosine = group_gap_cos(4, witness, witness)
+    sine = group_gap_sin(4, witness, witness)
+    bound = group_remainder(4, witness, witness)
+    if (
+        cosine != Fraction(53, 49152)
+        or sine != Fraction(-71, 9216)
+        or bound != Fraction(401, 40320)
+    ):
+        return (False, "il testimone non torna")
+    listed = ", ".join(_rat(sample) for sample in samples)
+    return (
+        True,
+        f"per ogni N ≤ {degree} e per x, y in {{{listed}}}\n"
+        f"testimone N = 4, x = y = 1/2: "
+        f"scarto cos {_rat(cosine)}, scarto sin {_rat(sine)}, "
+        f"resto {_rat(bound)}",
+    )
+
+
+def _within_half(n: int, x: Fraction) -> bool:
+    return 2 * abs(x) <= Fraction(n + 2, 2)
+
+
+def remainder_small_scan(
+    degree: int = DEGREE,
+    samples: tuple[Fraction, ...] = SAMPLES,
+) -> tuple[bool, str]:
+    """Se `2|x| ≤ (N + 2) / 2`, `r_N(x)` sta sotto il doppio del primo termine."""
+    for order in range(degree + 1):
+        for sample in samples:
+            if not _within_half(order, sample):
+                continue
+            cap = 2 * exp_term(order + 1, 2 * abs(sample))
+            if remainder(order, sample) > cap:
+                return (
+                    False,
+                    f"fallisce a N = {order}, x = {_rat(sample)}",
+                )
+    witness = Fraction(1, 2)
+    rest = remainder(4, witness)
+    cap = 2 * exp_term(5, 2 * abs(witness))
+    if (
+        not _within_half(4, witness)
+        or rest != Fraction(401, 40320)
+        or cap != Fraction(1, 60)
+        or rest > cap
+    ):
+        return (False, "il testimone non torna")
+    listed = ", ".join(_rat(sample) for sample in samples)
+    return (
+        True,
+        f"per ogni N ≤ {degree} e per x in {{{listed}}} "
+        f"con 2|x| ≤ (N + 2) / 2\n"
+        f"testimone N = 4, x = 1/2: 2|x| = {_rat(2 * abs(witness))} "
+        f"≤ {_rat(Fraction(6, 2))}, resto {_rat(rest)} ≤ {_rat(cap)}",
     )

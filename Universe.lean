@@ -14,6 +14,9 @@ La nota è `papers/qubit.md`.
 `angle_add_cos` e `angle_add_sin` sono la legge di addizione a ogni grado.
 `circle_tail` scrive `C_N² + S_N² − 1` come coda. `circle_bound` la stima
 con `remainder`, e `exp_add` è la legge di addizione di `xᵏ / k!`.
+`group_bound_cos` e `group_bound_sin` stimano la legge di gruppo troncata
+con la coda di `exp(|x| + |y|)`. Se `2|x| ≤ (N + 2) / 2`, `remainder_small`
+chiude `remainder` con il doppio del primo termine.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
 `Universe.Evaluation` dice che `evalAt` rispetta `polySame`, il prodotto e il coniugio.
 `Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,

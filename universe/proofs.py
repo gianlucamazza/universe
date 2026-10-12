@@ -1,10 +1,13 @@
-"""Certificato eseguibile del primo universo. Stampa 79 righe.
+"""Certificato eseguibile del primo universo. Stampa 81 righe.
 
 Una riga algebrica è dimostrata quando il resto è zero e l'espansione
 libera dei cofattori ridà il polinomio. Le righe della sezione Tempo non
 sono un resto: sono uguaglianze di razionali. La legge di addizione vale
 a ogni grado `m ≤ 12`. Per `N ≤ 12`, `C_N² + S_N² − 1` è la coda e il
-valore assoluto sta sotto il resto. Il collasso della serie, nel footer, è
+valore assoluto sta sotto il resto. Lo scarto di `C_N(x + y)` dalla legge
+di gruppo sta sotto la coda di `exp(|x| + |y|)`, e se
+`2|x| ≤ (N + 2) / 2` il resto sta sotto il doppio del primo termine.
+Il collasso della serie, nel footer, è
 `Universe.Qubit.expCoeff_hamiltonian`.
 
 La ripartizione per ideali è `papers/qubit.md`. La completezza di
@@ -149,8 +152,13 @@ termine in `x + y`, per `m ≤ 12` e per le frazioni `0`, `±1`, `1/2`,
 `Universe.Angle.angle_add_sin`). Per gli stessi valori, `C_N² + S_N² − 1`
 è la coda `tailSum` e il valore assoluto sta sotto `remainder`
 (`Universe.Angle.circle_tail`, `Universe.Angle.circle_bound`,
-`Universe.Angle.exp_add`). Il punto `φ = 1`, `N = 8` è
-`Universe.Angle.circle_eight`.
+`Universe.Angle.exp_add`). Lo scarto fra `C_N(x + y)` e
+`C_N(x) C_N(y) − S_N(x) S_N(y)`, e fra `S_N(x + y)` e
+`S_N(x) C_N(y) + C_N(x) S_N(y)`, è la banda alta e sta sotto la coda di
+`exp(|x| + |y|)` (`Universe.Angle.group_bound_cos`,
+`Universe.Angle.group_bound_sin`). Se `2|x| ≤ (N + 2) / 2`, `remainder`
+sta sotto il doppio del primo termine (`Universe.Angle.remainder_small`).
+Il punto `φ = 1`, `N = 8` è `Universe.Angle.circle_eight`.
 """
 
 from __future__ import annotations
@@ -158,7 +166,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 
-from universe.angle import addition_scan, circle_at_one, circle_scan
+from universe.angle import (
+    addition_scan,
+    circle_at_one,
+    circle_scan,
+    group_scan,
+    remainder_small_scan,
+)
 from universe.dynamics import evolution, hamiltonian
 from universe.epistemology import (
     born,
@@ -1389,6 +1403,27 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "scarto = −6991/1625702400, resto = 373426/212837625",
         example_ok,
         "Universe.Angle.circle_eight" if example_ok else "il punto non torna",
+    )
+    holds, detail = group_scan()
+    cited = (
+        "Universe.Angle.group_cos_tail, Universe.Angle.group_sin_tail, "
+        "Universe.Angle.group_bound_cos, Universe.Angle.group_bound_sin, "
+        "Universe.Angle.group_half"
+    )
+    add(
+        "Tempo",
+        "per N ≤ 12, lo scarto della legge di gruppo sta sotto "
+        "la coda di exp(|x| + |y|)",
+        holds,
+        f"{detail}\n{cited}" if holds else detail,
+    )
+    holds, detail = remainder_small_scan()
+    cited = "Universe.Angle.remainder_small, Universe.Angle.remainder_half"
+    add(
+        "Tempo",
+        "se 2|x| ≤ (N + 2) / 2, il resto sta sotto il doppio del primo termine",
+        holds,
+        f"{detail}\n{cited}" if holds else detail,
     )
     return proven
 

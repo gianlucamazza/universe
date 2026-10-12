@@ -21,7 +21,10 @@ L'istanza su questo qubit è Universe.Qubit.expCoeff_hamiltonian.
 `Universe.Angle.angle_add_cos` e `Universe.Angle.angle_add_sin` sono
 la legge di addizione a ogni grado. `circle_tail` scrive `C_N² + S_N² − 1`
 come coda, `circle_bound` la stima con `remainder`, e `exp_add` è la
-legge di addizione di `xᵏ / k!`.
+legge di addizione di `xᵏ / k!`. `group_bound_cos` e `group_bound_sin`
+stimano la legge di gruppo troncata con la coda di `exp(|x| + |y|)`.
+Se `2|x| ≤ (N + 2) / 2`, `remainder_small` chiude `remainder` con il
+doppio del primo termine.
 
 Le identità si ripartiscono per i generatori che usano. Nel libero stanno
 H† = H, |z|² = re² + im², il proiettore Π₀ e la composizione con un |0⟩

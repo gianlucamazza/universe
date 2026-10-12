@@ -257,4 +257,15 @@ LEAN: dict[str, tuple[str, ...]] = {
     "scarto = −6991/1625702400, resto = 373426/212837625": (
         "Universe.Angle.circle_eight",
     ),
+    "per N ≤ 12, lo scarto della legge di gruppo sta sotto la coda di exp(|x| + |y|)": (
+        "Universe.Angle.group_cos_tail",
+        "Universe.Angle.group_sin_tail",
+        "Universe.Angle.group_bound_cos",
+        "Universe.Angle.group_bound_sin",
+        "Universe.Angle.group_half",
+    ),
+    "se 2|x| ≤ (N + 2) / 2, il resto sta sotto il doppio del primo termine": (
+        "Universe.Angle.remainder_small",
+        "Universe.Angle.remainder_half",
+    ),
 }

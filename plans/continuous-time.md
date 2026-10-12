@@ -7,7 +7,7 @@ Status: in progress. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
 | ----- | ------- | ---------------------------------------------------------------------- |
 | 1     | done    | spike: partial sums, and the addition law degree by degree (go/no-go)  |
 | 2     | done    | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
-| 3     | planned | the group law up to a bound, and `r_N` goes to zero                    |
+| 3     | done    | the group law up to a bound, and `r_N` goes to zero                    |
 | 4     | planned | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
 | 5     | planned | docs, figure, release                                                  |
 
@@ -60,6 +60,11 @@ Phase 2 note: `exp_add` reuses the Phase 1 skeleton (`sumTo_weight_of_pointwise`
 `sumTo_leibniz`, `series_succ`); `circle_eight` is `decide_cbv`, since `Rat` arithmetic is
 irreducible for the kernel's `decide`. The review replaced two local re-proofs with the core
 lemmas `Lean.Grind.OrderedAdd.add_le_add` and `Lean.Grind.Semiring.pow_add`.
+
+Phase 3 note: one band bound, `highBand_abs_le`, gives `circle_bound`, `group_bound_cos` and
+`group_bound_sin`. The review made `cosConvTerm`, `sinConvTerm` the diagonals of `cosCell`,
+`sinCell` (one definition of each product), and `tail_sum` in Python the `high_band` of
+`circle_cell`.
 
 ## 2. Ground rules
 

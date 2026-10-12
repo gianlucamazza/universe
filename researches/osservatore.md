@@ -76,4 +76,4 @@ Il vicolo cieco non era il monomio. Era cercare la prova sulla forma `α|00⟩ +
 
 ## Verifica
 
-`lake build` sulla libreria `Universe`. `python -m universe` stampa 79 righe, chiude con `79/79` ed esce 0.
+`lake build` sulla libreria `Universe`. `python -m universe` stampa 81 righe, chiude con `81/81` ed esce 0.

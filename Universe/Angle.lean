@@ -11,6 +11,11 @@ della convoluzione: lo usano il coseno, il seno e `exp`.
 
 `C_N² + S_N² − 1` è la coda `tailSum`: i gradi `1 … N` si cancellano.
 Il suo valore assoluto è al più `remainder`, la coda di `exp(2|x|)`.
+La stessa stima, `highBand_abs_le`, dà la legge di gruppo: lo scarto fra
+`C_N(x + y)` e `C_N(x) C_N(y) − S_N(x) S_N(y)` sta sotto la coda di
+`exp(|x| + |y|)`. `circle_bound` è il caso `u = v = |x|` sulla cella
+`c c + s s`. Se `2|x| ≤ (N + 2) / 2`, i termini di `remainder` si dimezzano
+e `remainder_small` lo chiude con il doppio del primo.
 -/
 import Universe.Series
 
@@ -94,6 +99,14 @@ theorem sumTo_add (n : Nat) (f g : Nat → Rat) :
     simp only [sumTo, ih]
     grind
 
+theorem sumTo_sub (n : Nat) (f g : Nat → Rat) :
+    sumTo n (fun k => f k - g k) = sumTo n f - sumTo n g := by
+  induction n with
+  | zero => simp [sumTo, Rat.sub_eq_add_neg]
+  | succ n ih =>
+    simp only [sumTo, ih]
+    grind
+
 theorem sumTo_mul (n : Nat) (a : Rat) (f : Nat → Rat) :
     sumTo n (fun k => a * f k) = a * sumTo n f := by
   induction n with
@@ -101,6 +114,14 @@ theorem sumTo_mul (n : Nat) (a : Rat) (f : Nat → Rat) :
   | succ n ih =>
     simp only [sumTo, ih]
     grind
+
+/-- Il prodotto di due somme è la somma sul rettangolo. -/
+theorem sum_mul_sum (n : Nat) (a b : Nat → Rat) :
+    sumTo n a * sumTo n b = sumTo n fun j => sumTo n fun k => a j * b k := by
+  rw [Rat.mul_comm, ← sumTo_mul]
+  refine sumTo_congr ?_
+  intro j _
+  rw [Rat.mul_comm, ← sumTo_mul]
 
 /-- La somma `f 0 + f 1 + … + f (n + 1)` parte da `f 0` e sposta l'indice. -/
 theorem sumTo_succ_left (n : Nat) (f : Nat → Rat) :
@@ -221,23 +242,31 @@ theorem sTerm_deriv (m : Nat) (x : Rat) :
     grind
   rw [hnum, Rat.mul_assoc]
 
-/-- `cₖ(x) cₙ₋ₖ(y) − sₖ(x) sₙ₋ₖ(y)`. -/
-def cosConvTerm (x y : Rat) (n : Nat) : Nat → Rat :=
-  fun k => cTerm k x * cTerm (n - k) y - sTerm k x * sTerm (n - k) y
+/-- `cⱼ(x) cₖ(y) − sⱼ(x) sₖ(y)`. -/
+def cosCell (x y : Rat) (j k : Nat) : Rat :=
+  cTerm j x * cTerm k y - sTerm j x * sTerm k y
 
-/-- `sₖ(x) cₙ₋ₖ(y) + cₖ(x) sₙ₋ₖ(y)`. -/
+/-- `sⱼ(x) cₖ(y) + cⱼ(x) sₖ(y)`. -/
+def sinCell (x y : Rat) (j k : Nat) : Rat :=
+  sTerm j x * cTerm k y + cTerm j x * sTerm k y
+
+/-- `cosCell` sulla diagonale `k + (n − k) = n`. -/
+def cosConvTerm (x y : Rat) (n : Nat) : Nat → Rat :=
+  fun k => cosCell x y k (n - k)
+
+/-- `sinCell` sulla diagonale `k + (n − k) = n`. -/
 def sinConvTerm (x y : Rat) (n : Nat) : Nat → Rat :=
-  fun k => sTerm k x * cTerm (n - k) y + cTerm k x * sTerm (n - k) y
+  fun k => sinCell x y k (n - k)
 
 theorem cosConvTerm_rev (n k : Nat) (hk : k ≤ n) (x y : Rat) :
     cosConvTerm x y n (n - k) = cosConvTerm y x n k := by
-  unfold cosConvTerm
+  unfold cosConvTerm cosCell
   rw [Nat.sub_sub_self hk]
   grind
 
 theorem sinConvTerm_rev (n k : Nat) (hk : k ≤ n) (x y : Rat) :
     sinConvTerm x y n (n - k) = sinConvTerm y x n k := by
-  unfold sinConvTerm
+  unfold sinConvTerm sinCell
   rw [Nat.sub_sub_self hk]
   grind
 
@@ -271,7 +300,7 @@ theorem cos_weight (m : Nat) (x y : Rat) :
   sumTo_weight_of_pointwise m (fun k => cosConvTerm x y (m + 1) k)
     (fun j => sinConvTerm x y m j) (-x) <| by
       intro j
-      unfold cosConvTerm sinConvTerm
+      unfold cosConvTerm sinConvTerm cosCell sinCell
       rw [Nat.succ_sub_succ]
       exact term_cos_weight j m x y
 
@@ -281,7 +310,7 @@ theorem sin_weight (m : Nat) (x y : Rat) :
   sumTo_weight_of_pointwise m (fun k => sinConvTerm x y (m + 1) k)
     (fun j => cosConvTerm x y m j) x <| by
       intro j
-      unfold sinConvTerm cosConvTerm
+      unfold sinConvTerm cosConvTerm sinCell cosCell
       rw [Nat.succ_sub_succ]
       exact term_sin_weight j m x y
 
@@ -314,9 +343,9 @@ theorem angle_add (m : Nat) (x y : Rat) :
   induction m with
   | zero =>
     constructor
-    · simp [sumTo, cosConvTerm, Nat.sub_self, cTerm_zero, sTerm_zero]
+    · simp [sumTo, cosConvTerm, cosCell, Nat.sub_self, cTerm_zero, sTerm_zero]
       grind
-    · simp [sumTo, sinConvTerm, Nat.sub_self, cTerm_zero, sTerm_zero]
+    · simp [sumTo, sinConvTerm, sinCell, Nat.sub_self, cTerm_zero, sTerm_zero]
       grind
   | succ m ih =>
     rcases ih with ⟨ihc, ihs⟩
@@ -329,7 +358,7 @@ theorem angle_add_cos (m : Nat) (x y : Rat) :
     sumTo m (fun k => cTerm k x * cTerm (m - k) y - sTerm k x * sTerm (m - k) y) =
       cTerm m (x + y) := by
   have h := (angle_add m x y).1
-  unfold cosConvTerm at h
+  unfold cosConvTerm cosCell at h
   exact h
 
 /-- A grado `m`, `Σ_{k ≤ m} (sₖ(x) cₘ₋ₖ(y) + cₖ(x) sₘ₋ₖ(y)) = sₘ(x + y)`. -/
@@ -337,7 +366,7 @@ theorem angle_add_sin (m : Nat) (x y : Rat) :
     sumTo m (fun k => sTerm k x * cTerm (m - k) y + cTerm k x * sTerm (m - k) y) =
       sTerm m (x + y) := by
   have h := (angle_add m x y).2
-  unfold sinConvTerm at h
+  unfold sinConvTerm sinCell at h
   exact h
 
 /-- Termine `xᵐ / m!`. -/
@@ -795,19 +824,7 @@ theorem low_is_one (n : Nat) (x : Rat) : lowBand n (circleTerm x) = 1 := by
 theorem circle_square (n : Nat) (x : Rat) :
     cosSum n x * cosSum n x + sinSum n x * sinSum n x = rect n (circleTerm x) := by
   unfold cosSum sinSum rect circleTerm
-  have hc : sumTo n (fun k => cTerm k x) * sumTo n (fun k => cTerm k x) =
-      sumTo n fun j => sumTo n fun k => cTerm j x * cTerm k x := by
-    rw [Rat.mul_comm, ← sumTo_mul]
-    refine sumTo_congr ?_
-    intro j _
-    rw [Rat.mul_comm, ← sumTo_mul]
-  have hs : sumTo n (fun k => sTerm k x) * sumTo n (fun k => sTerm k x) =
-      sumTo n fun j => sumTo n fun k => sTerm j x * sTerm k x := by
-    rw [Rat.mul_comm, ← sumTo_mul]
-    refine sumTo_congr ?_
-    intro j _
-    rw [Rat.mul_comm, ← sumTo_mul]
-  rw [hc, hs, ← sumTo_add]
+  rw [sum_mul_sum, sum_mul_sum, ← sumTo_add]
   refine sumTo_congr ?_
   intro j _
   rw [← sumTo_add]
@@ -945,6 +962,18 @@ theorem div_mul_div (a b c d : Rat) : a / b * (c / d) = a * c / (b * d) := by
   rw [Rat.div_def, Rat.div_def, Rat.div_def, Rat.inv_mul_rev]
   grind
 
+theorem expTerm_prod (j k : Nat) (u v : Rat) :
+    expTerm j u * expTerm k v =
+      u ^ j * v ^ k / ((fact j * fact k : Nat) : Rat) := by
+  unfold expTerm
+  rw [div_mul_div, ← Rat.natCast_mul]
+
+/-- `0 ≤ x` dà `0 ≤ xᵐ / m!`. -/
+theorem expTerm_nonneg {x : Rat} (hx : 0 ≤ x) (m : Nat) : 0 ≤ expTerm m x := by
+  unfold expTerm
+  rw [Rat.div_def]
+  exact Rat.mul_nonneg (Rat.pow_nonneg hx) (Rat.le_of_lt (Rat.inv_pos.mpr (fact_pos m)))
+
 theorem two_mul (y : Rat) : (2 : Rat) * y = y + y := by
   rw [show (2 : Rat) = (1 : Rat) + 1 from Rat.natCast_add 1 1, Rat.add_mul, Rat.one_mul]
 
@@ -1003,33 +1032,95 @@ theorem mul_le_mul_of_nonneg {a b c d : Rat} (ha : 0 ≤ a) (hc : 0 ≤ c) (hab 
   Rat.le_trans (Rat.mul_le_mul_of_nonneg_right hab hc)
     (Rat.mul_le_mul_of_nonneg_left hcd (Rat.le_trans ha hab))
 
+/-- Due stime monomiali, con basi diverse, danno il prodotto. -/
+theorem prod_term_le {a b : Rat} {j k : Nat} {x y : Rat}
+    (ha : a.abs ≤ x.abs ^ j / (fact j : Rat))
+    (hb : b.abs ≤ y.abs ^ k / (fact k : Rat)) :
+    (a * b).abs ≤ expTerm j x.abs * expTerm k y.abs := by
+  rw [abs_mul]
+  refine Rat.le_trans (mul_le_mul_of_nonneg Rat.abs_nonneg Rat.abs_nonneg ha hb) ?_
+  rw [div_mul_div, ← Rat.natCast_mul, ← expTerm_prod]
+  exact Rat.le_refl
+
 theorem half_abs_mul {a b : Rat} {j k : Nat} {x : Rat}
     (ha : a.abs ≤ x.abs ^ j / (fact j : Rat))
     (hb : b.abs ≤ x.abs ^ k / (fact k : Rat)) :
     (a * b).abs ≤ x.abs ^ (j + k) / ((fact j * fact k : Nat) : Rat) := by
-  rw [abs_mul]
-  refine Rat.le_trans (mul_le_mul_of_nonneg Rat.abs_nonneg Rat.abs_nonneg ha hb) ?_
-  rw [div_mul_div, ← Lean.Grind.Semiring.pow_add, ← Rat.natCast_mul]
+  refine Rat.le_trans (prod_term_le ha hb) ?_
+  rw [expTerm_prod, ← Lean.Grind.Semiring.pow_add]
   exact Rat.le_refl
+
+/-- Se uno dei due addendi è zero, somma e differenza stanno sotto la stima comune. -/
+theorem abs_exclusive {p q bound : Rat} (hp : p.abs ≤ bound) (hq : q.abs ≤ bound)
+    (hzero : p = 0 ∨ q = 0) : (p + q).abs ≤ bound ∧ (p - q).abs ≤ bound := by
+  rcases hzero with hp0 | hq0
+  · subst hp0
+    refine ⟨?_, ?_⟩
+    · simpa [Rat.zero_add] using hq
+    · rw [Rat.sub_eq_add_neg, Rat.zero_add, Rat.abs_neg]
+      exact hq
+  · subst hq0
+    refine ⟨?_, ?_⟩
+    · simpa [Rat.add_zero] using hp
+    · rw [Rat.sub_eq_add_neg, Rat.neg_zero, Rat.add_zero]
+      exact hp
+
+/-- La parità spegne `cⱼ cₖ` oppure `sⱼ sₖ`. -/
+theorem cc_or_ss (j k : Nat) (x y : Rat) :
+    cTerm j x * cTerm k y = 0 ∨ sTerm j x * sTerm k y = 0 := by
+  rcases Nat.mod_two_eq_zero_or_one j with hj | hj <;>
+    rcases Nat.mod_two_eq_zero_or_one k with hk | hk
+  · exact Or.inr <| by rw [sTerm_even j hj x, Rat.zero_mul]
+  · exact Or.inl <| by rw [cTerm_odd k hk y, Rat.mul_zero]
+  · exact Or.inl <| by rw [cTerm_odd j hj x, Rat.zero_mul]
+  · exact Or.inl <| by rw [cTerm_odd j hj x, Rat.zero_mul]
+
+/-- La parità spegne `sⱼ cₖ` oppure `cⱼ sₖ`. -/
+theorem sc_or_cs (j k : Nat) (x y : Rat) :
+    sTerm j x * cTerm k y = 0 ∨ cTerm j x * sTerm k y = 0 := by
+  rcases Nat.mod_two_eq_zero_or_one j with hj | hj <;>
+    rcases Nat.mod_two_eq_zero_or_one k with hk | hk
+  · exact Or.inl <| by rw [sTerm_even j hj x, Rat.zero_mul]
+  · exact Or.inl <| by rw [sTerm_even j hj x, Rat.zero_mul]
+  · exact Or.inr <| by rw [cTerm_odd j hj x, Rat.zero_mul]
+  · exact Or.inl <| by rw [cTerm_odd k hk y, Rat.mul_zero]
+
+theorem c_prod_abs (j k : Nat) (x y : Rat) :
+    (cTerm j x * cTerm k y).abs ≤ expTerm j x.abs * expTerm k y.abs :=
+  prod_term_le (cTerm_abs_le j x) (cTerm_abs_le k y)
+
+theorem s_prod_abs (j k : Nat) (x y : Rat) :
+    (sTerm j x * sTerm k y).abs ≤ expTerm j x.abs * expTerm k y.abs :=
+  prod_term_le (sTerm_abs_le j x) (sTerm_abs_le k y)
+
+theorem sc_prod_abs (j k : Nat) (x y : Rat) :
+    (sTerm j x * cTerm k y).abs ≤ expTerm j x.abs * expTerm k y.abs :=
+  prod_term_le (sTerm_abs_le j x) (cTerm_abs_le k y)
+
+theorem cs_prod_abs (j k : Nat) (x y : Rat) :
+    (cTerm j x * sTerm k y).abs ≤ expTerm j x.abs * expTerm k y.abs :=
+  prod_term_le (cTerm_abs_le j x) (sTerm_abs_le k y)
+
+theorem cosCell_abs_le (j k : Nat) (x y : Rat) :
+    (cosCell x y j k).abs ≤ expTerm j x.abs * expTerm k y.abs := by
+  unfold cosCell
+  exact (abs_exclusive (c_prod_abs j k x y) (s_prod_abs j k x y) (cc_or_ss j k x y)).2
+
+theorem sinCell_abs_le (j k : Nat) (x y : Rat) :
+    (sinCell x y j k).abs ≤ expTerm j x.abs * expTerm k y.abs := by
+  unfold sinCell
+  exact (abs_exclusive (sc_prod_abs j k x y) (cs_prod_abs j k x y) (sc_or_cs j k x y)).1
+
+theorem circleCell_abs_le (j k : Nat) (x : Rat) :
+    (circleTerm x j k).abs ≤ expTerm j x.abs * expTerm k x.abs := by
+  unfold circleTerm
+  exact (abs_exclusive (c_prod_abs j k x x) (s_prod_abs j k x x) (cc_or_ss j k x x)).1
 
 theorem dot_abs_le (j k : Nat) (x : Rat) :
     (circleTerm x j k).abs ≤ x.abs ^ (j + k) / ((fact j * fact k : Nat) : Rat) := by
-  rcases Nat.mod_two_eq_zero_or_one j with hj | hj <;>
-    rcases Nat.mod_two_eq_zero_or_one k with hk | hk
-  · unfold circleTerm
-    rw [sTerm_even j hj x, sTerm_even k hk x, Rat.mul_zero, Rat.add_zero]
-    exact half_abs_mul (cTerm_abs_le j x) (cTerm_abs_le k x)
-  · unfold circleTerm
-    rw [sTerm_even j hj x, cTerm_odd k hk x, Rat.mul_zero, Rat.zero_mul, Rat.add_zero,
-      Rat.abs_zero]
-    simpa [show j + k - j = k by omega] using monomial_nonneg (j + k) j x
-  · unfold circleTerm
-    rw [cTerm_odd j hj x, sTerm_even k hk x, Rat.zero_mul, Rat.mul_zero, Rat.add_zero,
-      Rat.abs_zero]
-    simpa [show j + k - j = k by omega] using monomial_nonneg (j + k) j x
-  · unfold circleTerm
-    rw [cTerm_odd j hj x, cTerm_odd k hk x, Rat.zero_mul, Rat.zero_add]
-    exact half_abs_mul (sTerm_abs_le j x) (sTerm_abs_le k x)
+  refine Rat.le_trans (circleCell_abs_le j k x) ?_
+  rw [expTerm_prod, ← Lean.Grind.Semiring.pow_add]
+  exact Rat.le_refl
 
 theorem sumTo_abs_le (n : Nat) (f : Nat → Rat) :
     (sumTo n f).abs ≤ sumTo n fun k => (f k).abs := by
@@ -1131,38 +1222,253 @@ theorem sumRange_le_sumTo {lo hi n : Nat} (hlo : lo ≤ hi) (hhi : hi ≤ n) {f 
 def remainder (n : Nat) (x : Rat) : Rat :=
   sumRange (n + 1) (2 * n) fun m => expTerm m ((2 : Rat) * x.abs)
 
-theorem inner_abs_le (n m : Nat) (x : Rat) (hn : n ≤ m) (hm : m ≤ n + n) :
-    (sumRange (m - n) n fun k => circleTerm x k (m - k)).abs ≤
-      expTerm m ((2 : Rat) * x.abs) := by
-  refine Rat.le_trans (sumRange_abs_le (m - n) n fun k => circleTerm x k (m - k)) ?_
-  have hpoint : sumRange (m - n) n (fun k => (circleTerm x k (m - k)).abs) ≤
-      sumRange (m - n) n fun k =>
-        x.abs ^ m / ((fact k * fact (m - k) : Nat) : Rat) :=
-    sumRange_le_of fun k hk1 hk2 => by
-      have hkm : k ≤ m := Nat.le_trans hk2 hn
-      have hdot := dot_abs_le k (m - k) x
-      simpa [Nat.add_sub_cancel' hkm] using hdot
+/-- Ogni cella sotto `u^k / k! · v^{m−k} / (m−k)!` dà la diagonale parziale
+    sotto `(u + v)^m / m!`. `exp_add` chiude la somma intera. -/
+theorem diag_abs_le (n m : Nat) (u v : Rat) (f : Nat → Nat → Rat)
+    (hu : 0 ≤ u) (hv : 0 ≤ v) (hn : n ≤ m) (hm : m ≤ n + n)
+    (hcell : ∀ k, m - n ≤ k → k ≤ n →
+      (f k (m - k)).abs ≤ expTerm k u * expTerm (m - k) v) :
+    (sumRange (m - n) n fun k => f k (m - k)).abs ≤ expTerm m (u + v) := by
+  refine Rat.le_trans (sumRange_abs_le (m - n) n fun k => f k (m - k)) ?_
+  have hpoint :
+      sumRange (m - n) n (fun k => (f k (m - k)).abs) ≤
+        sumRange (m - n) n fun k => expTerm k u * expTerm (m - k) v :=
+    sumRange_le_of hcell
   refine Rat.le_trans hpoint ?_
-  have hfull : sumRange (m - n) n
-      (fun k => x.abs ^ m / ((fact k * fact (m - k) : Nat) : Rat)) ≤
-      sumTo m fun k => x.abs ^ m / ((fact k * fact (m - k) : Nat) : Rat) :=
-    sumRange_le_sumTo (by omega) hn fun k _ => monomial_nonneg m k x
+  have hfull :
+      sumRange (m - n) n (fun k => expTerm k u * expTerm (m - k) v) ≤
+        sumTo m fun k => expTerm k u * expTerm (m - k) v :=
+    sumRange_le_sumTo (by omega) hn fun k _ =>
+      Rat.mul_nonneg (expTerm_nonneg hu k) (expTerm_nonneg hv (m - k))
   refine Rat.le_trans hfull ?_
-  rw [exp_binom]
+  rw [exp_add]
   exact Rat.le_refl
 
-theorem tail_abs_le (n : Nat) (x : Rat) : (tailSum n x).abs ≤ remainder n x := by
-  unfold tailSum remainder highBand
+/-- La fascia `n < m ≤ 2n` sta sotto la coda di `exp(u + v)`. -/
+theorem highBand_abs_le (n : Nat) (u v : Rat) (f : Nat → Nat → Rat)
+    (hu : 0 ≤ u) (hv : 0 ≤ v)
+    (hcell : ∀ j k, (f j k).abs ≤ expTerm j u * expTerm k v) :
+    (highBand n f).abs ≤ sumRange (n + 1) (2 * n) fun m => expTerm m (u + v) := by
+  unfold highBand
   refine Rat.le_trans (sumRange_abs_le _ _ _) ?_
   refine sumRange_le_of ?_
   intro m hm1 hm2
-  exact inner_abs_le n m x (by omega) (by omega)
+  exact diag_abs_le n m u v f hu hv (by omega) (by omega) fun k _ _ => hcell k (m - k)
 
-/-- `|C_N(x)² + S_N(x)² − 1| ≤ r_N(x)`. -/
+theorem inner_abs_le (n m : Nat) (x : Rat) (hn : n ≤ m) (hm : m ≤ n + n) :
+    (sumRange (m - n) n fun k => circleTerm x k (m - k)).abs ≤
+      expTerm m ((2 : Rat) * x.abs) := by
+  rw [two_mul]
+  exact diag_abs_le n m x.abs x.abs (circleTerm x) Rat.abs_nonneg Rat.abs_nonneg hn hm
+    fun k _ _ => circleCell_abs_le k (m - k) x
+
+theorem tail_abs_le (n : Nat) (x : Rat) : (tailSum n x).abs ≤ remainder n x := by
+  unfold tailSum remainder
+  rw [two_mul]
+  exact highBand_abs_le n x.abs x.abs (circleTerm x) Rat.abs_nonneg Rat.abs_nonneg
+    fun j k => circleCell_abs_le j k x
+
+/-- `|C_N(x)² + S_N(x)² − 1| ≤ r_N(x)`. Caso `u = v = |x|` di `highBand_abs_le`. -/
 theorem circle_bound (n : Nat) (x : Rat) :
     (cosSum n x * cosSum n x + sinSum n x * sinSum n x - 1).abs ≤ remainder n x := by
   rw [circle_tail]
   exact tail_abs_le n x
+
+theorem cos_rect (n : Nat) (x y : Rat) :
+    cosSum n x * cosSum n y - sinSum n x * sinSum n y = rect n (cosCell x y) := by
+  unfold cosSum sinSum rect cosCell
+  rw [sum_mul_sum, sum_mul_sum, ← sumTo_sub]
+  refine sumTo_congr ?_
+  intro j _
+  rw [← sumTo_sub]
+
+theorem sin_rect (n : Nat) (x y : Rat) :
+    sinSum n x * cosSum n y + cosSum n x * sinSum n y = rect n (sinCell x y) := by
+  unfold sinSum cosSum rect sinCell
+  rw [sum_mul_sum, sum_mul_sum, ← sumTo_add]
+  refine sumTo_congr ?_
+  intro j _
+  rw [← sumTo_add]
+
+theorem low_cos (n : Nat) (x y : Rat) :
+    lowBand n (cosCell x y) = cosSum n (x + y) := by
+  unfold lowBand cosSum
+  refine sumTo_congr ?_
+  intro m _
+  exact (angle_add m x y).1
+
+theorem low_sin (n : Nat) (x y : Rat) :
+    lowBand n (sinCell x y) = sinSum n (x + y) := by
+  unfold lowBand sinSum
+  refine sumTo_congr ?_
+  intro m _
+  exact (angle_add m x y).2
+
+/-- I gradi `≤ N` della legge di gruppo sono `C_N(x + y)`; resta la coda. -/
+theorem group_cos_tail (n : Nat) (x y : Rat) :
+    cosSum n x * cosSum n y - sinSum n x * sinSum n y - cosSum n (x + y) =
+      highBand n (cosCell x y) := by
+  rw [cos_rect, rect_eq_bands, low_cos, Rat.add_comm, Rat.add_sub_cancel]
+
+/-- I gradi `≤ N` della legge di gruppo sono `S_N(x + y)`; resta la coda. -/
+theorem group_sin_tail (n : Nat) (x y : Rat) :
+    sinSum n x * cosSum n y + cosSum n x * sinSum n y - sinSum n (x + y) =
+      highBand n (sinCell x y) := by
+  rw [sin_rect, rect_eq_bands, low_sin, Rat.add_comm, Rat.add_sub_cancel]
+
+/-- `|C_N(x + y) − (C_N(x) C_N(y) − S_N(x) S_N(y))|` sta sotto la coda di `exp(|x| + |y|)`. -/
+theorem group_bound_cos (n : Nat) (x y : Rat) :
+    (cosSum n (x + y) - (cosSum n x * cosSum n y - sinSum n x * sinSum n y)).abs ≤
+      sumRange (n + 1) (2 * n) fun m => expTerm m (x.abs + y.abs) := by
+  rw [← Rat.neg_sub, group_cos_tail, Rat.abs_neg]
+  exact highBand_abs_le n x.abs y.abs (cosCell x y) Rat.abs_nonneg Rat.abs_nonneg
+    fun j k => cosCell_abs_le j k x y
+
+/-- `|S_N(x + y) − (S_N(x) C_N(y) + C_N(x) S_N(y))|` sta sotto la stessa coda. -/
+theorem group_bound_sin (n : Nat) (x y : Rat) :
+    (sinSum n (x + y) - (sinSum n x * cosSum n y + cosSum n x * sinSum n y)).abs ≤
+      sumRange (n + 1) (2 * n) fun m => expTerm m (x.abs + y.abs) := by
+  rw [← Rat.neg_sub, group_sin_tail, Rat.abs_neg]
+  exact highBand_abs_le n x.abs y.abs (sinCell x y) Rat.abs_nonneg Rat.abs_nonneg
+    fun j k => sinCell_abs_le j k x y
+
+theorem expTerm_succ_div (m : Nat) (x : Rat) :
+    expTerm (m + 1) x = x * expTerm m x / ((m + 1 : Nat) : Rat) := by
+  have hc : ((m + 1 : Nat) : Rat) ≠ 0 := by
+    intro h
+    exact Nat.succ_ne_zero m (Rat.natCast_eq_zero_iff.mp h)
+  apply nat_mul_cancel (Nat.succ_ne_zero m)
+  rw [expTerm_deriv, Rat.mul_comm (((m + 1 : Nat) : Rat)),
+    Lean.Grind.Field.div_mul_cancel hc]
+
+/-- Se `a ≤ (n + 2) / 2` e `m ≥ n + 1`, allora `a / (m + 1) ≤ 1 / 2`. -/
+theorem ratio_le_half {n m : Nat} {a : Rat}
+    (ha : a ≤ ((n + 2 : Nat) : Rat) / 2) (hm : n + 1 ≤ m) :
+    a / ((m + 1 : Nat) : Rat) ≤ (1 : Rat) / 2 := by
+  have hd : 0 < ((m + 1 : Nat) : Rat) := Rat.natCast_pos.mpr (Nat.succ_pos m)
+  have hden_ne : ((m + 1 : Nat) : Rat) ≠ 0 := Rat.ne_of_gt hd
+  have h2ne : (2 : Rat) ≠ 0 := by decide
+  have hmul := Rat.mul_le_mul_of_nonneg_right ha (by decide : (0 : Rat) ≤ 2)
+  rw [Rat.mul_comm a, Lean.Grind.Field.div_mul_cancel h2ne] at hmul
+  have hbound : (2 : Rat) * a ≤ ((m + 1 : Nat) : Rat) :=
+    Rat.le_trans hmul (Rat.natCast_le_natCast.mpr (by omega))
+  have hinv : 0 ≤ ((m + 1 : Nat) : Rat)⁻¹ := Rat.le_of_lt (Rat.inv_pos.mpr hd)
+  have hdiv := Rat.mul_le_mul_of_nonneg_right hbound hinv
+  rw [Rat.mul_inv_cancel _ hden_ne, Rat.mul_assoc, ← Rat.div_def, Rat.mul_comm] at hdiv
+  have hhalf := Rat.mul_le_mul_of_nonneg_right hdiv
+    (Rat.le_of_lt (Rat.inv_pos.mpr (by decide : (0 : Rat) < 2)))
+  rw [Rat.mul_assoc, Rat.mul_inv_cancel _ h2ne, Rat.mul_one, ← Rat.div_def] at hhalf
+  exact hhalf
+
+theorem expTerm_halves {n m : Nat} {a : Rat}
+    (h : a ≤ ((n + 2 : Nat) : Rat) / 2) (hm : n + 1 ≤ m) (ha : 0 ≤ a) :
+    expTerm (m + 1) a ≤ expTerm m a / 2 := by
+  rw [expTerm_succ_div]
+  have hmul := Rat.mul_le_mul_of_nonneg_right (ratio_le_half h hm) (expTerm_nonneg ha m)
+  have hleft : a / ((m + 1 : Nat) : Rat) * expTerm m a =
+      a * expTerm m a / ((m + 1 : Nat) : Rat) :=
+    Lean.Grind.Field.div_mul
+  have hright : (1 : Rat) / 2 * expTerm m a = expTerm m a / 2 := by
+    rw [Rat.div_def, Rat.div_def, Rat.one_mul, Rat.mul_comm]
+  rw [← hleft, ← hright]
+  exact hmul
+
+/-- `1 / 2ᵈ = 1 / 2ᵈ⁺¹ + 1 / 2ᵈ⁺¹`. -/
+theorem half_split (d : Nat) :
+    (1 : Rat) / 2 ^ d = 1 / 2 ^ (d + 1) + 1 / 2 ^ (d + 1) := by
+  have h : (2 : Rat) * (1 / 2 ^ (d + 1)) = 1 / 2 ^ d := by
+    calc
+      (2 : Rat) * (1 / 2 ^ (d + 1)) = 2 * (2 ^ (d + 1))⁻¹ := by
+        rw [Rat.div_def, Rat.one_mul]
+      _ = 2 * (2 ^ d * 2)⁻¹ := by rw [Rat.pow_succ]
+      _ = 2 * (2⁻¹ * (2 ^ d)⁻¹) := by rw [Rat.inv_mul_rev]
+      _ = (2 * 2⁻¹) * (2 ^ d)⁻¹ := by rw [← Rat.mul_assoc]
+      _ = 1 * (2 ^ d)⁻¹ := by rw [Rat.mul_inv_cancel _ (by decide)]
+      _ = 1 / 2 ^ d := by rw [← Rat.div_def]
+  rw [← two_mul, h]
+
+theorem two_sub_half_le (d : Nat) : (2 : Rat) - 1 / 2 ^ d ≤ 2 := by
+  rw [Rat.sub_eq_add_neg]
+  have hpow : 0 ≤ (1 : Rat) / 2 ^ d := by
+    rw [Rat.div_def, Rat.one_mul]
+    exact Rat.le_of_lt
+      (Rat.inv_pos.mpr (Rat.pow_pos (n := d) (by decide : (0 : Rat) < 2)))
+  have hneg : -((1 : Rat) / 2 ^ d) ≤ 0 := by
+    simpa [Rat.neg_zero] using Rat.neg_le_neg hpow
+  simpa [Rat.add_zero] using (Rat.add_le_add_left (c := (2 : Rat))).mpr hneg
+
+/-- Se il termine `k` sta sotto `base / 2ᵏ`, la somma sta sotto `(2 − 1/2ᵈ) · base`. -/
+theorem sumRange_geom (lo d : Nat) (f : Nat → Rat) (base : Rat)
+    (hterm : ∀ k, k ≤ d → f (lo + k) ≤ base / 2 ^ k) :
+    sumRange lo (lo + d) f ≤ (2 - 1 / 2 ^ d) * base := by
+  induction d with
+  | zero =>
+    rw [Nat.add_zero, sumRange_singleton]
+    have h := hterm 0 (Nat.le_refl 0)
+    have hdiv : base / 1 = base := by
+      rw [Rat.div_def, Lean.Grind.Field.inv_one, Rat.mul_one]
+    rw [Rat.pow_zero, hdiv] at h
+    have hone_div : (1 : Rat) / 1 = 1 := by
+      rw [Rat.div_def, Lean.Grind.Field.inv_one, Rat.mul_one]
+    have hone : (2 : Rat) - 1 = 1 := by
+      rw [show (2 : Rat) = 1 + 1 from Rat.natCast_add 1 1, Rat.add_sub_cancel]
+    rw [Rat.pow_zero, hone_div, hone, Rat.one_mul]
+    exact h
+  | succ d ih =>
+    have hle : lo ≤ lo + d := Nat.le_add_right lo d
+    rw [← Nat.add_assoc, sumRange_succ_hi hle]
+    have ih' := ih fun k hk => hterm k (Nat.le_succ_of_le hk)
+    have hnext := hterm (d + 1) (Nat.le_refl _)
+    refine Rat.le_trans (Lean.Grind.OrderedAdd.add_le_add ih' hnext) ?_
+    have hdiv : base / 2 ^ (d + 1) = (1 / 2 ^ (d + 1)) * base := by
+      rw [Rat.div_def, Rat.div_def, Rat.one_mul, Rat.mul_comm]
+    have hcoef : ((2 : Rat) - 1 / 2 ^ d) + 1 / 2 ^ (d + 1) =
+        2 - 1 / 2 ^ (d + 1) := by
+      rw [half_split d]
+      grind
+    rw [hdiv, ← Rat.add_mul, hcoef]
+    exact Rat.le_refl
+
+/-- Dal grado `lo`, se ogni passo dimezza, il termine `k` sta sotto `base / 2ᵏ`. -/
+theorem exp_fall (lo : Nat) (a : Rat)
+    (hstep : ∀ m, lo ≤ m → expTerm (m + 1) a ≤ expTerm m a / 2) :
+    ∀ k, expTerm (lo + k) a ≤ expTerm lo a / 2 ^ k := by
+  intro k
+  induction k with
+  | zero =>
+    rw [Nat.add_zero, Rat.pow_zero, Rat.div_def, Lean.Grind.Field.inv_one, Rat.mul_one]
+    exact Rat.le_refl
+  | succ k ih =>
+    refine Rat.le_trans (hstep (lo + k) (Nat.le_add_right lo k)) ?_
+    have hmono := Rat.mul_le_mul_of_nonneg_right ih
+      (Rat.le_of_lt (Rat.inv_pos.mpr (by decide : (0 : Rat) < 2)))
+    rw [← Rat.div_def, ← Rat.div_def] at hmono
+    refine Rat.le_trans hmono ?_
+    rw [Lean.Grind.Field.div_div_left, ← Rat.pow_succ]
+    exact Rat.le_refl
+
+/-- Se `2|x| ≤ (N + 2) / 2`, allora `r_N(x) ≤ 2 · (2|x|)ᵅ⁺¹ / (N + 1)!`. -/
+theorem remainder_small (n : Nat) (x : Rat)
+    (h : (2 : Rat) * x.abs ≤ ((n + 2 : Nat) : Rat) / 2) :
+    remainder n x ≤ 2 * expTerm (n + 1) ((2 : Rat) * x.abs) := by
+  unfold remainder
+  have ha : 0 ≤ (2 : Rat) * x.abs :=
+    Rat.mul_nonneg (by decide : (0 : Rat) ≤ 2) Rat.abs_nonneg
+  cases n with
+  | zero =>
+    rw [sumRange_of_gt (by decide : (0 : Nat) < 1)]
+    exact Rat.mul_nonneg (by decide : (0 : Rat) ≤ 2) (expTerm_nonneg ha 1)
+  | succ n =>
+    have hrange : (n + 2) + n = 2 * (n + 1) := by omega
+    rw [← hrange]
+    have hstep : ∀ m, n + 2 ≤ m →
+        expTerm (m + 1) ((2 : Rat) * x.abs) ≤ expTerm m ((2 : Rat) * x.abs) / 2 :=
+      fun m hm => expTerm_halves (n := n + 1) h (by omega) ha
+    refine Rat.le_trans
+      (sumRange_geom (n + 2) n (fun m => expTerm m ((2 : Rat) * x.abs))
+        (expTerm (n + 2) ((2 : Rat) * x.abs))
+        fun k _ => exp_fall (n + 2) _ hstep k) ?_
+    exact Rat.mul_le_mul_of_nonneg_right (two_sub_half_le n) (expTerm_nonneg ha (n + 2))
 
 /-- Il punto `φ = 1`, `N = 8`: quattro razionali, e la coda sta sotto il resto. -/
 theorem circle_eight :
@@ -1171,6 +1477,28 @@ theorem circle_eight :
         cosSum 8 1 * cosSum 8 1 + sinSum 8 1 * sinSum 8 1 - 1 =
           -(6991 : Rat) / 1625702400 ∧
           remainder 8 1 = (373426 : Rat) / 212837625 := by
+  decide_cbv
+
+/-- `N = 4`, `x = y = 1/2`: gli scarti e la coda di `exp(1)`. -/
+theorem group_half :
+    cosSum 4 ((1 : Rat) / 2 + 1 / 2) -
+        (cosSum 4 (1 / 2) * cosSum 4 (1 / 2) -
+          sinSum 4 (1 / 2) * sinSum 4 (1 / 2)) =
+      (53 : Rat) / 49152 ∧
+    sinSum 4 ((1 : Rat) / 2 + 1 / 2) -
+        (sinSum 4 (1 / 2) * cosSum 4 (1 / 2) +
+          cosSum 4 (1 / 2) * sinSum 4 (1 / 2)) =
+      -(71 : Rat) / 9216 ∧
+    sumRange (4 + 1) (2 * 4) (fun m =>
+      expTerm m (((1 : Rat) / 2).abs + ((1 : Rat) / 2).abs)) =
+      (401 : Rat) / 40320 := by
+  decide_cbv
+
+/-- `N = 4`, `x = 1/2`: `2|x| ≤ 3` e il resto sta sotto `1/60`. -/
+theorem remainder_half :
+    (2 : Rat) * ((1 : Rat) / 2).abs ≤ ((4 + 2 : Nat) : Rat) / 2 ∧
+      remainder 4 ((1 : Rat) / 2) = (401 : Rat) / 40320 ∧
+        2 * expTerm (4 + 1) ((2 : Rat) * ((1 : Rat) / 2).abs) = (1 : Rat) / 60 := by
   decide_cbv
 
 end Universe.Angle

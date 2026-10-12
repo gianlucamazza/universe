@@ -10,14 +10,25 @@ from universe.angle import (
     circle_at_one,
     circle_gap,
     circle_scan,
+    cos_cell,
     cos_coeff,
     cos_conv,
+    cos_product,
     cos_sum,
+    exp_tail,
     exp_term,
+    group_gap_cos,
+    group_gap_sin,
+    group_remainder,
+    group_scan,
+    high_band,
     remainder,
+    remainder_small_scan,
     s_term,
+    sin_cell,
     sin_coeff,
     sin_conv,
+    sin_product,
     sin_sum,
     tail_sum,
 )
@@ -115,3 +126,35 @@ def test_circle_at_one():
     assert gap == Fraction(-6991, 1625702400)
     assert bound == Fraction(373426, 212837625)
     assert abs(gap) <= bound
+
+
+def test_group_law_and_bound():
+    witness = Fraction(1, 2)
+    cosine = group_gap_cos(4, witness, witness)
+    sine = group_gap_sin(4, witness, witness)
+    bound = group_remainder(4, witness, witness)
+    assert cosine == Fraction(53, 49152)
+    assert sine == Fraction(-71, 9216)
+    assert bound == Fraction(401, 40320)
+    assert cosine == -high_band(4, witness, witness, cos_cell)
+    assert sine == -high_band(4, witness, witness, sin_cell)
+    total = witness + witness
+    assert cos_product(4, witness, witness) - cos_sum(4, total) == -cosine
+    assert sin_product(4, witness, witness) - sin_sum(4, total) == -sine
+    assert abs(cosine) <= bound
+    assert abs(sine) <= bound
+    holds, _detail = group_scan()
+    assert holds
+
+
+def test_remainder_halves():
+    witness = Fraction(1, 2)
+    assert 2 * abs(witness) <= Fraction(6, 2)
+    rest = remainder(4, witness)
+    cap = 2 * exp_term(5, 2 * abs(witness))
+    assert rest == exp_tail(4, Fraction(1))
+    assert rest == Fraction(401, 40320)
+    assert cap == Fraction(1, 60)
+    assert rest <= cap
+    holds, _detail = remainder_small_scan()
+    assert holds
