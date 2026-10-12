@@ -128,6 +128,9 @@ la traccia parziale su un qubit. `cnotFrom0` è il `CNOT` dal qubit `0`.
 `α|0…0⟩ + β|1…1⟩`, `fanout_agree` azzera il peso delle celle in cui
 due qubit differiscono, e `fanout_decoherence` rende il sistema
 diagonale con `bornPair`, per `n ≥ 2`.
+`Universe.Points` è la tabella dei punti razionali. `p0` e `p1` sono
+i membri sinistri di `point_prob0` e `point_prob1`. `lake exe points`
+li stampa.
 -/
 import Universe.Angle
 import Universe.Composition
@@ -137,6 +140,7 @@ import Universe.Evaluation
 import Universe.Interaction
 import Universe.Observer
 import Universe.Ontology
+import Universe.Points
 import Universe.Qubit
 import Universe.Qubits
 import Universe.Quotient

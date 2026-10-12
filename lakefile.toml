@@ -8,3 +8,7 @@ relaxedAutoImplicit = false
 
 [[lean_lib]]
 name = "Universe"
+
+[[lean_exe]]
+name = "points"
+root = "Main"

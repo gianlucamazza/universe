@@ -894,14 +894,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---
-    point = {
-        "c": g(Fraction(3, 5)),
-        "s": g(Fraction(4, 5)),
-        "nx": g(1),
-        "ny": g(0),
-        "nz": g(0),
-    }
-    matrix = [[entry.evaluate(point) for entry in row] for row in world.U.rows]
+    point = corollary_point()
+    matrix = corollary_matrix(world)
     point_product = _gauss_matmul(_gauss_dagger(matrix), matrix)
     rational_ok = _is_gauss_identity(point_product)
     add(
@@ -2146,11 +2140,33 @@ def _real_fraction(value: Gauss) -> Fraction:
     return value.re
 
 
-def _modulus_sq(value: Gauss) -> Fraction:
+def corollary_point() -> dict[str, Gauss]:
+    """Il punto `c = 3/5`, `s = 4/5`, `n = e_x` del corollario."""
+    return {
+        "c": g(Fraction(3, 5)),
+        "s": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+
+
+def corollary_matrix(world: QubitUniverse) -> list[list[Gauss]]:
+    """`U` valutata nel punto del corollario."""
+    point = corollary_point()
+    return [[entry.evaluate(point) for entry in row] for row in world.U.rows]
+
+
+def modulus_gauss(value: Gauss) -> Gauss:
+    """`|z|²`. L'immaginario è zero."""
     squared = value * value.conj()
     if squared.im != 0:
         raise ValueError("modulo quadro non reale")
-    return squared.re
+    return squared
+
+
+def _modulus_sq(value: Gauss) -> Fraction:
+    return modulus_gauss(value).re
 
 
 def _format_matrix(matrix: list[list[Gauss]]) -> str:

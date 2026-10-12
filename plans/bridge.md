@@ -1,11 +1,11 @@
 # Plan: the bridge
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: planned. Milestone M4 of `plans/roadmap.md`, release `v0.8.0`.
+Status: in progress. Milestone M4 of `plans/roadmap.md`, release `v0.8.0`.
 
 | Phase | State   | Goal                                                                  |
 | ----- | ------- | --------------------------------------------------------------------- |
-| 1     | planned | spike: `lake exe points` prints one rational point, Python compares   |
+| 1     | done    | spike: `lake exe points` prints one rational point, Python compares   |
 | 2     | planned | every rational point of the certificate, in Lean and in Python        |
 | 3     | planned | CI: the Lean job checks the file, the Python job compares the numbers |
 | 4     | planned | docs, release                                                         |
@@ -31,6 +31,10 @@ universe/points.py  # Python computes the same keys from its own definitions
 CI has a Python job without Lean and a Lean job without Python. So the Lean job checks that
 `lake exe points` reproduces `points.txt` byte for byte, and a Python test checks that
 `universe/points.py` gives the same values, read as `Fraction`, not as strings.
+
+Phase 1 note: `lake exe points` runs in half a second. The review moved the key list from
+`Main.lean` into `Universe.Points.table`, so `Main` only prints and every new point is added
+in one place, next to its `example`.
 
 ## 2. Ground rules
 
