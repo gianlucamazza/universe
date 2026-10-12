@@ -248,4 +248,13 @@ LEAN: dict[str, tuple[str, ...]] = {
         "Universe.Angle.angle_add_cos",
         "Universe.Angle.angle_add_sin",
     ),
+    "per N ≤ 12, C_N² + S_N² − 1 è la coda e |scarto| ≤ resto": (
+        "Universe.Angle.circle_tail",
+        "Universe.Angle.circle_bound",
+        "Universe.Angle.exp_add",
+    ),
+    "a φ = 1, N = 8: C = 4357/8064, S = 4241/5040, "
+    "scarto = −6991/1625702400, resto = 373426/212837625": (
+        "Universe.Angle.circle_eight",
+    ),
 }

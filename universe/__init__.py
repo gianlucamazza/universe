@@ -19,7 +19,9 @@ L'istanza su questo qubit è Universe.Qubit.expCoeff_hamiltonian.
 `Universe.Angle.cosSum` e `Universe.Angle.sinSum` sommano i termini
 `cosCoeff k · φᵏ / k!` e `sinCoeff` fino al grado `N`.
 `Universe.Angle.angle_add_cos` e `Universe.Angle.angle_add_sin` sono
-la legge di addizione a ogni grado.
+la legge di addizione a ogni grado. `circle_tail` scrive `C_N² + S_N² − 1`
+come coda, `circle_bound` la stima con `remainder`, e `exp_add` è la
+legge di addizione di `xᵏ / k!`.
 
 Le identità si ripartiscono per i generatori che usano. Nel libero stanno
 H† = H, |z|² = re² + im², il proiettore Π₀ e la composizione con un |0⟩

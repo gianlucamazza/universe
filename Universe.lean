@@ -12,6 +12,8 @@ La nota è `papers/qubit.md`.
 `Universe.Series` è il collasso di `exp(-i φ a)` quando `a² = 1`.
 `Universe.Angle` somma `cosCoeff k · φᵏ / k!` e `sinCoeff`.
 `angle_add_cos` e `angle_add_sin` sono la legge di addizione a ogni grado.
+`circle_tail` scrive `C_N² + S_N² − 1` come coda. `circle_bound` la stima
+con `remainder`, e `exp_add` è la legge di addizione di `xᵏ / k!`.
 `Universe.Dynamics` è l'algebra delle matrici su quel quoziente.
 `Universe.Evaluation` dice che `evalAt` rispetta `polySame`, il prodotto e il coniugio.
 `Universe.Qubit` istanzia `expCoeff` sull'Hamiltoniana e prova `U†U`, `UU†`,

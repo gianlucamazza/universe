@@ -7,13 +7,19 @@ from universe.angle import (
     SAMPLES,
     addition_scan,
     c_term,
+    circle_at_one,
+    circle_gap,
+    circle_scan,
     cos_coeff,
     cos_conv,
     cos_sum,
+    exp_term,
+    remainder,
     s_term,
     sin_coeff,
     sin_conv,
     sin_sum,
+    tail_sum,
 )
 
 
@@ -79,3 +85,33 @@ def test_addition_law():
 def test_partial_sums_at_one():
     assert cos_sum(8, Fraction(1)) == Fraction(4357, 8064)
     assert sin_sum(8, Fraction(1)) == Fraction(4241, 5040)
+
+
+def test_exp_add():
+    for m in range(DEGREE + 1):
+        for x in SAMPLES:
+            for y in SAMPLES:
+                total = sum(
+                    (exp_term(k, x) * exp_term(m - k, y) for k in range(m + 1)),
+                    Fraction(0),
+                )
+                assert total == exp_term(m, x + y)
+
+
+def test_circle_identity_and_bound():
+    for order in range(DEGREE + 1):
+        for sample in SAMPLES:
+            gap = circle_gap(order, sample)
+            assert gap == tail_sum(order, sample)
+            assert abs(gap) <= remainder(order, sample)
+    holds, _detail = circle_scan()
+    assert holds
+
+
+def test_circle_at_one():
+    cosine, sine, gap, bound = circle_at_one()
+    assert cosine == Fraction(4357, 8064)
+    assert sine == Fraction(4241, 5040)
+    assert gap == Fraction(-6991, 1625702400)
+    assert bound == Fraction(373426, 212837625)
+    assert abs(gap) <= bound

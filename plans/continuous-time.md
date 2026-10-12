@@ -6,7 +6,7 @@ Status: in progress. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
 | Phase | State   | Goal                                                                   |
 | ----- | ------- | ---------------------------------------------------------------------- |
 | 1     | done    | spike: partial sums, and the addition law degree by degree (go/no-go)  |
-| 2     | planned | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
+| 2     | done    | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
 | 3     | planned | the group law up to a bound, and `r_N` goes to zero                    |
 | 4     | planned | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
 | 5     | planned | docs, figure, release                                                  |
@@ -55,6 +55,11 @@ Phase 1 note: the spike is a go, in 323 lines. The review made `cosSum`, `sinSum
 `sumTo` (no second recursion), proved the index reflection once (`sumTo_reflect`,
 `sumTo_reflect_weight`) for both convolutions, and renamed the certificate footer to "righe
 dimostrate", since the angle line is an equality of rationals, not a remainder.
+
+Phase 2 note: `exp_add` reuses the Phase 1 skeleton (`sumTo_weight_of_pointwise`,
+`sumTo_leibniz`, `series_succ`); `circle_eight` is `decide_cbv`, since `Rat` arithmetic is
+irreducible for the kernel's `decide`. The review replaced two local re-proofs with the core
+lemmas `Lean.Grind.OrderedAdd.add_le_add` and `Lean.Grind.Semiring.pow_add`.
 
 ## 2. Ground rules
 

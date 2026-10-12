@@ -1,9 +1,10 @@
-"""Certificato eseguibile del primo universo. Stampa 77 righe.
+"""Certificato eseguibile del primo universo. Stampa 79 righe.
 
 Una riga algebrica è dimostrata quando il resto è zero e l'espansione
-libera dei cofattori ridà il polinomio. La riga della sezione Tempo non
-è un resto: è l'uguaglianza di razionali della legge di addizione, per
-ogni grado `m ≤ 12`. Il collasso della serie, nel footer, è
+libera dei cofattori ridà il polinomio. Le righe della sezione Tempo non
+sono un resto: sono uguaglianze di razionali. La legge di addizione vale
+a ogni grado `m ≤ 12`. Per `N ≤ 12`, `C_N² + S_N² − 1` è la coda e il
+valore assoluto sta sotto il resto. Il collasso della serie, nel footer, è
 `Universe.Qubit.expCoeff_hamiltonian`.
 
 La ripartizione per ideali è `papers/qubit.md`. La completezza di
@@ -145,7 +146,11 @@ Con `V = U` il resto di `V(Uψ) − (V U V†)(Vψ)` e dei pesi di Born è zero
 La sezione Tempo confronta la convoluzione di coseno e seno con il
 termine in `x + y`, per `m ≤ 12` e per le frazioni `0`, `±1`, `1/2`,
 `3/5`, `−4/5` (`Universe.Angle.angle_add_cos`,
-`Universe.Angle.angle_add_sin`).
+`Universe.Angle.angle_add_sin`). Per gli stessi valori, `C_N² + S_N² − 1`
+è la coda `tailSum` e il valore assoluto sta sotto `remainder`
+(`Universe.Angle.circle_tail`, `Universe.Angle.circle_bound`,
+`Universe.Angle.exp_add`). Il punto `φ = 1`, `N = 8` è
+`Universe.Angle.circle_eight`.
 """
 
 from __future__ import annotations
@@ -153,7 +158,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 
-from universe.angle import addition_scan
+from universe.angle import addition_scan, circle_at_one, circle_scan
 from universe.dynamics import evolution, hamiltonian
 from universe.epistemology import (
     born,
@@ -1358,6 +1363,32 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "la legge di addizione di coseno e seno, a ogni grado",
         holds,
         f"{detail}\n{cited}" if holds else detail,
+    )
+    holds, detail = circle_scan()
+    cited = (
+        "Universe.Angle.circle_tail, Universe.Angle.circle_bound, "
+        "Universe.Angle.exp_add"
+    )
+    add(
+        "Tempo",
+        "per N ≤ 12, C_N² + S_N² − 1 è la coda e |scarto| ≤ resto",
+        holds,
+        f"{detail}\n{cited}" if holds else detail,
+    )
+    cosine_8, sine_8, gap_8, bound_8 = circle_at_one()
+    example_ok = (
+        cosine_8 == Fraction(4357, 8064)
+        and sine_8 == Fraction(4241, 5040)
+        and gap_8 == Fraction(-6991, 1625702400)
+        and bound_8 == Fraction(373426, 212837625)
+        and abs(gap_8) <= bound_8
+    )
+    add(
+        "Tempo",
+        "a φ = 1, N = 8: C = 4357/8064, S = 4241/5040, "
+        "scarto = −6991/1625702400, resto = 373426/212837625",
+        example_ok,
+        "Universe.Angle.circle_eight" if example_ok else "il punto non torna",
     )
     return proven
 
