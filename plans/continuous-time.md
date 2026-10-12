@@ -1,11 +1,11 @@
 # Plan: continuous time
 
 Executor: `grok` (`grok-4.7`). Orchestrator and reviewer: Claude.
-Status: planned. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
+Status: in progress. Milestone M3 of `plans/roadmap.md`, release `v0.7.0`.
 
 | Phase | State   | Goal                                                                   |
 | ----- | ------- | ---------------------------------------------------------------------- |
-| 1     | planned | spike: partial sums, and the addition law degree by degree (go/no-go)  |
+| 1     | done    | spike: partial sums, and the addition law degree by degree (go/no-go)  |
 | 2     | planned | the circle: `C_N² + S_N² − 1` is an explicit tail, bounded by `r_N(φ)` |
 | 3     | planned | the group law up to a bound, and `r_N` goes to zero                    |
 | 4     | planned | the qubit at angle `φ`: the Born pair at `(C_N(φ), S_N(φ))`            |
@@ -50,6 +50,11 @@ Example, `φ = 1`, `N = 8`: `C₈ = 4357/8064`, `S₈ = 4241/5040`,
 
 Lean core has `Rat` with its order, `Rat.abs` and the `grind` instances for ordered fields
 (`Init/Data/Rat`, `Init/Grind/Ordered/Rat.lean`). Phase 1 decides whether that is enough.
+
+Phase 1 note: the spike is a go, in 323 lines. The review made `cosSum`, `sinSum` plain
+`sumTo` (no second recursion), proved the index reflection once (`sumTo_reflect`,
+`sumTo_reflect_weight`) for both convolutions, and renamed the certificate footer to "righe
+dimostrate", since the angle line is an equality of rationals, not a remainder.
 
 ## 2. Ground rules
 
