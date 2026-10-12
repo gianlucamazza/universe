@@ -6,7 +6,7 @@ Status: in progress. Milestone M4 of `plans/roadmap.md`, release `v0.8.0`.
 | Phase | State   | Goal                                                                  |
 | ----- | ------- | --------------------------------------------------------------------- |
 | 1     | done    | spike: `lake exe points` prints one rational point, Python compares   |
-| 2     | planned | every rational point of the certificate, in Lean and in Python        |
+| 2     | done    | every rational point of the certificate, in Lean and in Python        |
 | 3     | planned | CI: the Lean job checks the file, the Python job compares the numbers |
 | 4     | planned | docs, release                                                         |
 
@@ -35,6 +35,12 @@ CI has a Python job without Lean and a Lean job without Python. So the Lean job 
 Phase 1 note: `lake exe points` runs in half a second. The review moved the key list from
 `Main.lean` into `Universe.Points.table`, so `Main` only prints and every new point is added
 in one place, next to its `example`.
+
+Phase 2 note: 95 keys. The first run left out the eight cell weights, the `c = 0` sample and
+the two energies, because no numeric theorem had them as left-hand side; the review asked for
+those theorems (`point_cells`, `point_cnot_sample`, with `eval_keepFlip`) instead of a smaller
+criterion. Every rational result the certificate prints is now a key: only the inputs `1/2`
+and `4/5` are not. `universe/points.py` imports only public names from `universe/proofs.py`.
 
 ## 2. Ground rules
 

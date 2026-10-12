@@ -95,6 +95,12 @@ def sin_conv(m: int, x: Fraction, y: Fraction) -> Fraction:
     return total
 
 
+def addition_witness() -> tuple[Fraction, Fraction]:
+    """Coseno a grado 2 e seno a grado 3, per `x = 1/2` e `y = 3/5`."""
+    left, right = Fraction(1, 2), Fraction(3, 5)
+    return cos_conv(2, left, right), sin_conv(3, left, right)
+
+
 def addition_scan(
     degree: int = DEGREE,
     samples: tuple[Fraction, ...] = SAMPLES,
@@ -110,15 +116,13 @@ def addition_scan(
                         False,
                         f"fallisce a m = {m}, x = {_rat(x)}, y = {_rat(y)}",
                     )
-    witness_x, witness_y = Fraction(1, 2), Fraction(3, 5)
     listed = ", ".join(_rat(sample) for sample in samples)
-    cos_two = _rat(cos_conv(2, witness_x, witness_y))
-    sin_three = _rat(sin_conv(3, witness_x, witness_y))
+    cos_two, sin_three = addition_witness()
     return (
         True,
         f"per ogni m ≤ {degree} e per x, y in {{{listed}}}\n"
-        f"testimone x = {_rat(witness_x)}, y = {_rat(witness_y)}: "
-        f"grado 2, cos {cos_two}; grado 3, sin {sin_three}",
+        f"testimone x = 1/2, y = 3/5: "
+        f"grado 2, cos {_rat(cos_two)}; grado 3, sin {_rat(sin_three)}",
     )
 
 
@@ -234,6 +238,16 @@ def group_gap_sin(n: int, x: Fraction, y: Fraction) -> Fraction:
     return sin_sum(n, x + y) - sin_product(n, x, y)
 
 
+def group_witness() -> tuple[Fraction, Fraction, Fraction]:
+    """Scarto coseno, scarto seno e resto a `N = 4`, `x = y = 1/2`."""
+    witness = Fraction(1, 2)
+    return (
+        group_gap_cos(4, witness, witness),
+        group_gap_sin(4, witness, witness),
+        group_remainder(4, witness, witness),
+    )
+
+
 def group_scan(
     degree: int = DEGREE,
     samples: tuple[Fraction, ...] = SAMPLES,
@@ -257,10 +271,7 @@ def group_scan(
                         False,
                         f"fallisce a N = {order}, x = {_rat(left)}, y = {_rat(right)}",
                     )
-    witness = Fraction(1, 2)
-    cosine = group_gap_cos(4, witness, witness)
-    sine = group_gap_sin(4, witness, witness)
-    bound = group_remainder(4, witness, witness)
+    cosine, sine, bound = group_witness()
     if (
         cosine != Fraction(53, 49152)
         or sine != Fraction(-71, 9216)
@@ -281,6 +292,12 @@ def _within_half(n: int, x: Fraction) -> bool:
     return 2 * abs(x) <= Fraction(n + 2, 2)
 
 
+def remainder_witness() -> tuple[Fraction, Fraction]:
+    """Resto e doppio del primo termine a `N = 4`, `x = 1/2`."""
+    witness = Fraction(1, 2)
+    return remainder(4, witness), 2 * exp_term(5, 2 * abs(witness))
+
+
 def remainder_small_scan(
     degree: int = DEGREE,
     samples: tuple[Fraction, ...] = SAMPLES,
@@ -297,8 +314,7 @@ def remainder_small_scan(
                     f"fallisce a N = {order}, x = {_rat(sample)}",
                 )
     witness = Fraction(1, 2)
-    rest = remainder(4, witness)
-    cap = 2 * exp_term(5, 2 * abs(witness))
+    rest, cap = remainder_witness()
     if (
         not _within_half(4, witness)
         or rest != Fraction(401, 40320)
@@ -345,24 +361,43 @@ def axis_reading(cosine: Fraction, sine: Fraction) -> tuple[Gauss, Gauss, Gauss,
     )
 
 
-def angle_at_half() -> tuple[
-    Fraction, Fraction, Fraction, Fraction, Fraction, Fraction
+def angle_half_reading() -> tuple[
+    Fraction,
+    Fraction,
+    Gauss,
+    Gauss,
+    Fraction,
+    Fraction,
+    Fraction,
+    Fraction,
 ]:
-    """`φ = 1/2`, `N = 4`: coseno, seno, i due pesi letti da `U|0⟩`, scarto, resto."""
+    """`φ = 1/2`, `N = 4`: coseno, seno, ampiezze, pesi, scarto, resto."""
     point = Fraction(1, 2)
     cosine = cos_sum(4, point)
     sine = sin_sum(4, point)
-    _, _, born0, born1 = axis_reading(cosine, sine)
+    amplitude0, amplitude1, born0, born1 = axis_reading(cosine, sine)
     if born0.im or born1.im:
         raise ArithmeticError("un peso di Born non è reale")
     return (
         cosine,
         sine,
+        amplitude0,
+        amplitude1,
         born0.re,
         born1.re,
         circle_gap(4, point),
         remainder(4, point),
     )
+
+
+def angle_at_half() -> tuple[
+    Fraction, Fraction, Fraction, Fraction, Fraction, Fraction
+]:
+    """`φ = 1/2`, `N = 4`: coseno, seno, i due pesi letti da `U|0⟩`, scarto, resto."""
+    cosine, sine, _amplitude0, _amplitude1, weight0, weight1, gap, bound = (
+        angle_half_reading()
+    )
+    return cosine, sine, weight0, weight1, gap, bound
 
 
 def born_scan(

@@ -11,6 +11,8 @@ Nel punto `c = 0`, `s = 1`, `n = e_x` si ha `U = −i X`: l'evoluzione
 controllata è `CNOT` seguito dalla fase `−i` sul `|1⟩` del controllo.
 Su `|ψ⟩ ⊗ |0⟩` lo stato è `α|00⟩ − i β|11⟩`. La fase ha modulo uno, quindi
 esce da ogni peso di Born: `decoherence` e `pointer_born` restano gli stessi.
+`point_cnot_sample` valuta `α = 3/5`, `β = −4/5 i`: `3/5|00⟩ − 4/5|11⟩`,
+con pesi `9/25` e `16/25`.
 
 Con l'apparato in `|0⟩` lo stato è `α|00⟩ + β|1⟩⊗(U|0⟩)`.
 `partial_coherence` dice che l'antidiagonale del sistema ridotto è
@@ -590,6 +592,129 @@ theorem partial_diagonal (ψ : Pair) :
 
 Il coupling tiene i propri `c, s`. Un solo monomio non porta entrambi. -/
 def probePair : Pair := ⟨single pointAlpha Mono.one, single pointBeta Mono.one⟩
+
+theorem powR_zero_succ (n : Nat) : powR (0 : Rat) (n + 1) = 0 := by
+  induction n with
+  | zero => simp [powR]
+  | succ n ih =>
+    rw [powR, ih]
+    exact Rat.mul_zero 0
+
+theorem powR_one (n : Nat) : powR (1 : Rat) n = 1 := by
+  induction n with
+  | zero => simp [powR]
+  | succ n ih => rw [powR, ih, Rat.mul_one]
+
+theorem keepFlip_one : keepFlip Mono.one = some Mono.one := by
+  simp [keepFlip, Mono.one]
+
+/-- A `c = 0`, `s = 1`, `nx = 1`, `ny = nz = 0` il monomio vale quanto `keepFlip`. -/
+theorem monoVal_keepFlip (m : Mono) :
+    monoVal 0 1 1 0 0 m =
+      match keepFlip m with
+      | none => 0
+      | some k => monoVal 0 1 1 0 0 k := by
+  simp only [keepFlip]
+  by_cases hc : m.c = 0
+  · by_cases hy : m.ny = 0
+    · by_cases hz : m.nz = 0
+      · rw [ite_eq_left ⟨hc, hy, hz⟩]
+        simp only [monoVal, hc, hy, hz, powR_one, powR]
+      · rw [ite_eq_right (by intro h; exact hz h.2.2)]
+        have ⟨t, ht⟩ := Nat.exists_eq_succ_of_ne_zero hz
+        simp only [monoVal, ht, powR_zero_succ]
+        grind
+    · rw [ite_eq_right (by intro h; exact hy h.2.1)]
+      have ⟨t, ht⟩ := Nat.exists_eq_succ_of_ne_zero hy
+      simp only [monoVal, ht, powR_zero_succ]
+      grind
+  · rw [ite_eq_right (by intro h; exact hc h.1)]
+    have ⟨t, ht⟩ := Nat.exists_eq_succ_of_ne_zero hc
+    simp only [monoVal, ht, powR_zero_succ]
+    grind
+
+/-- Valutare in `c = 0`, `s = 1`, `n = e_x` è valutare dopo `keepFlip`. -/
+theorem eval_keepFlip (p : Poly) :
+    evalAt 0 1 1 0 0 p = evalAt 0 1 1 0 0 (specPoly keepFlip p) := by
+  induction p with
+  | nil => simp [specPoly, evalAt]
+  | cons head rest ih =>
+    cases head with
+    | mk a m =>
+      rw [show evalAt 0 1 1 0 0 ((a, m) :: rest) =
+          ⟨a.re * monoVal 0 1 1 0 0 m, a.im * monoVal 0 1 1 0 0 m⟩ +
+            evalAt 0 1 1 0 0 rest from rfl, ih, monoVal_keepFlip m]
+      cases hkeep : keepFlip m with
+      | none =>
+        simp only [specPoly, hkeep, Rat.mul_zero]
+        exact Gauss.zero_add _
+      | some k =>
+        simp only [specPoly, hkeep]
+        rw [show evalAt 0 1 1 0 0 ((a, k) :: specPoly keepFlip rest) =
+            ⟨a.re * monoVal 0 1 1 0 0 k, a.im * monoVal 0 1 1 0 0 k⟩ +
+              evalAt 0 1 1 0 0 (specPoly keepFlip rest) from rfl]
+
+/-- Nel punto `c = 0`, `s = 1`, `n = e_x`, con `α = 3/5` e `β = −4/5 i`,
+l'evoluzione controllata è `3/5|00⟩ − 4/5|11⟩`. I pesi sono `9/25` e `16/25`.
+
+`cnot_point` identifica lo stato, dopo `keepFlip`, con `CNOT` seguito dalla
+fase `−i`. `cnot_point_born` toglie quella fase dai pesi. -/
+theorem point_cnot_sample :
+    evalAt 0 1 1 0 0 (applyCtrl evolution (tensorPair probePair ket0)).a0 =
+      ⟨(3 : Rat) / 5, 0⟩ ∧
+      evalAt 0 1 1 0 0 (applyCtrl evolution (tensorPair probePair ket0)).a1 = 0 ∧
+        evalAt 0 1 1 0 0 (applyCtrl evolution (tensorPair probePair ket0)).a2 = 0 ∧
+          evalAt 0 1 1 0 0 (applyCtrl evolution (tensorPair probePair ket0)).a3 =
+            ⟨-((4 : Rat) / 5), 0⟩ ∧
+            evalAt 0 1 1 0 0
+                (columnBorn (applyCtrl evolution (tensorPair probePair ket0)).a0) =
+              ⟨(9 : Rat) / 25, 0⟩ ∧
+              evalAt 0 1 1 0 0
+                  (columnBorn (applyCtrl evolution (tensorPair probePair ket0)).a1) = 0 ∧
+                evalAt 0 1 1 0 0
+                    (columnBorn (applyCtrl evolution (tensorPair probePair ket0)).a2) = 0 ∧
+                  evalAt 0 1 1 0 0
+                      (columnBorn (applyCtrl evolution (tensorPair probePair ket0)).a3) =
+                    ⟨(16 : Rat) / 25, 0⟩ := by
+  have hctrl := cnot_point probePair
+  simp only [quadSame, specQuad] at hctrl
+  have hphase : phaseControl (-Gauss.i) (applyCNOT (tensorPair probePair ket0)) =
+      ⟨probePair.a0, [], [], scale (-Gauss.i) probePair.a1⟩ := phase_cnot probePair
+  rw [hphase] at hctrl
+  have hborn := (cnot_point_born probePair).1.2.2
+  unfold phasedPoint at hborn
+  rw [hphase] at hborn
+  simp only [reduceLeft, bornPair, columnBorn_nil, List.append_nil, List.nil_append] at hborn
+  unfold probePair at hctrl hborn ⊢
+  dsimp only at hctrl hborn
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [eval_keepFlip, eval_polySame hctrl.1, specFlip_single_some _ _ _ keepFlip_one,
+      eval_const]
+    simp [pointAlpha, pointC]
+  · rw [eval_keepFlip, eval_polySame hctrl.2.1]
+    simp [specPoly, evalAt]
+  · rw [eval_keepFlip, eval_polySame hctrl.2.2.1]
+    simp [specPoly, evalAt]
+  · rw [eval_keepFlip, eval_polySame hctrl.2.2.2, spec_scale,
+      specFlip_single_some _ _ _ keepFlip_one, eval_scale, eval_const]
+    simp [pointBeta, pointS, Gauss.i]
+    ext <;> simp <;> grind
+  · rw [eval_keepFlip, eval_polySame (spec_columnBorn keepFlip_mul _),
+      eval_polySame (polySame_columnBorn hctrl.1),
+      specFlip_single_some _ _ _ keepFlip_one, eval_polySame hborn.1, eval_column_const]
+    simp [pointAlpha, pointC, Gauss.conj]
+    ext <;> simp <;> grind
+  · rw [eval_keepFlip, eval_polySame (spec_columnBorn keepFlip_mul _),
+      eval_polySame (polySame_columnBorn hctrl.2.1)]
+    simp only [specPoly, columnBorn_nil, evalAt]
+  · rw [eval_keepFlip, eval_polySame (spec_columnBorn keepFlip_mul _),
+      eval_polySame (polySame_columnBorn hctrl.2.2.1)]
+    simp only [specPoly, columnBorn_nil, evalAt]
+  · rw [eval_keepFlip, eval_polySame (spec_columnBorn keepFlip_mul _),
+      eval_polySame (polySame_columnBorn hctrl.2.2.2), spec_scale,
+      specFlip_single_some _ _ _ keepFlip_one, eval_polySame hborn.2, eval_column_const]
+    simp [pointBeta, pointS, Gauss.conj]
+    ext <;> simp <;> grind
 
 theorem probe_coherence_factor :
     pointAlpha * Gauss.conj pointBeta = ⟨0, (12 : Rat) / 25⟩ := by

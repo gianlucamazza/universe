@@ -34,7 +34,8 @@ entrate fuori diagonale sono il polinomio zero, la diagonale è
 Nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, con `ψ = Φ|0⟩`, disfare
 l'amico restituisce coerenza `12/25 i` e purezza `1`. Dopo la copia
 la coerenza è `0`, la purezza è `337/625` e Wigner legge `9/25`,
-`16/25`.
+`16/25`. `point_cells` valuta le otto celle di tre copie di `Φ|0⟩`:
+il peso è `(9/25)` per ogni bit `0` e `(16/25)` per ogni bit `1`.
 
 `I ⊗ U` sull'apparato, dopo `CNOT` con `|0⟩`, non cambia il marginale
 del sistema. La differenza sta in `(gC, gN)`: i cofattori di `δ`
@@ -493,6 +494,88 @@ theorem eval_a10_point : evalAt pointC pointS 1 0 0 evolution.a10 = pointBeta :=
   simp [pointBeta, monoVal, powR, s1, nx1, ny1, Mono.mul, pointC, pointS,
     Gauss.re_neg, Gauss.im_neg, Gauss.re_i, Gauss.im_i]
   ext <;> simp <;> grind
+
+/-- `((Φ|0⟩ ⊗ Φ|0⟩) ⊗ Φ|0⟩)`. `tensor_assoc_obs` dà l'altra parentesizzazione. -/
+def threeCopies : Oct :=
+  tensorLeft (tensorPair (applyMat evolution ket0) (applyMat evolution ket0))
+    (applyMat evolution ket0)
+
+/-- Tre copie di `Φ|0⟩` nel punto `c = 3/5`, `s = 4/5`, `n = e_x`.
+
+La cella `4 i + 2 j + k` pesa `(9/25)` per ogni bit `0` e `(16/25)` per
+ogni bit `1`: `729/15625`, `1296/15625`, `1296/15625`, `2304/15625`,
+`1296/15625`, `2304/15625`, `2304/15625`, `4096/15625`. -/
+theorem point_cells :
+    evalAt pointC pointS 1 0 0 (bornOct threeCopies).a0 = ⟨(729 : Rat) / 15625, 0⟩ ∧
+      evalAt pointC pointS 1 0 0 (bornOct threeCopies).a1 = ⟨(1296 : Rat) / 15625, 0⟩ ∧
+        evalAt pointC pointS 1 0 0 (bornOct threeCopies).a2 = ⟨(1296 : Rat) / 15625, 0⟩ ∧
+          evalAt pointC pointS 1 0 0 (bornOct threeCopies).a3 = ⟨(2304 : Rat) / 15625, 0⟩ ∧
+            evalAt pointC pointS 1 0 0 (bornOct threeCopies).a4 = ⟨(1296 : Rat) / 15625, 0⟩ ∧
+              evalAt pointC pointS 1 0 0 (bornOct threeCopies).a5 =
+                ⟨(2304 : Rat) / 15625, 0⟩ ∧
+                evalAt pointC pointS 1 0 0 (bornOct threeCopies).a6 =
+                  ⟨(2304 : Rat) / 15625, 0⟩ ∧
+                  evalAt pointC pointS 1 0 0 (bornOct threeCopies).a7 =
+                    ⟨(4096 : Rat) / 15625, 0⟩ := by
+  have hket : applyMat evolution ket0 = ⟨evolution.a00, evolution.a10⟩ := apply_ket0 evolution
+  have hmod (z w : Gauss) :
+      (z * w) * Gauss.conj (z * w) = (z * Gauss.conj z) * (w * Gauss.conj w) := by
+    rw [conj_mul]
+    calc
+      (z * w) * (Gauss.conj z * Gauss.conj w) =
+          z * (w * (Gauss.conj z * Gauss.conj w)) := by rw [Gauss.mul_assoc]
+      _ = z * ((w * Gauss.conj z) * Gauss.conj w) := by rw [Gauss.mul_assoc w]
+      _ = z * ((Gauss.conj z * w) * Gauss.conj w) := by
+        rw [Gauss.mul_comm w (Gauss.conj z)]
+      _ = z * (Gauss.conj z * (w * Gauss.conj w)) := by
+        rw [← Gauss.mul_assoc (Gauss.conj z) w (Gauss.conj w)]
+      _ = (z * Gauss.conj z) * (w * Gauss.conj w) := by
+        rw [← Gauss.mul_assoc z (Gauss.conj z) (w * Gauss.conj w)]
+  have hmod3 (a b c : Gauss) :
+      ((a * b) * c) * Gauss.conj ((a * b) * c) =
+        (a * Gauss.conj a) * ((b * Gauss.conj b) * (c * Gauss.conj c)) := by
+    rw [hmod (a * b) c, hmod a b, Gauss.mul_assoc]
+  have halpha : pointAlpha * Gauss.conj pointAlpha = ⟨(9 : Rat) / 25, 0⟩ := by
+    simp only [pointAlpha, pointC, Gauss.conj]
+    ext <;> simp <;> grind
+  have hbeta : pointBeta * Gauss.conj pointBeta = ⟨(16 : Rat) / 25, 0⟩ := by
+    simp only [pointBeta, pointS, Gauss.conj]
+    ext <;> simp <;> grind
+  have hborn (p q r : Poly) :
+      evalAt pointC pointS 1 0 0 (columnBorn (pmul (pmul p q) r)) =
+        ((evalAt pointC pointS 1 0 0 p * evalAt pointC pointS 1 0 0 q) *
+            evalAt pointC pointS 1 0 0 r) *
+          Gauss.conj
+            ((evalAt pointC pointS 1 0 0 p * evalAt pointC pointS 1 0 0 q) *
+              evalAt pointC pointS 1 0 0 r) := by
+    rw [eval_columnBorn, eval_pmul, eval_pmul]
+  rw [threeCopies, hket]
+  simp only [bornOct, tensorLeft, tensorPair]
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hborn]
+    simp only [eval_a00_point, hmod3, halpha]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a00_point, eval_a10_point, hmod3, halpha, hbeta]
+    ext <;> simp <;> grind
+  · rw [hborn]
+    simp only [eval_a10_point, hmod3, hbeta]
+    ext <;> simp <;> grind
 
 /-- Nel punto la purezza del sistema, dopo `CNOT`, è `337/625`. È minore di `1`. -/
 theorem point_purity :

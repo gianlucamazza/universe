@@ -533,15 +533,8 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Universe.Observer.product_det, Universe.Observer.entangled_det",
     )
 
-    rational = {
-        "c": g(Fraction(3, 5)),
-        "s": g(Fraction(4, 5)),
-        "nx": g(1),
-        "ny": g(0),
-        "nz": g(0),
-    }
-    coupled = cnot(ring).apply(tensor_state(ground, world.ground()))
-    det_point = determinant_2x2(coupled).evaluate(rational)
+    bell = bell_point(world)
+    det_point = bell.determinant
     point_ok = det_point == g(0, Fraction(-12, 25))
     add(
         "Osservatore",
@@ -597,7 +590,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         "Obs è la diagonale\nUniverse.Observer.pointer_born",
     )
 
-    purity_value = purity(reduced(coupled, 0, 2, 2)).evaluate(rational)
+    purity_value = bell.purity
     purity_ok = purity_value == g(Fraction(337, 625))
     add(
         "Osservatore",
@@ -753,21 +746,14 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         else "Wigner non legge più il sistema",
     )
 
-    lab = tensor_state(tensor_state(ground, world.ground()), world.ground())
-    friend_gate = cnot01(ring)
-    wigner_gate = cnot12(ring)
-    undone_state = friend_gate.apply(friend_gate.apply(lab))
-    copied_state = friend_gate.apply(wigner_gate.apply(friend_gate.apply(lab)))
-    undone_rho = reduced(undone_state, 0, 2, 4)
-    copied_rho = reduced(copied_state, 0, 2, 4)
-    undone_coherence = undone_rho.rows[0][1].evaluate(rational)
-    undone_purity = purity(undone_rho).evaluate(rational)
-    copied_coherence = copied_rho.rows[0][1].evaluate(rational)
-    copied_other = copied_rho.rows[1][0].evaluate(rational)
-    copied_purity = purity(copied_rho).evaluate(rational)
-    wigner_margin = marginal(copied_state, 1, 4, 2)
-    weight0 = wigner_margin[0].evaluate(rational)
-    weight1 = wigner_margin[1].evaluate(rational)
+    friend = friend_point(world)
+    undone_coherence = friend.undone_coherence
+    undone_purity = friend.undone_purity
+    copied_coherence = friend.copied_coherence
+    copied_other = friend.copied_other
+    copied_purity = friend.copied_purity
+    weight0 = friend.weight0
+    weight1 = friend.weight1
     coherence_ok = undone_coherence == g(0, Fraction(12, 25))
     purity_ok = undone_purity == g(1)
     undone_point_ok = coherence_ok and purity_ok
@@ -894,7 +880,6 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     )
 
     # --- Corollario razionale, cammino indipendente in aritmetica di Gauss ---
-    point = corollary_point()
     matrix = corollary_matrix(world)
     point_product = _gauss_matmul(_gauss_dagger(matrix), matrix)
     rational_ok = _is_gauss_identity(point_product)
@@ -907,20 +892,12 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     column = (matrix[0][0], matrix[1][0])
     prob0 = _modulus_sq(column[0])
     prob1 = _modulus_sq(column[1])
-    factor = world.evolve(world.ground())
-    triple_left = tensor_state(tensor_state(factor, factor), factor)
-    triple_right = tensor_state(factor, tensor_state(factor, factor))
-    cell_weights = [
-        _real_fraction(weight.evaluate(point)) for weight in born(triple_left)
-    ]
-    cell_right = [
-        _real_fraction(weight.evaluate(point)) for weight in born(triple_right)
-    ]
-    expected_cells = [
+    cell_weights, cell_right = corollary_cells(world)
+    expected_cells = tuple(
         Fraction(9, 25) ** (3 - (index.bit_count()))
         * Fraction(16, 25) ** index.bit_count()
         for index in range(8)
-    ]
+    )
     cells_ok = cell_weights == expected_cells and cell_right == expected_cells
     cells_ok = cells_ok and sum(cell_weights) == 1
     probs_ok = prob0 == Fraction(9, 25) and prob1 == Fraction(16, 25) and cells_ok
@@ -936,13 +913,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if probs_ok
         else f"P(0) = {prob0}, P(1) = {prob1}; celle = {cell_detail}",
     )
-    ket = world.ground()
-    evolved_ket = world.evolve(ket)
-    point_z = {**point, "nx": g(0), "ny": g(0), "nz": g(1)}
-    before_x = expectation(ket, world.H).evaluate(point)
-    after_x = expectation(evolved_ket, world.H).evaluate(point)
-    before_z = expectation(ket, world.H).evaluate(point_z)
-    after_z = expectation(evolved_ket, world.H).evaluate(point_z)
+    before_x, after_x, before_z, after_z = energy_point(world)
     energy_point_ok = (
         before_x == g(0) and after_x == g(0) and before_z == g(1) and after_z == g(1)
     )
@@ -1006,29 +977,18 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         left.modulus_squared() == right.substitute(law).modulus_squared()
         for left, right in zip(phased, flipped.amplitudes, strict=True)
     )
-    sample = {
-        **law,
-        "ar": g(Fraction(3, 5)),
-        "ai": g(0),
-        "br": g(0),
-        "bi": g(Fraction(-4, 5)),
-    }
-    drawn = [amplitude.evaluate(sample) for amplitude in phased]
-    phased_weights = [
-        _real_fraction(amplitude.modulus_squared().evaluate(sample))
-        for amplitude in phased
-    ]
-    drawn_ok = drawn == [
+    drawn, phased_weights = cnot_sample(world)
+    drawn_ok = drawn == (
         g(Fraction(3, 5)),
         g(0),
         g(0),
         g(Fraction(-4, 5)),
-    ] and phased_weights == [
+    ) and phased_weights == (
         Fraction(9, 25),
         Fraction(0),
         Fraction(0),
         Fraction(16, 25),
-    ]
+    )
     point_ok = phased == expected and born_ok and drawn_ok
     add(
         "Interazione",
@@ -1070,15 +1030,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if diagonal_ok
         else (gap_zero or gap_one or ""),
     )
-    probe = State(
-        (
-            ring.constant(g(Fraction(3, 5))),
-            ring.constant(g(0, Fraction(-4, 5))),
-        )
-    )
-    probe_rho = partial_reduced(world.U, probe)
-    probe_pure = purity(probe_rho)
-    axis_x = {"nx": g(1), "ny": g(0), "nz": g(0)}
+    partial_idle, partial_mid, partial_flip = partial_points(world)
     expected_points = (
         (Fraction(1), Fraction(0), g(0, Fraction(12, 25)), g(1)),
         (
@@ -1091,13 +1043,15 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
     )
     point_rows: list[str] = []
     points_hold = True
-    for coupling_c, coupling_s, coherence, pure in expected_points:
-        sample = {**axis_x, "c": g(coupling_c), "s": g(coupling_s)}
-        got_coherence = probe_rho.rows[0][1].evaluate(sample)
-        got_purity = probe_pure.evaluate(sample)
-        points_hold = points_hold and got_coherence == coherence and got_purity == pure
+    for (coupling_c, coupling_s, coherence, pure), reading in zip(
+        expected_points, (partial_idle, partial_mid, partial_flip), strict=True
+    ):
+        points_hold = (
+            points_hold and reading.coherence == coherence and reading.purity == pure
+        )
         point_rows.append(
-            f"({coupling_c}, {coupling_s}): {got_coherence}, purezza {got_purity}"
+            f"({coupling_c}, {coupling_s}): "
+            f"{reading.coherence}, purezza {reading.purity}"
         )
     add(
         "Interazione",
@@ -1152,23 +1106,11 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if repeat_ok
         else f"0 → {second0}; 1 → {second1}",
     )
-    evolved_ground = world.evolve(world.ground())
-    sample = {
-        "c": g(Fraction(3, 5)),
-        "s": g(Fraction(4, 5)),
-        "nx": g(1),
-        "ny": g(0),
-        "nz": g(0),
-    }
-    pointed = cnot(evolved_ground.ring).apply(
-        tensor_state(evolved_ground, world.ground())
-    )
-    pointed0 = condition(pointed, 0)
-    pointed1 = condition(pointed, 1)
-    got0 = tuple(amplitude.evaluate(sample) for amplitude in pointed0.amplitudes)
-    got1 = tuple(amplitude.evaluate(sample) for amplitude in pointed1.amplitudes)
-    norm0 = norm_squared(pointed0).evaluate(sample)
-    norm1 = norm_squared(pointed1).evaluate(sample)
+    luders = luders_point(world)
+    got0 = luders.read0
+    got1 = luders.read1
+    norm0 = luders.norm0
+    norm1 = luders.norm1
     point_luders_ok = (
         got0 == (g(Fraction(3, 5)), g(0))
         and got1 == (g(0), g(0, Fraction(-4, 5)))
@@ -1183,13 +1125,13 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if point_luders_ok
         else f"0 = {got0}, norma {norm0}; 1 = {got1}, norma {norm1}",
     )
-    again0 = marginal(reread(evolved_ground, 0), 1, 2, 2)
-    again1 = marginal(reread(evolved_ground, 1), 1, 2, 2)
+    again0 = luders.again0
+    again1 = luders.again1
     point_repeat_ok = (
-        again0[0].evaluate(sample) == g(Fraction(9, 25))
-        and again0[1].evaluate(sample) == g(0)
-        and again1[0].evaluate(sample) == g(0)
-        and again1[1].evaluate(sample) == g(Fraction(16, 25))
+        again0[0] == g(Fraction(9, 25))
+        and again0[1] == g(0)
+        and again1[0] == g(0)
+        and again1[1] == g(Fraction(16, 25))
     )
     add(
         "Interazione",
@@ -1197,11 +1139,10 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         point_repeat_ok,
         "l'altro esito pesa 0\nUniverse.Interaction.point_repeatable"
         if point_repeat_ok
-        else f"0 → ({again0[0].evaluate(sample)}, {again0[1].evaluate(sample)}); "
-        f"1 → ({again1[0].evaluate(sample)}, {again1[1].evaluate(sample)})",
+        else f"0 → ({again0[0]}, {again0[1]}); 1 → ({again1[0]}, {again1[1]})",
     )
 
-    change = _change_of_basis(world)
+    change = change_of_basis(world)
     add(
         "Simmetria",
         "V(Uψ) = (V U V†)(Vψ) nell'anello libero",
@@ -1286,7 +1227,7 @@ def prove(world: QubitUniverse | None = None) -> list[Theorem]:
         if axes_norm
         else "la norma del prodotto non sta in (gC, gN, gC2, gM)",
     )
-    axes_drawn = _axes_point()
+    axes_drawn = axes_point()
     forward_image = (
         g(Fraction(9, 25), Fraction(-12, 25)),
         g(Fraction(-16, 25), Fraction(-12, 25)),
@@ -1450,6 +1391,7 @@ class _BasisChange:
     born: bool
     image: tuple[Gauss, Gauss]
     weights: tuple[Gauss, Gauss]
+    conjugated: tuple[Gauss, Gauss]
 
 
 def _origin_zero(left: Poly, right: Poly) -> bool:
@@ -1501,7 +1443,7 @@ def _symbolic_conjugation(world: QubitUniverse) -> _SymbolicBasis:
     return _SymbolicBasis(evolution_ok, born_ok)
 
 
-def _change_of_basis(world: QubitUniverse) -> _BasisChange:
+def change_of_basis(world: QubitUniverse) -> _BasisChange:
     """`V` è `U` nel punto `c = 3/5`, `s = 4/5`, `n = e_x`, a entrate costanti.
 
     L'uguaglianza è sull'origine libera, prima di `reduce`.
@@ -1560,6 +1502,9 @@ def _change_of_basis(world: QubitUniverse) -> _BasisChange:
         )
     )
     image0, image1 = (amplitude.evaluate(axis) for amplitude in ground.amplitudes)
+    conj0, conj1 = (
+        amplitude.evaluate(axis) for amplitude in conjugated_ground.amplitudes
+    )
     weight0, weight1 = (
         bracket(basis.apply(ket), basis.apply(world.ground()))
         .modulus_squared()
@@ -1571,6 +1516,7 @@ def _change_of_basis(world: QubitUniverse) -> _BasisChange:
         born,
         (image0, image1),
         (weight0, weight1),
+        (conj0, conj1),
     )
 
 
@@ -1834,7 +1780,7 @@ class _AxesPoint:
     backward_weights: tuple[Gauss, Gauss]
 
 
-def _axes_point() -> _AxesPoint:
+def axes_point() -> _AxesPoint:
     """Il punto `n = e_x`, `m = e_z`, `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`.
 
     `a` e `b` vengono da `_axes_pair`. I due ordini sono i fattori di
@@ -1926,26 +1872,12 @@ def _time_composition() -> _TimeLaw:
     needs_extra = gap.certification() is not None
     paid = gap.certify_extra("c2", sphere.one() - sphere.var("s2") ** 2) is None
 
-    point_ring = Ring(_LAW)
-    _, cosine, sine, closed = _composition(point_ring)
-    point = {
-        "c1": g(Fraction(3, 5)),
-        "s1": g(Fraction(4, 5)),
-        "c2": g(Fraction(3, 5)),
-        "s2": g(Fraction(4, 5)),
-        "nx": g(1),
-        "ny": g(0),
-        "nz": g(0),
-    }
-    evolved = closed.apply(State((point_ring.one(), point_ring.zero())))
+    drawn = compose_point()
     return _TimeLaw(
         group=on_axis and not_free and circle_misses,
         circle=needs_extra and paid,
-        angle=(cosine.evaluate(point), sine.evaluate(point)),
-        image=(
-            evolved.amplitudes[0].evaluate(point),
-            evolved.amplitudes[1].evaluate(point),
-        ),
+        angle=(drawn.cosine, drawn.sine),
+        image=drawn.image,
     )
 
 
@@ -2157,12 +2089,260 @@ def corollary_matrix(world: QubitUniverse) -> list[list[Gauss]]:
     return [[entry.evaluate(point) for entry in row] for row in world.U.rows]
 
 
+def corollary_cells(
+    world: QubitUniverse,
+) -> tuple[tuple[Fraction, ...], tuple[Fraction, ...]]:
+    """Pesi delle otto celle di tre copie di `Φ|0⟩`, sulle due parentesizzazioni.
+
+    È il triplo tensore che il corollario stampa accanto a `P(0)` e `P(1)`.
+    """
+    point = corollary_point()
+    factor = world.evolve(world.ground())
+    triple_left = tensor_state(tensor_state(factor, factor), factor)
+    triple_right = tensor_state(factor, tensor_state(factor, factor))
+    left = tuple(_real_fraction(weight.evaluate(point)) for weight in born(triple_left))
+    right = tuple(
+        _real_fraction(weight.evaluate(point)) for weight in born(triple_right)
+    )
+    return left, right
+
+
+def energy_point(world: QubitUniverse) -> tuple[Gauss, Gauss, Gauss, Gauss]:
+    """⟨H⟩ di `|0⟩` e di `Φ|0⟩` nel punto, lungo `e_x` e poi lungo `e_z`.
+
+    L'ordine è prima e dopo `Φ` sull'asse x, poi prima e dopo sull'asse z.
+    """
+    point = corollary_point()
+    ket = world.ground()
+    evolved = world.evolve(ket)
+    point_z = {**point, "nx": g(0), "ny": g(0), "nz": g(1)}
+    return (
+        expectation(ket, world.H).evaluate(point),
+        expectation(evolved, world.H).evaluate(point),
+        expectation(ket, world.H).evaluate(point_z),
+        expectation(evolved, world.H).evaluate(point_z),
+    )
+
+
+def cnot_sample(
+    world: QubitUniverse,
+) -> tuple[tuple[Gauss, ...], tuple[Fraction, ...]]:
+    """Evoluzione controllata a `c = 0`, `s = 1`, `n = e_x`.
+
+    `α = 3/5` e `β = −4/5 i`: lo stesso stato che il certificato
+    confronta con `α|00⟩ − i β|11⟩`.
+    """
+    law = {
+        "c": g(0),
+        "s": g(1),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    idle = tensor_state(world.generic(), world.ground())
+    phased = tuple(
+        amplitude.substitute(law)
+        for amplitude in controlled(world.U).apply(idle).amplitudes
+    )
+    sample = {
+        **law,
+        "ar": g(Fraction(3, 5)),
+        "ai": g(0),
+        "br": g(0),
+        "bi": g(Fraction(-4, 5)),
+    }
+    drawn = tuple(amplitude.evaluate(sample) for amplitude in phased)
+    weights = tuple(
+        _real_fraction(amplitude.modulus_squared().evaluate(sample))
+        for amplitude in phased
+    )
+    return drawn, weights
+
+
 def modulus_gauss(value: Gauss) -> Gauss:
     """`|z|²`. L'immaginario è zero."""
     squared = value * value.conj()
     if squared.im != 0:
         raise ValueError("modulo quadro non reale")
     return squared
+
+
+@dataclass(frozen=True)
+class BellPoint:
+    """Ampiezze di CNOT(Φ|0⟩ ⊗ |0⟩), determinante e purezza, nel punto."""
+
+    amplitudes: tuple[Gauss, Gauss, Gauss, Gauss]
+    determinant: Gauss
+    purity: Gauss
+
+
+@dataclass(frozen=True)
+class FriendPoint:
+    """Coerenza e purezza dell'amico disfatto e della copia, nel punto."""
+
+    undone_coherence: Gauss
+    undone_purity: Gauss
+    copied_coherence: Gauss
+    copied_other: Gauss
+    copied_purity: Gauss
+    weight0: Gauss
+    weight1: Gauss
+
+
+@dataclass(frozen=True)
+class PartialReading:
+    """Coerenza e purezza di una misura parziale."""
+
+    coherence: Gauss
+    purity: Gauss
+
+
+@dataclass(frozen=True)
+class LudersPoint:
+    """Letture condizionate, norme e seconda lettura, nel punto."""
+
+    read0: tuple[Gauss, Gauss]
+    read1: tuple[Gauss, Gauss]
+    norm0: Gauss
+    norm1: Gauss
+    again0: tuple[Gauss, Gauss]
+    again1: tuple[Gauss, Gauss]
+
+
+@dataclass(frozen=True)
+class ComposePoint:
+    """Coseno, seno e stato `U U₂|0⟩` nel punto composto."""
+
+    cosine: Gauss
+    sine: Gauss
+    image: tuple[Gauss, Gauss]
+
+
+def bell_point(world: QubitUniverse) -> BellPoint:
+    """CNOT(Φ|0⟩ ⊗ |0⟩) nel punto del corollario.
+
+    Lo stesso stato paga il determinante e la purezza del certificato.
+    """
+    ring = world.scalars.ring
+    ground = world.evolve(world.ground())
+    rational = corollary_point()
+    coupled = cnot(ring).apply(tensor_state(ground, world.ground()))
+    amplitudes = coupled.amplitudes
+    return BellPoint(
+        amplitudes=(
+            amplitudes[0].evaluate(rational),
+            amplitudes[1].evaluate(rational),
+            amplitudes[2].evaluate(rational),
+            amplitudes[3].evaluate(rational),
+        ),
+        determinant=determinant_2x2(coupled).evaluate(rational),
+        purity=purity(reduced(coupled, 0, 2, 2)).evaluate(rational),
+    )
+
+
+def friend_point(world: QubitUniverse) -> FriendPoint:
+    """Amico disfatto e copia, con `ψ = Φ|0⟩` nel punto del corollario."""
+    ring = world.scalars.ring
+    ground = world.evolve(world.ground())
+    rational = corollary_point()
+    lab = tensor_state(tensor_state(ground, world.ground()), world.ground())
+    friend_gate = cnot01(ring)
+    wigner_gate = cnot12(ring)
+    undone_state = friend_gate.apply(friend_gate.apply(lab))
+    copied_state = friend_gate.apply(wigner_gate.apply(friend_gate.apply(lab)))
+    undone_rho = reduced(undone_state, 0, 2, 4)
+    copied_rho = reduced(copied_state, 0, 2, 4)
+    wigner_margin = marginal(copied_state, 1, 4, 2)
+    return FriendPoint(
+        undone_coherence=undone_rho.rows[0][1].evaluate(rational),
+        undone_purity=purity(undone_rho).evaluate(rational),
+        copied_coherence=copied_rho.rows[0][1].evaluate(rational),
+        copied_other=copied_rho.rows[1][0].evaluate(rational),
+        copied_purity=purity(copied_rho).evaluate(rational),
+        weight0=wigner_margin[0].evaluate(rational),
+        weight1=wigner_margin[1].evaluate(rational),
+    )
+
+
+def partial_points(
+    world: QubitUniverse,
+) -> tuple[PartialReading, PartialReading, PartialReading]:
+    """Coerenza e purezza ai coupling `(1, 0)`, `(3/5, 4/5)` e `(0, 1)`."""
+    ring = world.scalars.ring
+    probe = State(
+        (
+            ring.constant(g(Fraction(3, 5))),
+            ring.constant(g(0, Fraction(-4, 5))),
+        )
+    )
+    probe_rho = partial_reduced(world.U, probe)
+    probe_pure = purity(probe_rho)
+    axis_x = {"nx": g(1), "ny": g(0), "nz": g(0)}
+    readings: list[PartialReading] = []
+    for coupling_c, coupling_s in (
+        (Fraction(1), Fraction(0)),
+        (Fraction(3, 5), Fraction(4, 5)),
+        (Fraction(0), Fraction(1)),
+    ):
+        sample = {**axis_x, "c": g(coupling_c), "s": g(coupling_s)}
+        readings.append(
+            PartialReading(
+                coherence=probe_rho.rows[0][1].evaluate(sample),
+                purity=probe_pure.evaluate(sample),
+            )
+        )
+    return readings[0], readings[1], readings[2]
+
+
+def luders_point(world: QubitUniverse) -> LudersPoint:
+    """Stato condizionato e seconda lettura, nel punto del corollario."""
+    evolved_ground = world.evolve(world.ground())
+    sample = corollary_point()
+    pointed = cnot(evolved_ground.ring).apply(
+        tensor_state(evolved_ground, world.ground())
+    )
+    pointed0 = condition(pointed, 0)
+    pointed1 = condition(pointed, 1)
+    again0 = marginal(reread(evolved_ground, 0), 1, 2, 2)
+    again1 = marginal(reread(evolved_ground, 1), 1, 2, 2)
+    return LudersPoint(
+        read0=(
+            pointed0.amplitudes[0].evaluate(sample),
+            pointed0.amplitudes[1].evaluate(sample),
+        ),
+        read1=(
+            pointed1.amplitudes[0].evaluate(sample),
+            pointed1.amplitudes[1].evaluate(sample),
+        ),
+        norm0=norm_squared(pointed0).evaluate(sample),
+        norm1=norm_squared(pointed1).evaluate(sample),
+        again0=(again0[0].evaluate(sample), again0[1].evaluate(sample)),
+        again1=(again1[0].evaluate(sample), again1[1].evaluate(sample)),
+    )
+
+
+def compose_point() -> ComposePoint:
+    """Coseno, seno e `U U₂|0⟩` a `c₁ = c₂ = 3/5`, `s₁ = s₂ = 4/5`, `n = e_x`."""
+    point_ring = Ring(_LAW)
+    _, cosine, sine, closed = _composition(point_ring)
+    point = {
+        "c1": g(Fraction(3, 5)),
+        "s1": g(Fraction(4, 5)),
+        "c2": g(Fraction(3, 5)),
+        "s2": g(Fraction(4, 5)),
+        "nx": g(1),
+        "ny": g(0),
+        "nz": g(0),
+    }
+    evolved = closed.apply(State((point_ring.one(), point_ring.zero())))
+    return ComposePoint(
+        cosine=cosine.evaluate(point),
+        sine=sine.evaluate(point),
+        image=(
+            evolved.amplitudes[0].evaluate(point),
+            evolved.amplitudes[1].evaluate(point),
+        ),
+    )
 
 
 def _modulus_sq(value: Gauss) -> Fraction:

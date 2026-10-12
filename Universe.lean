@@ -51,6 +51,8 @@ in `n = e_x`.
 `tensor_assoc` identifica le due parentesizzazioni di tre qubit.
 `tensor_assoc_ui` porta `(U ⊗ I ⊗ I)` sul primo fattore.
 `tensor_assoc_obs` identifica i moduli quadri delle otto celle.
+`point_cells` li valuta su tre copie di `Φ|0⟩` nel punto:
+`729/15625`, …, `4096/15625`.
 `Universe.Composition.tensorIndex` è `right * i + k`. `ground_tensor` dice che
 `|0⟩ ⊗ |0⟩` ha ampiezza `1` nella cella `0` e `0` altrove.
 `kronecker_ui_gen` è `(U ⊗ I)(|ψ⟩ ⊗ |φ⟩) = (U|ψ⟩) ⊗ |φ⟩` per ogni matrice e
@@ -108,7 +110,8 @@ nell'ideale `(gC, gN)`. Con `V = U` sono `conj_evolution_law` e
 `G³ = G`. `controlled_from_hamiltonian` è l'evoluzione controllata, e
 `cnot_point` la legge nel punto `c = 0`, `s = 1`, `n = e_x` come `CNOT`
 seguito dalla fase `−i`. `cnot_point_born` dice che quella fase esce dai
-pesi di Born. Con l'apparato in `|0⟩`, `partial_coherence` dà
+pesi di Born. `point_cnot_sample` valuta `3/5|00⟩ − 4/5|11⟩`, con pesi
+`9/25` e `16/25`. Con l'apparato in `|0⟩`, `partial_coherence` dà
 l'antidiagonale `α β̄ · conj(⟨0|U|0⟩)` nell'anello libero, con
 `⟨0|U|0⟩ = c − i s nz`, e `partial_diagonal` mette la diagonale su
 `bornPair` modulo `(gC, gN)`. I tre punti lungo `e_x` sono
@@ -128,9 +131,8 @@ la traccia parziale su un qubit. `cnotFrom0` è il `CNOT` dal qubit `0`.
 `α|0…0⟩ + β|1…1⟩`, `fanout_agree` azzera il peso delle celle in cui
 due qubit differiscono, e `fanout_decoherence` rende il sistema
 diagonale con `bornPair`, per `n ≥ 2`.
-`Universe.Points` è la tabella dei punti razionali. `p0` e `p1` sono
-i membri sinistri di `point_prob0` e `point_prob1`. `lake exe points`
-li stampa.
+`Universe.Points` è la tabella dei punti razionali. Ogni voce è il
+membro sinistro del teorema che la dimostra. `lake exe points` la stampa.
 -/
 import Universe.Angle
 import Universe.Composition
