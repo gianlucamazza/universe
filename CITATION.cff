@@ -8,8 +8,8 @@ authors:
     given-names: Gianluca
 license: MIT
 repository-code: "https://github.com/gianlucamazza/universe"
-version: 0.6.0
-date-released: 2026-10-11
+version: 0.7.0
+date-released: 2026-10-12
 keywords:
   - lean4
   - formal-verification
